@@ -618,7 +618,8 @@ function nextFloor(){
   }
   // 보스 연전: 헬·익스트림. 1~3층은 보스 뒤에 남은 후보, 4층은 중간보스로 안 나온 둘 뒤에 야율척(3연전)
   G.bossChain=[G.bossId];
-  if(['hell','extreme'].includes(G.diff.id)){
+  // 보스 연전은 2층부터(1층은 중간보스만)
+  if(['hell','extreme'].includes(G.diff.id)&&G.floor>=2){
     if(G.floor<4){const third=FLOORS[G.floor].bosses.find(b=>b!==G.bossId&&b!==G.midbossId);if(third)G.bossChain=[G.bossId,third]}
     else G.bossChain=[...F4_POOL.filter(b=>b!==G.midbossId),G.bossId];
   }
@@ -652,7 +653,7 @@ function edgeOk(r,l1,l2){const a=G.map.rows[r][0].type,b=G.map.rows[r+1][0].type
 
 /* ================= 히든 스테이지 ================= */
 const HIDDEN={
-  seoksil:{n:'중봉 석실',minF:2,cond:()=>distinctArt('yuun')>=3,text:'종남산 중봉의 석실. 혈선 정립병의 애검 용영검과 《혈선비록》, 곽일산의 유운검결이 남아 있다. 원작에서 진산월은 이곳에서 3년을 보내고 검정중원을 만들었다.',run:()=>{acquireWeapon('yongyeong');starUp('yuun',2,'석실 수련');acquireCard('geomjeong')}},
+  seoksil:{n:'중봉 석실',minF:2,cond:()=>distinctArt('yuun')>=4,text:'종남산 중봉의 석실. 혈선 정립병의 애검 용영검과 《혈선비록》, 곽일산의 유운검결이 남아 있다. 원작에서 진산월은 이곳에서 3년을 보내고 검정중원을 만들었다.',run:()=>{acquireWeapon('yongyeong');starUp('yuun',2,'석실 수련');acquireCard('geomjeong')}},
   yeolseok:{n:'열석대진',minF:2,cond:()=>starOf('c36')>=3,text:'돌무더기로 쌓은 진. 12방위에 9가지 변화, 모두 36방의 구조가 보인다.',run:()=>acquireCard('cheonhamugung')},
   beolmo:{n:'벌모세수',minF:1,cond:()=>G.p.flags.poisoned,text:'몸에 쌓인 독을 몰아내며 체질을 씻어 낸다. 원작에서 진산월은 앙천지독과 부시독을 이겨 내고 약류장을 완성했다.',run:()=>{G.p.max+=12;healP(12);G.p.flags.poisoned=false;acquireCard('yakryu')}},
   soseon:{n:'소선의 유진',minF:2,cond:()=>fpOther()>=3,text:'소선 우일기가 남긴 유진. 일곱 가지 절학과 천단신공이 적혀 있다. 하나만 가져갈 수 있다.',choices:[['천단신공 (심법)',()=>acquireRelic('cheondan')],['묵령갑 (병기)',()=>acquireWeapon('mukryeong')],['뇌정만균 (낙뢰신권)',()=>acquireCard('noejeong')],['서우망월 (구반장법)',()=>acquireCard('seou')]]},
