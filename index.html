@@ -817,6 +817,12 @@ function pickGroup(type){
   if(type==='normals'&&F.first&&G.map.battles<2){G.map.battles++;return pick(F.first)}
   if(type==='normals')G.map.battles++;
   let list=[...F[type]];
+  // 4층: 중간보스·보스 연전으로 나올 상대는 정예 칸에서 빼서 두 번 만나지 않게 한다. 다 빠지면 쾌의당·서장 무리로 채운다
+  if(type==='elites'&&G.floor===4){
+    const used=new Set([G.midbossId,...(G.bossChain||[])].filter(Boolean).flatMap(foeIds));
+    list=list.filter(grp=>!grp.some(id=>used.has(id)));
+    if(!list.length)list=[['kwaesal','kwaesal','kwaesal'],['sinpo','sinpo','sadae'],['seopso','wijirip']];
+  }
   if(type==='elites'&&G.p.flags.chasePungdo){G.p.flags.chasePungdo=false;return['pungdo']}
   if(type==='elites'&&G.p.flags.samjeong==='stolen'&&!G.p.flags.dugiDone&&G.floor>=2)list.push(['dugichun'],['dugichun']);
   return pick(list);
