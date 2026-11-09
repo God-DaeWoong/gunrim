@@ -84,7 +84,7 @@ h1,h2,h3{font-family:'Nanum Myeongjo',serif;margin:.4em 0}
 .st.yin{background:#d6e8f2;color:#1f4f6f;font-weight:700}
 .st.blk{background:#d6e3ea;color:#1f4f6f;font-weight:700}
 .intent{font-size:13px;font-weight:700;min-height:20px;color:var(--red)}
-.intent.def{color:var(--blue)} .intent.buf{color:var(--gold)}
+.intent.def{color:var(--blue)} .intent.chain{font-size:12px;border:2px solid var(--red);border-radius:8px;padding:2px 6px;background:#fff2ee} .intent.buf{color:var(--gold)}
 .float{position:absolute;left:50%;top:30%;transform:translateX(-50%);font-weight:800;font-size:22px;color:var(--red);pointer-events:none;animation:flt .9s forwards;text-shadow:0 0 4px #fff;white-space:nowrap;z-index:5}
 .float.blue{color:var(--blue)} .float.gold{color:var(--gold)}
 @keyframes flt{to{transform:translate(-50%,-50px);opacity:0}}
@@ -160,9 +160,9 @@ function saveMeta(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(G.meta))}ca
 const DIFFS=[
   {id:'easy',name:'이지',desc:'적 체력 -20%, 휴식 회복 증가',ehp:.8,eatk:.9,batk:1,rest:.45,elite:1,ticket:10,req:null},
   {id:'normal',name:'노말',desc:'기준 난이도',ehp:1.1,eatk:1.05,batk:1,rest:.3,elite:1,ticket:10,req:null},
-  {id:'hard',name:'하드',desc:'적 체력·공격 증가, 중간보스 등장, 뽑기권 12스테이지마다',ehp:1.2,eatk:1.1,batk:1,rest:.3,elite:1.6,ticket:12,req:null},
-  {id:'hell',name:'헬',desc:'+ 보스 연전, 보스 공격력 +15%, 휴식 회복 감소',ehp:1.25,eatk:1.12,batk:1.15,rest:.2,elite:1.6,ticket:12,req:'hard'},
-  {id:'extreme',name:'익스트림',desc:'+ 보스 연전, 잡념 카드, 보스 패턴 추가, 숨은 보스',ehp:1.3,eatk:1.15,batk:1.15,rest:.2,elite:1.8,ticket:15,req:'hell',junk:1,ext:1},
+  {id:'hard',name:'하드',desc:'적 체력·공격 증가, 중간보스 등장, 뽑기권 12스테이지마다',ehp:1.35,eatk:1.1,batk:1,rest:.25,elite:1.6,ticket:12,req:null},
+  {id:'hell',name:'헬',desc:'+ 보스 연전, 보스 공격력 +15%, 휴식 회복 감소',ehp:1.42,eatk:1.12,batk:1.15,rest:.2,elite:1.6,ticket:12,req:'hard'},
+  {id:'extreme',name:'익스트림',desc:'+ 보스 연전, 잡념 카드, 보스 패턴 추가, 숨은 보스',ehp:1.48,eatk:1.15,batk:1.15,rest:.18,elite:1.8,ticket:15,req:'hell',junk:1,ext:1},
 ];
 
 /* ================= 문파 ================= */
@@ -772,11 +772,32 @@ function makeEnemy(id,i){
   const e={id,name:d.name,title:d.title,kind:d.kind,hp,max:hp,block:0,st:Object.assign({},d.init||{}),idx:-1,phase2:false,intent:null,seed:rnd(9999)+i,analyzed:null,yayulSaid:false};
   chooseIntent(e);return e;
 }
+// 연계 조합: 원작 초식 이름 안에서 앞 초식으로 열고 뒤 초식으로 잇는다. 필살기(제세모니인·혈화염구주 등 한 방 초식)는 넣지 않는다
+const ENEMY_CHAIN={
+  simok:['혈화표풍','심화봉혈'],heomugeuk:['삼지생화','연환지'],unjachu:['쌍패','비룡옥패'],
+  jeongoe:['연창','창막'],maejang:['매화검화','매화검기'],oyok:['혈라인','마운장'],
+  bokyang:['양봉음위','음유양란'],danggak:['칠교액','천지차암'],gojin:['백락심연','구주파천황'],
+  yayul:['불광만천','금강항마'],maejongdo:['대라장천','대라궁해'],
+  dokgo:['흑살조','냉살'],heemok:['무음비도','비도난사'],wibyeong:['팔검진','해천검'],hanchung:['겁륜탈혼','정세'],
+  pungdo:['탈혼검','탈혼검'],dugichun:['연검','검세'],baekdae:['천개유룡','백원적과'],jwadong:['분뢰경변','운기'],
+  gongson:['북풍탈백','광풍'],gamjong:['색탈혼','색탈혼'],joik:['현음진기','대라장천'],yujung:['낙뢰구검','신뢰하격'],baekmo:['월녀검법','음양화벽']
+};
+const CHAIN_DMG=.7;
+function chainIntent(e){
+  const c=ENEMY_CHAIN[e.id];if(!c)return null;
+  const boss=e.kind==='boss'&&e.phase2,elite=e.kind==='elite'&&['hell','extreme'].includes(G.diff.id);
+  if(!boss&&!elite)return null;
+  e.chainCtr=(e.chainCtr||0)+1;if(e.chainCtr%(boss?3:4))return null;
+  const l=moveList(e),a=l.find(m=>m.n===c[0]),b=l.find(m=>m.n===c[1]);if(!a||!b)return null;
+  const cut=m=>m.d?{...m,d:Math.max(1,Math.round(m.d*CHAIN_DMG))}:{...m};
+  return{n:'연계: '+c[0]+' → '+c[1],chain:[cut(a),cut(b)],d:(a.d||0)+(b.d||0)};
+}
 function moveList(e){const d=EN[e.id];let l=d.p1?(e.phase2?d.p2:d.p1):d.moves;if(e.phase2&&G.diff.ext&&G.floor>=2&&d.ext)l=[...l,d.ext];return l}
 function chooseIntent(e){
   const d=EN[e.id],l=moveList(e);
   if(d.p1||d.cycle){e.idx++;e.intent=l[e.idx%l.length]}
   else{let m=pick(l);let g=0;while(l.length>1&&m===e.intent&&g++<10)m=pick(l);e.intent=m}
+  const ch=chainIntent(e);if(ch)e.intent=ch;
 }
 function pickGroup(type){
   const F=FLOORS[G.floor];
@@ -1230,6 +1251,15 @@ function enemyAct(e){
   if(mv.ap)for(const k in mv.ap)applyPlayer(k,mv.ap[k]);
   if(mv.pm)applyPlayer('pmark',mv.pm);
 }
+async function enemyActChain(e){
+  const mv=e.intent;if(!mv||!mv.chain){enemyAct(e);return}
+  blog(`<b>${e.name}의 연계</b>`);toast(e.name+' — 연계',1600);
+  for(let i=0;i<mv.chain.length;i++){
+    e.intent=mv.chain[i];enemyAct(e);
+    if(i<mv.chain.length-1){render();await sleep(Math.max(450,(e.fxDur||0)*1000+150));e.fxDur=0;if(G.p.hp<=0||G.screen!=='battle')break}
+  }
+  e.intent=mv;
+}
 function yayulAnalyze(e){
   const u=G.b.artUse;let top=null,n=1;
   for(const a in u)if(u[a]>n){n=u[a];top=a}
@@ -1249,7 +1279,7 @@ async function endTurn(){
     if(e.hp<=0){render();continue}
     if(e.id==='yayul')yayulAnalyze(e);
     if(e.st.frozen){e.st.frozen--;blog(`${e.name}: 빙결로 움직이지 못한다.`)}
-    else enemyAct(e);
+    else await enemyActChain(e);
     if(e.st.burn&&e.hp>0){dealToEnemy(e,e.st.burn,true,'화상');e.st.burn--}
     ['weak','vuln','chill'].forEach(k=>{if(e.st[k])e.st[k]--});
     chooseIntent(e);
@@ -1369,9 +1399,19 @@ function stHTML(st,block){
     s+=`<span class="st" title="${SD[k]||''}">${SN[k]} ${st[k]}</span>`}
   return s;
 }
+function intentParts(e,m){
+  const parts=[];
+  if(m.d){const d=enemyDmg(e,m);parts.push(`⚔ ${d}${m.h>1?'×'+m.h:''}`)}
+  if(m.b)parts.push(`방어 ${m.b}`);
+  if(m.sf||m.heal)parts.push(m.heal?'회복':'강화');
+  if(m.ap)parts.push('▼'+Object.keys(m.ap).map(k=>SN[k]).join('·'));
+  if(m.pm)parts.push('탈혼');
+  return parts.join(' ');
+}
 function intentHTML(e){
   const m=e.intent;if(!m)return'';
   if(e.st.frozen)return'<div class="intent def">빙결</div>';
+  if(m.chain)return `<div class="intent chain" title="${m.n}">연계<br>${m.chain.map(s=>`${s.n} ${intentParts(e,s)}`).join('<br>')}</div>`;
   const parts=[];let cls='';
   if(m.d){const d=enemyDmg(e,m);parts.push(`⚔ ${d}${m.h>1?'×'+m.h:''}`)}
   if(m.b){parts.push(`방어 ${m.b}`);if(!m.d)cls='def'}
