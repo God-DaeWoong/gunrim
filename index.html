@@ -577,8 +577,9 @@ function newRun(diffId){
   const d=DIFFS.find(x=>x.id===diffId);
   const others=shuffle(['hwasan','haenam','seojang','soseon','kwae','sapa','jeomchang']).slice(0,4);
   G.diff=d;G.facs=['jongnam',...others];
-  G.p={hp:72,max:72,gold:60,deck:[],stars:{jk:1,c36:1},relics:['taeeul','hyeoncheong'],weapons:[],wpn:null,banned:[],st:{},block:0,tickets:0,flags:{visited:[],spawned:[],events:[]}};
-  ['jounyuk','samhwan','ogang','yeongyang','geumgang','dodo','seongjin','bisa'].forEach(id=>G.p.deck.push({uid:UID++,id}));
+  G.p={hp:72,max:72,gold:60,deck:[],stars:{yuun:1,jk:1,c36:1},relics:['taeeul','hyeoncheong'],weapons:[],wpn:null,banned:[],st:{},block:0,tickets:0,flags:{visited:[],spawned:[],events:[]}};
+  // 처음 덱: 종남 기본 검법 유운검법 2장 + 장괘장권구식 3장 + 천하삼십육검 3장
+  ['unmu','chulgok','jounyuk','yeongyang','geumgang','dodo','seongjin','bisa'].forEach(id=>G.p.deck.push({uid:UID++,id}));
   if(d.junk)G.p.deck.push({uid:UID++,id:'japnyeom'});
   G.stage=0;G.floor=0;G.b=null;G.meta.runs=(G.meta.runs||0)+1;saveMeta();
   nextFloor();
