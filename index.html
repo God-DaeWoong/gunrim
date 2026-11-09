@@ -55,6 +55,11 @@ h1,h2,h3{font-family:'Nanum Myeongjo',serif;margin:.4em 0}
 .node.boss small{top:66px;font-weight:700;color:var(--ink)}
 .node.hidden{border-style:dashed;border-color:var(--gold);color:var(--gold);background:#fff8e6}
 .node.elite{color:var(--red)}
+.goods{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.good{display:flex;align-items:center;gap:10px;padding:8px 10px;border:2px solid var(--ink2);border-radius:9px;background:var(--card);cursor:pointer}
+.good:hover{border-color:var(--gold)} .good.sel{border-color:var(--red);background:#fff6ee} .good.off{opacity:.5}
+.good .gtxt{flex:1;font-size:13px} .good .gtxt span{color:var(--ink2)} .good .gbuy{text-align:right;font-weight:700;min-width:80px}
+.cardsel .card{outline:3px solid var(--red);outline-offset:2px}
 .ico{display:inline-flex;vertical-align:middle;border-radius:10px;background:radial-gradient(circle at 50% 40%,#3d352d,#15110e);border:1px solid var(--gold);margin-right:6px;overflow:hidden;flex:0 0 auto}
 .ico img{width:100%;height:100%;object-fit:contain;padding:3px;box-sizing:border-box}
 .node.midboss{width:54px;height:54px;border:3px solid var(--red);color:var(--red);background:#fff2ee;font-size:19px}
@@ -1513,18 +1518,25 @@ function hiddenHTML(){
   return `<div class="panel" style="border-color:var(--gold)"><div class="chip" style="border-color:var(--gold);color:var(--gold)">숨은 길</div><h2>${h.n}</h2><p class="serif" style="line-height:1.8">${h.text}</p>
 <div style="display:flex;flex-direction:column;gap:8px">${h.choices?h.choices.map((c,i)=>`<button onclick="A.hiddenChoose(${i})" style="text-align:left">${c[0]}</button>`).join(''):`<button onclick="A.hiddenChoose(-1)">기연을 받아들인다</button>`}</div></div>`;
 }
+// 상점 물건 한 줄: 아이콘·이름·설명·값과 산다 버튼. 고른 물건(S.pick)만 버튼이 "산다"로 바뀐다
+function shopGood(key,icon,name,desc,price,soldOut,act){
+  const S=G.shop,P=G.p,sel=S.pick===key,can=!soldOut&&P.gold>=price;
+  return `<div class="good${sel?' sel':''}${soldOut?' off':''}" title="${name} — ${desc}" onclick="A.pick('${key}')">${icon}<div class="gtxt"><b>${name}</b><br><span>${desc}</span></div>
+<div class="gbuy">${soldOut?'팔림':`은자 ${price}`}${sel&&can?`<br><button class="endbtn" onclick="event.stopPropagation();${act}">산다</button>`:sel&&!soldOut?'<br><span class="muted">은자 부족</span>':''}</div></div>`;
+}
 function shopHTML(){
   const S=G.shop,P=G.p;
-  return `<div class="panel"><h2>객잔 · 상점</h2>
-<div class="cards">${S.cards.map((x,i)=>`<div>${cardHTML(CARDS[x.id],x.sold?'':`A.buy(${i})`,x.sold||P.gold<x.price?'off':'',!x.sold)}<div class="price">${x.sold?'팔림':'은자 '+x.price}</div></div>`).join('')}</div>
-<div class="row" style="justify-content:center">
-<button onclick="A.gacha()" ${P.gold<60?'disabled':''}>비급 뽑기 (은자 60)</button>
-<button onclick="A.shopRemove()" ${S.removed||P.gold<70?'disabled':''}>초식 버리기 (은자 70)</button>
-<button onclick="A.potion()" ${S.potion||P.gold<35?'disabled':''}>금창약 · 체력 15 (은자 35)</button>
-${S.weapon?`<button onclick="A.buyWeapon()" ${S.wsold||P.gold<160?'disabled':''}>${ICON(S.weapon,28)}병기 ${WEAPONS[S.weapon].n} (은자 160)</button>`:''}
-${!has('hongok')?`<button onclick="A.buyRelic('hongok',110)" ${P.gold<110?'disabled':''}>홍옥모니주 · 독 면역 (은자 110)</button>`:''}
-<button onclick="A.wine()"${P.flags.wine||P.gold<25?'disabled':''}>술 한 동이 (은자 25)</button>
-</div><div class="row" style="justify-content:center;margin-top:12px"><button class="endbtn" onclick="A.leave()">떠난다</button></div></div>`;
+  return `<div class="panel"><h2>객잔 · 상점</h2><p class="muted" style="font-size:13px">물건을 누르면 설명이 표시되고, <b>산다</b>를 눌러야 산다.</p>
+<div class="cards">${S.cards.map((x,i)=>`<div class="${S.pick==='c'+i?'cardsel':''}">${cardHTML(CARDS[x.id],x.sold?'':`A.pick('c${i}')`,x.sold||P.gold<x.price?'off':'',!x.sold)}<div class="price">${x.sold?'팔림':'은자 '+x.price}${S.pick==='c'+i&&!x.sold&&P.gold>=x.price?`<br><button class="endbtn" onclick="A.buy(${i})">산다</button>`:''}</div></div>`).join('')}</div>
+<div class="goods">
+${S.weapon?shopGood('w',ICON(S.weapon,44),'병기 '+WEAPONS[S.weapon].n+' ('+WEAPONS[S.weapon].k+')',WEAPONS[S.weapon].d,160,S.wsold,'A.buyWeapon()'):''}
+${!has('hongok')?shopGood('r',ICON('hongok',44),'홍옥모니주',RELICS.hongok.d,110,false,"A.buyRelic('hongok',110)"):''}
+${shopGood('g','','비급 뽑기','이번 판에 나오는 문파의 초식 하나를 무작위로 얻는다',60,false,'A.gacha()')}
+${shopGood('x','','초식 버리기','덱에서 초식 하나를 골라 버린다. 버린 초식은 이번 판에 다시 나오지 않는다',70,S.removed,'A.shopRemove()')}
+${shopGood('p','','금창약','체력 15 회복',35,S.potion,'A.potion()')}
+${shopGood('j','','술 한 동이','어딘가에서 인연이 닿을지도 모른다',25,P.flags.wine,'A.wine()')}
+</div>
+<div class="row" style="justify-content:center;margin-top:12px"><button class="endbtn" onclick="A.leave()">떠난다</button></div></div>`;
 }
 function restHTML(){
   const P=G.p,heal=Math.round(P.max*G.diff.rest);
@@ -1619,7 +1631,8 @@ const A={
   skip:()=>finishReward(),
   choose:i=>{const c=G.ev.c[i];if(c[2]&&c[2]())return;const r=c[1]();if(r!=='wait')completeNode()},
   hiddenChoose:i=>{const h=HIDDEN[G.hid];if(i<0)h.run();else h.choices[i][1]();completeNode()},
-  buy:i=>{const x=G.shop.cards[i];if(x.sold||G.p.gold<x.price)return;G.p.gold-=x.price;x.sold=true;acquireCard(x.id);render()},
+  pick:k=>{G.shop.pick=G.shop.pick===k?null:k;render()},
+  buy:i=>{const x=G.shop.cards[i];if(x.sold||G.p.gold<x.price)return;G.p.gold-=x.price;x.sold=true;acquireCard(x.id);G.shop.pick=null;render()},
   gacha:()=>{if(G.p.gold<60)return;G.p.gold-=60;const id=gachaDraw();modal(`<h3>비급 뽑기</h3><div class="cards">${cardHTML(CARDS[id])}</div><div class="row" style="justify-content:center"><button onclick="A.close()">확인</button></div>`);acquireCard(id);render()},
   shopRemove:()=>{if(G.shop.removed||G.p.gold<70)return;openRemove(()=>{G.p.gold-=70;G.shop.removed=true;render()})},
   removeCard:uid=>{const after=G.afterRemove;G.afterRemove=null;closeModal();if(uid){const x=G.p.deck.find(d=>d.uid===uid);G.p.deck=G.p.deck.filter(d=>d.uid!==uid);if(!G.p.banned.includes(x.id))G.p.banned.push(x.id);toast(CARDS[x.id].name+'을(를) 버렸다');if(after)after()}else if(G.screen==='event')completeNode();else render()},
@@ -1629,8 +1642,8 @@ const A={
   rest:k=>{const P=G.p;if(k==='heal')healP(Math.round(P.max*G.diff.rest));if(k==='samjeong'){P.max+=16;healP(16);P.flags.samjeong='eaten2';toast('만년삼정을 복용했다. 임독양맥에 기운이 돈다.',3500)}completeNode()},
   train:a=>{starUp(a,a==='yuun'&&wpn('yongyeong')?2:1,'수련');completeNode()},
   equip:w=>{if(G.b)return;G.p.wpn=w;toast(WEAPONS[w].n+'을(를) 들었다');modal(bookHTML());render()},
-  buyWeapon:()=>{const S=G.shop;if(!S.weapon||S.wsold||G.p.gold<160)return;G.p.gold-=160;S.wsold=true;acquireWeapon(S.weapon);render()},
-  buyRelic:(r,pr)=>{if(G.p.gold<pr||has(r))return;G.p.gold-=pr;acquireRelic(r);render()},
+  buyWeapon:()=>{const S=G.shop;if(!S.weapon||S.wsold||G.p.gold<160)return;G.p.gold-=160;S.wsold=true;acquireWeapon(S.weapon);G.shop.pick=null;render()},
+  buyRelic:(r,pr)=>{if(G.p.gold<pr||has(r))return;G.p.gold-=pr;acquireRelic(r);if(G.shop)G.shop.pick=null;render()},
   ticket:()=>{if(!G.p.tickets||G.screen!=='map')return;const pool=ticketPool(),opts=[];for(let i=0;i<3&&pool.length;i++){const r=wpick(pool,x=>x.w);opts.push(r);pool.splice(pool.indexOf(r),1)}G.tk={res:null,opts};G.screen='ticket';render()},
   tkPick:i=>{if(G.tk.res)return;const r=G.tk.opts[i]||G.tk.opts[0];if(!r)return;G.p.tickets--;G.tk.res=r;if(r.k==='card')acquireCard(r.id);else acquireRelic(r.id);render()},
   tkDone:()=>{G.screen='map';checkHidden();render()},
