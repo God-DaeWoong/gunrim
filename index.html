@@ -159,6 +159,14 @@ function josa(w,pair){const c=w.charCodeAt(w.length-1)-0xAC00;const has=c>=0&&c<
 function toast(msg,ms=2600){const el=document.createElement('div');el.className='toast';el.textContent=msg;document.getElementById('toasts').appendChild(el);setTimeout(()=>el.remove(),ms)}
 const SAVE_KEY='gunrim-roguelike-v1';
 function loadMeta(){try{return JSON.parse(localStorage.getItem(SAVE_KEY))||{cleared:[],runs:0}}catch(e){return{cleared:[],runs:0}}}
+const RUN_KEY='gunrim-run-v1';
+function saveRun(){
+  if(!G.p||G.fxTestMode||['title','end','battle'].includes(G.screen))return;
+  const s={};for(const k in G)if(k!=='meta'&&k!=='b')s[k]=G[k];
+  try{localStorage.setItem(RUN_KEY,JSON.stringify({g:s,uid:UID,at:Date.now()}))}catch(e){}
+}
+function loadRun(){try{return JSON.parse(localStorage.getItem(RUN_KEY))}catch(e){return null}}
+function clearRun(){try{localStorage.removeItem(RUN_KEY)}catch(e){}}
 function saveMeta(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(G.meta))}catch(e){}}
 
 /* ================= 난이도 ================= */
@@ -1347,7 +1355,7 @@ function completeNode(noRender){
   if(!noRender){checkHidden();render()}
 }
 function endRun(win){
-  G.b=null;G.screen='end';G.win=win;
+  G.b=null;G.screen='end';G.win=win;clearRun();
   if(win&&!G.meta.cleared.includes(G.diff.id)){G.meta.cleared.push(G.diff.id)}
   saveMeta();render();
 }
@@ -1436,6 +1444,7 @@ function render(){
   const app=document.getElementById('app');
   const s=G.screen;
   syncMusic();
+  saveRun();
   if(s==='title'){app.innerHTML=titleHTML();return}
   if(s==='end'){app.innerHTML=endHTML();return}
   let h=topBar();
@@ -1455,6 +1464,7 @@ function titleHTML(){
   const cl=G.meta.cleared;
   return `<div class="title"><h1>君臨天下</h1><div class="sub">군림천하 · 종남의 검</div></div>
 <div class="panel"><p class="serif" style="margin-top:0">몰락한 종남파의 장문인 진산월이 되어 강호를 오른다. 4층, ${ROWS*4}스테이지. 죽으면 처음부터.</p>
+${(()=>{const r=loadRun();if(!r||!r.g||!r.g.p)return'';const d=r.g.diff||{};return `<div class="row" style="margin:0 0 12px"><button class="endbtn" onclick="A.resume()">이어하기</button><span class="muted" style="font-size:13px">${d.name||''} · ${r.g.floor}층 ${r.g.stage}스테이지 · 체력 ${r.g.p.hp}/${r.g.p.max}</span></div>`})()}
 <div class="diffs">${DIFFS.map(d=>{const ok=!d.req||cl.includes(d.req);return `<button class="diff" ${ok?`onclick="A.start('${d.id}')"`:'disabled'}><b>${d.name}</b>${cl.includes(d.id)?' <span class="chip">클리어</span>':''}<small>${ok?d.desc:DIFFS.find(x=>x.id===d.req).name+' 클리어 시 해금'}</small></button>`}).join('')}</div>
 
 <p class="muted" style="font-size:12px;margin-bottom:0">도전 ${G.meta.runs||0}회 · 기록은 이 브라우저에 저장된다.</p></div>`;
@@ -1603,7 +1613,8 @@ const HELP=`<h2>도움말</h2>
 
 /* ================= 액션 ================= */
 const A={
-  start:id=>{G.fxTestMode=false;newRun(id)},
+  start:id=>{const r=loadRun();if(r&&!confirm('진행 중인 판이 있다. 버리고 새로 시작할까?'))return;clearRun();G.fxTestMode=false;newRun(id)},
+  resume:()=>{const r=loadRun();if(!r)return;for(const k of Object.keys(G))if(k!=='meta')delete G[k];Object.assign(G,r.g);G.b=null;UID=r.uid||UID;if(G.screen==='battle'||!G.screen)G.screen='map';closeModal&&closeModal();render()},
   fxTest:()=>{newRun("normal");G.fxTestMode=true;startBattle([pick(FLOORS[1].bosses)],"boss");G.b.enemies[0].hp=G.b.enemies[0].max=9999;Object.keys(FXDEF).filter(id=>CARDS[id]).forEach((id,k)=>G.b.hand.unshift({uid:90000+k,id}));G.b.energy=9;render()},
   title:()=>{G.screen='title';render()},
   sound:()=>{SND.toggle();render()},
