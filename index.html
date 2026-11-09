@@ -611,8 +611,10 @@ function nextFloor(){
   if(!['easy','normal'].includes(G.diff.id)){
     const cand=G.floor<4?FLOORS[G.floor].bosses.filter(b=>b!==G.bossId):F4_POOL;
     G.midbossId=pick(cand);
-    const row=G.map.rows[Math.floor(ROWS/2)],node=row.find(n=>n.lane===1)||row[0];
-    node.type='midboss';node.mb=G.midbossId;
+    // 중간보스는 층 한가운데 줄을 혼자 차지해서 피해 갈 수 없다. 그 줄에 상점이 있었으면 다른 줄로 옮긴다
+    const mid=Math.floor(ROWS/2),hadShop=G.map.rows[mid].some(n=>n.type==='shop');
+    G.map.rows[mid]=[{lane:1,type:'midboss',mb:G.midbossId}];
+    if(hadShop||!G.map.rows.some(row=>row.some(n=>n.type==='shop'))){const rr=G.map.rows[mid+2+rnd(3)];pick(rr).type='shop'}
   }
   // 보스 연전: 헬·익스트림. 1~3층은 보스 뒤에 남은 후보, 4층은 중간보스로 안 나온 둘 뒤에 야율척(3연전)
   G.bossChain=[G.bossId];
@@ -643,10 +645,10 @@ function reachable(r,lane){
   const cur=G.map.cur;
   if(!cur)return r===0;
   if(r!==cur.r+1)return false;
-  if(lane===3||cur.lane===3||row[0].type==='boss')return true;
+  if(lane===3||cur.lane===3||row[0].type==='boss'||row[0].type==='midboss'||G.map.rows[cur.r][0].type==='midboss')return true;
   return Math.abs(lane-cur.lane)<=1;
 }
-function edgeOk(r,l1,l2){return l1===3||l2===3||G.map.rows[r+1][0].type==='boss'||Math.abs(l1-l2)<=1}
+function edgeOk(r,l1,l2){const a=G.map.rows[r][0].type,b=G.map.rows[r+1][0].type;return l1===3||l2===3||b==='boss'||b==='midboss'||a==='midboss'||Math.abs(l1-l2)<=1}
 
 /* ================= 히든 스테이지 ================= */
 const HIDDEN={
@@ -659,7 +661,7 @@ const HIDDEN={
 };
 function checkHidden(){
   const F=G.p.flags,cur=G.map.cur,tr=cur?cur.r+1:0;
-  if(tr>ROWS-2||G.map.rows[tr].some(n=>n.lane===3))return;
+  if(tr>ROWS-2||G.map.rows[tr].some(n=>n.lane===3||n.type==='midboss'))return;
   for(const k in HIDDEN){
     const h=HIDDEN[k];
     if(F.spawned.includes(k)||G.floor<h.minF)continue;
