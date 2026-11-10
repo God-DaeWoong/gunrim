@@ -151,7 +151,7 @@ table.arts td,table.arts th{border-bottom:1px solid var(--line);padding:5px 4px;
 <div id="toasts"></div>
 <div id="cutin"><div class="band"></div><div class="txt"></div><div class="sub"></div></div>
 <script>
-window.IMG_HAVE=["bokyang","danggak","dokgo","gojin","hanchung","heemok","heomugeuk","jeongoe","maejang","maejongdo","oyok","player","player_battle","player_bongmi","player_naengyeom","player_yeongrong","player_yeoui","player_yongyeong","pungdo","simok","unjachu","wibyeong","yayul","fx/amjeon_sheet","fx/baeun_sheet","fx/bancheon_sheet","fx/bisa_sheet","fx/bunroe_sheet","fx/b_baekhwa_sheet","fx/b_biryong_sheet","fx/b_bulgwang_sheet","fx/b_cheonji_sheet","fx/b_gujuhong_sheet","fx/b_gujupacheon_sheet","fx/b_gwiwang_sheet","fx/b_hyeolhwa_sheet","fx/b_jese_sheet","fx/b_noesin_sheet","fx/b_paewang_sheet","fx/b_samji_sheet","fx/cheongang_sheet","fx/cheonha_mugung_sheet","fx/cheonjeon_sheet","fx/chilji_sheet","fx/chulgok_sheet","fx/danak_sheet","fx/danbong_sheet","fx/dara1_sheet","fx/dara2_sheet","fx/dara3_sheet","fx/dodo_sheet","fx/eumyang_sheet","fx/eunhyeong_sheet","fx/geombong_sheet","fx/geomjeong2_sheet","fx/geomjeong_sheet","fx/geopryun_sheet","fx/geumganghangma_sheet","fx/hangryong_sheet","fx/hongdan_sheet","fx/hongye_sheet","fx/hyeolra_sheet","fx/jaha_sheet","fx/jajeon_sheet","fx/jetan_sheet","fx/jounyuk_sheet","fx/maehwageomgi_sheet","fx/maehwageomhwa_sheet","fx/maun_sheet","fx/milmil_sheet","fx/mueum_sheet","fx/muyeom_sheet","fx/nakha_sheet","fx/samhwan_sheet","fx/seongjin_sheet","fx/seongsan_sheet","fx/seunggi_sheet","fx/suzo_sheet","fx/talhon_cheuk_sheet","fx/talhon_gyo_sheet","fx/talhon_pierce_sheet","fx/talhon_saek_sheet","fx/unmu_sheet","fx/yakryu_sheet","item/biryong","item/bongmi","item/chwiwa","item/guyangju","item/gwiwang","item/hojeop","item/hongok","item/mukryeong","item/naengyeom","item/okru","item/saeung","item/yeongrong","item/yeoui","item/yongyeong"];
+window.IMG_HAVE=["baekdae","bokyang","danggak","dokgo","gojin","hanchung","heemok","heomugeuk","jeongoe","jwadong","maejang","maejongdo","oyok","player","player_battle","player_bongmi","player_naengyeom","player_yeongrong","player_yeoui","player_yongyeong","pungdo","simok","unjachu","wibyeong","yayul","fx/amjeon_sheet","fx/baeun_sheet","fx/bancheon_sheet","fx/bisa_sheet","fx/bunroe_sheet","fx/b_baekhwa_sheet","fx/b_biryong_sheet","fx/b_bulgwang_sheet","fx/b_cheonji_sheet","fx/b_gujuhong_sheet","fx/b_gujupacheon_sheet","fx/b_gwiwang_sheet","fx/b_hyeolhwa_sheet","fx/b_jese_sheet","fx/b_noesin_sheet","fx/b_paewang_sheet","fx/b_samji_sheet","fx/cheongang_sheet","fx/cheonha_mugung_sheet","fx/cheonjeon_sheet","fx/chilji_sheet","fx/chulgok_sheet","fx/danak_sheet","fx/danbong_sheet","fx/dara1_sheet","fx/dara2_sheet","fx/dara3_sheet","fx/dodo_sheet","fx/eumyang_sheet","fx/eunhyeong_sheet","fx/geombong_sheet","fx/geomjeong2_sheet","fx/geomjeong_sheet","fx/geopryun_sheet","fx/geumganghangma_sheet","fx/hangryong_sheet","fx/hongdan_sheet","fx/hongye_sheet","fx/hyeolra_sheet","fx/jaha_sheet","fx/jajeon_sheet","fx/jetan_sheet","fx/jounyuk_sheet","fx/maehwageomgi_sheet","fx/maehwageomhwa_sheet","fx/maun_sheet","fx/milmil_sheet","fx/mueum_sheet","fx/muyeom_sheet","fx/nakha_sheet","fx/samhwan_sheet","fx/seongjin_sheet","fx/seongsan_sheet","fx/seunggi_sheet","fx/suzo_sheet","fx/talhon_cheuk_sheet","fx/talhon_gyo_sheet","fx/talhon_pierce_sheet","fx/talhon_saek_sheet","fx/unmu_sheet","fx/yakryu_sheet","item/biryong","item/bongmi","item/chwiwa","item/guyangju","item/gwiwang","item/hojeop","item/hongok","item/mukryeong","item/naengyeom","item/okru","item/saeung","item/yeongrong","item/yeoui","item/yongyeong"];
 'use strict';
 /* ================= 유틸 ================= */
 const rnd=n=>Math.floor(Math.random()*n);
@@ -264,7 +264,11 @@ card('dara2','대라장천',null,'ult',2,'l',{dmg:18,self:{str:3},hidden:1,fac:'
 card('dara3','대라섬요',null,'ult',1,'l',{dmg:30,hidden:1,fac:'giyeon',text:'야율척에게는 통하지 않음'},['s']);
 // 화산
 card('chilji','칠지매화','chilji','atk',1,'c',{dmg:2,hits:4},['s']);
-card('maehwageomhwa','매화검화','chilji','atk',2,'r',{dmg:2,hits:9},['s']);
+// 매화 송이 아홉을 한꺼번에. 병기·6성 보너스는 송이마다가 아니라 전체에 한 번만(유운검봉과 같은 방식)
+card('maehwageomhwa','매화검화','chilji','atk',2,'r',{dmg:3,dmgFn:b=>3*9+(b-3),text:'매화 송이 아홉을 한꺼번에'},['s']);
+// 원작 72장: 화산 일대제자 천개방의 매화노방, 백수함의 매화토염(이십사수매화검법)
+card('maehwanobang','매화노방','chilji','atk',1,'c',{dmg:8,block:5,text:'길을 가로막는 매화 가지처럼 치고 막는다'},['s']);
+card('maehwatoyeom','매화토염','chilji','atk',2,'r',{dmg:3,dmgFn:b=>3*6+(b-3),text:'매화가 토하듯 피어나는 여섯 갈래를 한꺼번에'},['s']);
 card('maehwageomgi','매화검기','chilji','atk',1,'c',{dmg:6,text:'이번 턴 앞서 쓴 화산 초식 1개당 피해 +3',dmgFn:b=>b+3*(G.b?G.b.hwasanPlayed:0)},['s']);
 // 해남
 card('gunggong','궁공성사','seongra','atk',1,'c',{dmg:6,draw:1},['s']);
@@ -376,7 +380,7 @@ const DROP_W={baekmo:'yeongrong',gojin:'naengyeom',pungdo:'bongmi',danggak:'gwiw
 const DEATH_LINE={pungdo:'풍도: “정말 처량한 꼴이 됐군. 이래서 영롱비를 쓰려고 했던 건데…….”'};
 const DROP_R={unjachu:'biryong',joik:'chwiwa'};
 // 쓰러뜨린 적이 쓰던 무공 — 보상 후보에 끼어든다
-const ENEMY_ARTS={pungdo:['talhon','gyotalhon'],donghwi:['talhon'],kwaesal:['talhon','gyotalhon'],gamjong:['saektalhon','heomubo'],maejang:['chilji','maehwageomhwa','maehwageomgi'],oyok:['maun','hyeolra'],hanchung:['geopryun'],jwadong:['bunroe'],bokyang:['eumyang'],heemok:['mueum'],hyeokryeon:['eunhyeong'],sonik:['hyeolhae'],gongson:['gunggong'],wijirip:['taein']};
+const ENEMY_ARTS={pungdo:['talhon','gyotalhon'],donghwi:['talhon'],kwaesal:['talhon','gyotalhon'],gamjong:['saektalhon','heomubo'],maejang:['chilji','maehwageomhwa','maehwageomgi','maehwanobang','maehwatoyeom'],oyok:['maun','hyeolra'],hanchung:['geopryun'],jwadong:['bunroe'],bokyang:['eumyang'],heemok:['mueum'],hyeokryeon:['eunhyeong'],sonik:['hyeolhae'],gongson:['gunggong'],wijirip:['taein']};
 function acquireWeapon(id){
   const P=G.p;
   if(P.weapons.includes(id)){P.gold+=60;toast(WEAPONS[id].n+': 이미 있다. 은자 +60');return}
@@ -862,6 +866,8 @@ const alive=()=>G.b.enemies.filter(e=>e.hp>0);
 function blog(s){const B=G.b;B.log.push(s);if(B.log.length>4)B.log.shift()}
 function flt(who,text,cls=''){G.b.floats.push({who,text,cls})}
 function curTarget(){const B=G.b;let t=B.enemies[B.target];if(!t||t.hp<=0){t=alive()[0];B.target=B.enemies.indexOf(t)}return t}
+// 초식 방어량: 6성 +3, 성마다 8%씩(공격 피해와 같은 배율)
+function blockOf(c){const st=c.art?starOf(c.art):0;return Math.round((c.block+(c.art&&st>=6?3:0))*(st?1+.08*(Math.max(1,st)-1):1))}
 function costOf(c){
   let k=c.cost;
   if(c.art&&starOf(c.art)>=10&&k>=2)k--;
@@ -1067,7 +1073,7 @@ Object.assign(FXDEF.eunhyeong,{mode:'beam',ax:.02,hitU:.8,ay:.5,ky:.9,mr:1.45,fp
 // 최종 절초는 12컷(4x3)
 FXDEF.geomjeong={src:'img/fx/geomjeong_sheet.webp',cols:3,rows:2,n:6,fps:8,mode:'target',size:2.3,dim:.6,hit:4,shake:16};
 FXDEF.geomjeong2={src:'img/fx/geomjeong2_sheet.webp',cols:4,rows:3,n:12,fps:11,mode:'target',size:2.4,dim:.7,hit:9,shake:20};
-const FX_ALIAS={dara1h:'dara1'};
+const FX_ALIAS={dara1h:'dara1',maehwanobang:'chilji',maehwatoyeom:'maehwageomhwa'};
 const FXIMG={};
 function preloadFx(cardIds,enemyIds){
   const keys=new Set(cardIds);
@@ -1220,7 +1226,7 @@ function resolve(c,t){
   if(wpn('mukryeong')&&has('cheondan')&&(c.tags.includes('f')||c.tags.includes('p')))gainBlock(2);
   if(B.curCombo&&B.curCombo.allHit)for(const tg of alive())dealToEnemy(tg,B.curCombo.allHit,false,'연환');
   B.curCombo=null;
-  if(c.block)gainBlock(c.block+(c.art&&st>=6?3:0));
+  if(c.block)gainBlock(blockOf(c));
   if(c.draw)draw(c.draw);
   if(c.ap)for(const k in c.ap){if(k==='mark'&&c.dmg)continue;for(const tg of targets)applyEnemy(tg,k,c.ap[k])}
   if(c.ap&&c.ap.mark&&c.dmg)for(const tg of targets)applyEnemy(tg,'mark',c.ap.mark);
@@ -1429,7 +1435,7 @@ function openRemove(after){
 function cardDesc(c){
   const p=[];const inB=!!G.b;
   if(c.dmg){const t=inB?curTarget():null;const d=inB?calcDmg(c,t):c.dmg;const h=G.p?hitsOf(c):(c.hits||1);p.push(`피해 <b>${d}</b>${h>1?' × '+h:''}${c.all?' (전체)':''}${c.pierce?' · 방어 무시':''}`)}
-  if(c.block){const b=c.block+(c.art&&starOf(c.art)>=6?3:0);p.push(`방어 <b>${b}</b>`)}
+  if(c.block){const b=blockOf(c);p.push(`방어 <b>${b}</b>`)}
   if(c.ap)for(const k in c.ap)p.push(`${SN[k]} ${c.ap[k]}${c.all?' (전체)':''}`);
   if(c.self)for(const k in c.self)if(k!=='nextAtk'&&k!=='counter')p.push(`자신 ${SN[k]} ${c.self[k]}`);
   if(c.draw)p.push(`초식 ${c.draw}장 뽑기`);
