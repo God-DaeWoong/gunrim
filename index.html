@@ -177,9 +177,9 @@ function saveMeta(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(G.meta))}ca
 const DIFFS=[
   {id:'easy',name:'이지',desc:'적 체력 -20%, 휴식 회복 증가',ehp:.8,eatk:.9,batk:1,rest:.45,elite:1,ticket:10,req:null},
   {id:'normal',name:'노말',desc:'기준 난이도',ehp:1.1,eatk:1.05,batk:1,rest:.3,elite:1,ticket:10,req:null},
-  {id:'hard',name:'하드',desc:'적 체력·공격 증가, 중간보스 등장, 뽑기권 12스테이지마다',ehp:1.35,eatk:1.1,batk:1,rest:.25,elite:1.6,ticket:12,req:null},
-  {id:'hell',name:'헬',desc:'+ 보스 연전, 보스 공격력 +15%, 휴식 회복 감소',ehp:1.42,eatk:1.12,batk:1.15,rest:.2,elite:1.6,ticket:12,req:'hard'},
-  {id:'extreme',name:'익스트림',desc:'+ 보스 연전, 잡념 카드, 보스 패턴 추가, 숨은 보스',ehp:1.48,eatk:1.15,batk:1.15,rest:.18,elite:1.8,ticket:15,req:'hell',junk:1,ext:1},
+  {id:'hard',name:'하드',desc:'적 체력·공격 증가, 중간보스 등장, 뽑기권 12스테이지마다',ehp:1.45,eatk:1.1,batk:1,rest:.3,elite:1.6,ticket:12,req:null},
+  {id:'hell',name:'헬',desc:'+ 보스 연전, 보스 공격력 +15%, 휴식 회복 감소',ehp:1.5,eatk:1.12,batk:1.15,rest:.25,elite:1.6,ticket:12,req:'hard'},
+  {id:'extreme',name:'익스트림',desc:'+ 보스 연전, 잡념 카드, 보스 패턴 추가, 숨은 보스',ehp:1.48,eatk:1.15,batk:1.15,rest:.22,elite:1.8,ticket:15,req:'hell',junk:1,ext:1},
 ];
 
 /* ================= 문파 ================= */
@@ -684,7 +684,9 @@ const EVENTS=[
   {id:'hasuo',floors:[1,2,3,4],make:()=>({t:'500년 적하수오',x:'황산파에서 보낸 500년 적하수오가 손에 들어왔다.',c:[
     ['복용한다 (최대 체력 +6, 체력 10 회복)',()=>{G.p.max+=6;healP(10)}],['팔아 넘긴다 (은자 +60)',()=>{G.p.gold+=60}]]})},
   {id:'cheonryong',floors:[2,3,4],make:()=>({t:'천룡궤',x:'모용 대협에게 전해야 할 상자, 천룡궤. 속에 무엇이 들었는지는 아무도 모른다.',c:[
-    ['연다',()=>{const pD=.1+(deckIds().some(i=>CARDS[i].art==='talhon')?.15:0);if(!hasCard('dara3')&&Math.random()<pD){acquireCard('dara3');toast('천룡궤 속 초식: 대라섬요!',4000)}else if(Math.random()<.15&&Object.keys(WEAPONS).some(w=>!G.p.weapons.includes(w))){acquireWeapon(pick(Object.keys(WEAPONS).filter(w=>!G.p.weapons.includes(w))))}else{const pool=Object.values(CARDS).filter(c=>!c.hidden&&c.type!=='junk'&&c.rar!=='c');acquireCard(pick(pool).id)}}],
+    ['연다',()=>{const pD=.1+(deckIds().some(i=>CARDS[i].art==='talhon')?.15:0);if(!hasCard('dara3')&&Math.random()<pD){acquireCard('dara3');toast('천룡궤 속 초식: 대라섬요!',4000)}else if(Math.random()<.15&&Object.keys(WEAPONS).some(w=>!G.p.weapons.includes(w))){acquireWeapon(pick(Object.keys(WEAPONS).filter(w=>!G.p.weapons.includes(w))))}else{const pool=Object.values(CARDS).filter(c=>!c.hidden&&c.type!=='junk'&&c.rar!=='c'&&!(G.p.banned||[]).includes(c.id));const id=pick(pool).id;
+      // 상자 속 비급은 보고 나서 익힐지 고른다(덱이 불어나지 않게)
+      modal(`<h3>천룡궤 속 비급</h3><div class="cards">${cardHTML(CARDS[id])}</div><div class="row" style="justify-content:center"><button class="endbtn" onclick="A.chestTake('${id}')">익힌다</button><button onclick="A.chestTake('')">익히지 않는다 (은자 +30)</button></div>`);return 'wait'}}],
     ['열지 않고 맡겨 둔다 (은자 +40)',()=>{G.p.gold+=40}]]})},
   {id:'geumryeong',floors:[2,3,4],make:()=>({t:'금령단',x:'해남의 비전 영단 금령단을 얻었다.',c:[
     ['복용해 내공을 다진다 (가진 무공 하나 +1성)',()=>{const arts=Object.keys(G.p.stars);starUp(pick(arts),1,'금령단')}],['몸을 보한다 (최대 체력 +5)',()=>{G.p.max+=5;healP(5)}]]})},
@@ -1345,7 +1347,8 @@ function battleWin(){
   for(const [eid,w] of Object.entries(DROP_W))if(ids.includes(eid)&&(eid!=='seopso'||Math.random()<.35)&&!P.weapons.includes(w)){acquireWeapon(w);drops.push(WEAPONS[w].n)}
   for(const [eid,r] of Object.entries(DROP_R))if(ids.includes(eid)&&!has(r)){acquireRelic(r);drops.push(RELICS[r].n)}
   if(ids.includes('dugichun')){P.flags.dugiDone=true;toast('두기춘을 꺾고 만년삼정의 기운을 되찾았다. 최대 체력 +10');P.max+=10;healP(10)}
-  let healed=0;if(kind==='boss'&&!(G.bossQueue&&G.bossQueue.length)){healed=Math.round(P.max*.3);healP(healed)}
+  // 마지막 층 보스는 판이 끝나고, 나머지 층 보스 회복은 폐관 수련에서 한다
+  let healed=0;if(kind==='boss'&&G.floor>=4&&!(G.bossQueue&&G.bossQueue.length)){healed=Math.round(P.max*.3);healP(healed)}
   const opts=rewardCards(kind==='normal'?'normal':kind==='elite'?'rare':'boss');
   if(kind==='midboss')toast('중간보스 격파',2500);
   let learned=null;
@@ -1371,7 +1374,9 @@ function finishReward(){
       if(G.diff.ext&&G.p.flags.visited.length>=3&&!G.p.flags.mjd){G.p.flags.mjd=true;toast('태을검선 매종도가 모습을 드러냈다',4000);startBattle(['maejongdo'],'boss');return}
       endRun(true);return;
     }
-    G.camp={left:2};G.screen='camp';render();return;
+    // 층 사이 회복: 잃은 체력 × 난이도 비율(이지·노말 전부, 하드 75%, 헬 50%, 익스트림 35%)
+    const lost=G.p.max-G.p.hp,cr={easy:1,normal:1,hard:.75,hell:.5,extreme:.35}[G.diff.id]??.5,ch=Math.round(lost*cr);if(ch)healP(ch);
+    G.camp={left:2,healed:ch};G.screen='camp';render();return;
   }
   completeNode();
 }
@@ -1390,7 +1395,7 @@ function endRun(win){
 
 /* ================= 상점 / 휴식 / 뽑기 ================= */
 const PRICE={c:45,r:80,l:140};
-function openShop(){const ws=Object.keys(WEAPONS).filter(w=>!G.p.weapons.includes(w));G.shop={cards:rewardCards('shop',5).map(id=>({id,price:PRICE[CARDS[id].rar]+rnd(15),sold:false})),removed:false,potion:false,weapon:ws.length&&Math.random()<.35?pick(ws):null,wsold:false};G.screen='shop';render()}
+function openShop(){const ws=Object.keys(WEAPONS).filter(w=>!G.p.weapons.includes(w));G.shop={cards:rewardCards('shop',5).map(id=>({id,price:PRICE[CARDS[id].rar]+rnd(15),sold:false})),removed:false,potion:false,weapon:ws.length&&Math.random()<.35?pick(ws):null,wsold:false,relic:G.floor>=3?(['cheondan','taejin','chileum1','chileum2','guyang1','guyang2'].filter(r=>!has(r))[0]||null):null};G.screen='shop';render()}
 function gachaDraw(){
   const pool=Object.values(CARDS).filter(c=>!c.hidden&&c.type!=='junk'&&G.facs.includes(facOf(c))&&!(G.p.banned||[]).includes(c.id));
   const rr=wpick([['c',55],['r',35],['l',10]],x=>x[1])[0];
@@ -1568,11 +1573,12 @@ function shopHTML(){
 <div class="cards">${S.cards.map((x,i)=>`<div class="${S.pick==='c'+i?'cardsel':''}">${cardHTML(CARDS[x.id],x.sold?'':`A.pick('c${i}')`,x.sold||P.gold<x.price?'off':'',!x.sold)}<div class="price">${x.sold?'팔림':'은자 '+x.price}${S.pick==='c'+i&&!x.sold&&P.gold>=x.price?`<br><button class="endbtn" onclick="A.buy(${i})">산다</button>`:''}</div></div>`).join('')}</div>
 <div class="goods">
 ${S.weapon?shopGood('w',ICON(S.weapon,44),'병기 '+WEAPONS[S.weapon].n+' ('+WEAPONS[S.weapon].k+')',WEAPONS[S.weapon].d,160,S.wsold,'A.buyWeapon()'):''}
+${S.relic&&!has(S.relic)?shopGood('s',ICON(S.relic,44),'심법 '+RELICS[S.relic].n,RELICS[S.relic].d,220,false,`A.buyRelic('${S.relic}',220)`):''}
 ${!has('hongok')?shopGood('r',ICON('hongok',44),'홍옥모니주',RELICS.hongok.d,110,false,"A.buyRelic('hongok',110)"):''}
 ${shopGood('g','','비급 뽑기','이번 판에 나오는 문파의 초식 하나를 무작위로 얻는다',60,false,'A.gacha()')}
 ${shopGood('x','','초식 버리기','덱에서 초식 하나를 골라 버린다. 버린 초식은 이번 판에 다시 나오지 않는다',70,S.removed,'A.shopRemove()')}
-${shopGood('t','','심득','은자를 들여 고수의 가르침을 받는다. 가진 무공 하나 성 +1(익스트림 7성부터는 깨달음 +1)',120+40*(P.flags.simdeuk||0),S.trained||!Object.keys(P.stars).some(a=>P.stars[a]<10),'A.shopTrain()')}
-${shopGood('p','','금창약','체력 15 회복',35,S.potion,'A.potion()')}
+${shopGood('t','','심득','은자를 들여 고수의 가르침을 받는다. 가진 무공 하나 성 +1(익스트림 7성부터는 깨달음 +1). 여러 번 할 수 있고 할수록 비싸진다',120+40*(P.flags.simdeuk||0),!Object.keys(P.stars).some(a=>P.stars[a]<10),'A.shopTrain()')}
+${shopGood('p','','금창약',`최대 체력의 25% 회복 (${Math.round(P.max*.25)}). 여러 번 살 수 있고 살수록 비싸진다`,35+20*(S.potionN||0),P.hp>=P.max,'A.potion()')}
 ${shopGood('j','','술 한 동이','어딘가에서 인연이 닿을지도 모른다',25,P.flags.wine,'A.wine()')}
 </div>
 <div class="row" style="justify-content:center;margin-top:12px"><button class="endbtn" onclick="A.leave()">떠난다</button></div></div>`;
@@ -1590,7 +1596,7 @@ ${P.flags.samjeong==='held'?`<button onclick="A.rest('samjeong')" style="text-al
 function campHTML(){
   const P=G.p,C=G.camp;
   return `<div class="panel"><h2>폐관 수련</h2><p class="serif">${FLOORS[G.floor].name}의 싸움을 마치고 종남산으로 돌아와 무공을 가다듬는다. 다음은 ${FLOORS[G.floor+1].name}.</p>
-<p>쓸모가 다한 초식을 <b>최대 ${C.left}장 더</b> 버릴 수 있다. 버린 초식은 이번 판에 다시 나오지 않고, 그 무공의 성은 그대로 남는다.</p>
+${C.healed?`<p>몸을 추스른다 — <b>체력 ${C.healed} 회복</b></p>`:''}<p>쓸모가 다한 초식을 <b>최대 ${C.left}장 더</b> 버릴 수 있다. 버린 초식은 이번 판에 다시 나오지 않고, 그 무공의 성은 그대로 남는다.</p>
 <div class="cards">${P.deck.map(x=>cardHTML(CARDS[x.id],C.left>0?`A.campRemove(${x.uid})`:'',C.left>0?'':'off')).join('')}</div>
 ${P.weapons.length>1?`<p><b>병기</b> — ${P.weapons.map(w=>P.wpn===w?`<b>${ICON(w,28)}[장착] ${WEAPONS[w].n}</b>`:`<button class="tbtn" onclick="A.campEquip('${w}')">${ICON(w,28)}${WEAPONS[w].n} 들기</button>`).join(' ')}</p>`:''}
 <div class="row" style="justify-content:center;margin-top:10px"><button onclick="A.book()">무공록</button><button class="endbtn" onclick="A.campDone()">하산한다</button></div></div>`;
@@ -1669,17 +1675,18 @@ const A={
   take:id=>{acquireCard(id);G.reward.opts=[];if(!G.reward.extra.length)finishReward();else render()},
   takeExtra:id=>{acquireCard(id);G.reward.extra=[];if(!G.reward.opts.length)finishReward();else render()},
   skip:()=>finishReward(),
+  chestTake:id=>{closeModal();if(id)acquireCard(id);else G.p.gold+=30;completeNode()},
   choose:i=>{const c=G.ev.c[i];if(c[2]&&c[2]())return;const r=c[1]();if(r!=='wait')completeNode()},
   hiddenSkip:()=>{const h=HIDDEN[G.hid];if(h.skipRun)h.skipRun();completeNode();openRemove(()=>render())},
   hiddenChoose:i=>{const h=HIDDEN[G.hid];if(i<0)h.run();else h.choices[i][1]();completeNode()},
-  shopTrain:()=>{const P=G.p,pr=120+40*(P.flags.simdeuk||0);if(G.shop.trained||P.gold<pr)return;const arts=Object.keys(P.stars).filter(a=>P.stars[a]<10);modal(`<h3>심득 — 수련할 무공</h3><div class="row">${arts.map(a=>`<button onclick="A.shopTrainArt('${a}')">${ARTS[a].n} ${P.stars[a]}성</button>`).join('')}</div><div class="row" style="justify-content:center;margin-top:10px"><button onclick="A.close()">그만둔다</button></div>`)},
-  shopTrainArt:a=>{const P=G.p,pr=120+40*(P.flags.simdeuk||0);if(G.shop.trained||P.gold<pr)return;P.gold-=pr;P.flags.simdeuk=(P.flags.simdeuk||0)+1;G.shop.trained=true;G.shop.pick=null;closeModal();starUp(a,1,'심득');render()},
+  shopTrain:()=>{const P=G.p,pr=120+40*(P.flags.simdeuk||0);if(P.gold<pr)return;const arts=Object.keys(P.stars).filter(a=>P.stars[a]<10);modal(`<h3>심득 — 수련할 무공</h3><div class="row">${arts.map(a=>`<button onclick="A.shopTrainArt('${a}')">${ARTS[a].n} ${P.stars[a]}성</button>`).join('')}</div><div class="row" style="justify-content:center;margin-top:10px"><button onclick="A.close()">그만둔다</button></div>`)},
+  shopTrainArt:a=>{const P=G.p,pr=120+40*(P.flags.simdeuk||0);if(P.gold<pr)return;P.gold-=pr;P.flags.simdeuk=(P.flags.simdeuk||0)+1;G.shop.trained=true;G.shop.pick=null;closeModal();starUp(a,1,'심득');render()},
   pick:k=>{G.shop.pick=G.shop.pick===k?null:k;render()},
   buy:i=>{const x=G.shop.cards[i];if(x.sold||G.p.gold<x.price)return;G.p.gold-=x.price;x.sold=true;acquireCard(x.id);G.shop.pick=null;render()},
   gacha:()=>{if(G.p.gold<60)return;G.p.gold-=60;const id=gachaDraw();modal(`<h3>비급 뽑기</h3><div class="cards">${cardHTML(CARDS[id])}</div><div class="row" style="justify-content:center"><button onclick="A.close()">확인</button></div>`);acquireCard(id);render()},
   shopRemove:()=>{if(G.shop.removed||G.p.gold<70)return;openRemove(()=>{G.p.gold-=70;G.shop.removed=true;render()})},
   removeCard:uid=>{const after=G.afterRemove;G.afterRemove=null;closeModal();if(uid){const x=G.p.deck.find(d=>d.uid===uid);G.p.deck=G.p.deck.filter(d=>d.uid!==uid);if(!G.p.banned.includes(x.id))G.p.banned.push(x.id);toast(CARDS[x.id].name+'을(를) 버렸다');if(after)after()}else if(G.screen==='event')completeNode();else render()},
-  potion:()=>{if(G.shop.potion||G.p.gold<35)return;G.p.gold-=35;G.shop.potion=true;healP(15);render()},
+  potion:()=>{const S=G.shop,pr=35+20*(S.potionN||0);if(G.p.gold<pr||G.p.hp>=G.p.max)return;G.p.gold-=pr;S.potionN=(S.potionN||0)+1;healP(Math.round(G.p.max*.25));S.pick=null;render()},
   wine:()=>{if(G.p.flags.wine||G.p.gold<25)return;G.p.gold-=25;G.p.flags.wine=true;toast('술을 샀다. 어딘가에서 인연이 닿을지도 모른다.');render()},
   leave:()=>completeNode(),
   rest:k=>{const P=G.p;if(k==='heal')healP(Math.round(P.max*G.diff.rest));if(k==='samjeong'){P.max+=16;healP(16);P.flags.samjeong='eaten2';toast('만년삼정을 복용했다. 임독양맥에 기운이 돈다.',3500)}completeNode()},
