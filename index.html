@@ -828,6 +828,8 @@ function pickGroup(type){
   }
   if(type==='elites'&&G.p.flags.chasePungdo){G.p.flags.chasePungdo=false;return['pungdo']}
   if(type==='elites'&&G.p.flags.samjeong==='stolen'&&!G.p.flags.dugiDone&&G.floor>=2)list.push(['dugichun'],['dugichun']);
+  // 정예는 한 층에서 같은 상대를 두 번 만나지 않는다. 다 만났으면 그 층 일반 무리 둘을 합친 강한 무리가 나온다
+  if(type==='elites'){const met=G.map.metE||(G.map.metE=[]),left=list.filter(grp=>!met.includes(grp.join('+')));if(!left.length){const ns=shuffle([...F.normals]);return [...ns[0],...(ns[1]||[])].slice(0,3)}list=left;const gp=pick(list);met.push(gp.join('+'));return gp}
   return pick(list);
 }
 function startBattle(group,kind){
