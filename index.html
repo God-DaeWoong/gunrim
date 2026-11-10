@@ -1361,7 +1361,8 @@ function finishReward(){
 }
 function completeNode(noRender){
   G.stage++;
-  if(G.stage%G.diff.ticket===0){G.p.tickets++;toast('종남 뽑기권을 얻었다!',3200)}
+  // 마지막 칸(판 끝)에서는 뽑기권을 주지 않는다
+  if(G.stage%G.diff.ticket===0&&G.stage<ROWS*4){G.p.tickets++;toast('종남 뽑기권을 얻었다!',3200)}
   G.screen='map';
   if(!noRender){checkHidden();render()}
 }
