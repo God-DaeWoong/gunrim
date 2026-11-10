@@ -1666,7 +1666,11 @@ const A={
   equip:w=>{if(G.b)return;G.p.wpn=w;toast(WEAPONS[w].n+'을(를) 들었다');modal(bookHTML());render()},
   buyWeapon:()=>{const S=G.shop;if(!S.weapon||S.wsold||G.p.gold<160)return;G.p.gold-=160;S.wsold=true;acquireWeapon(S.weapon);G.shop.pick=null;render()},
   buyRelic:(r,pr)=>{if(G.p.gold<pr||has(r))return;G.p.gold-=pr;acquireRelic(r);if(G.shop)G.shop.pick=null;render()},
-  ticket:()=>{if(!G.p.tickets||G.screen!=='map')return;const pool=ticketPool(),opts=[];for(let i=0;i<3&&pool.length;i++){const r=wpick(pool,x=>x.w);opts.push(r);pool.splice(pool.indexOf(r),1)}G.tk={res:null,opts};G.screen='ticket';render()},
+  ticket:()=>{if(!G.p.tickets||G.screen!=='map')return;const pool=ticketPool(),opts=[];
+    // 아직 모을 심법이 남아 있으면 세 가지 중 하나는 반드시 심법(반쪽을 가진 칠음진기·구양신공의 나머지가 먼저 나오기 쉽다)
+    const rel=pool.filter(x=>x.k==='relic');if(rel.length){const r=wpick(rel,x=>x.w);opts.push(r);pool.splice(pool.indexOf(r),1)}
+    while(opts.length<3&&pool.length){const r=wpick(pool,x=>x.w);opts.push(r);pool.splice(pool.indexOf(r),1)}
+    opts.sort(()=>Math.random()-.5);G.tk={res:null,opts};G.screen='ticket';render()},
   tkPick:i=>{if(G.tk.res)return;const r=G.tk.opts[i]||G.tk.opts[0];if(!r)return;G.p.tickets--;G.tk.res=r;if(r.k==='card')acquireCard(r.id);else acquireRelic(r.id);render()},
   tkDone:()=>{G.screen='map';checkHidden();render()},
   campRemove:uid=>{const C=G.camp;if(!C||C.left<=0)return;const x=G.p.deck.find(d=>d.uid===uid);if(!x)return;G.p.deck=G.p.deck.filter(d=>d.uid!==uid);if(!G.p.banned.includes(x.id))G.p.banned.push(x.id);C.left--;toast(CARDS[x.id].name+'을(를) 버렸다');render()},
