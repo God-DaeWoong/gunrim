@@ -1655,7 +1655,7 @@ function endHTML(){
   const P=G.p,win=G.win;
   return `<div class="title"><h1>${win?'君臨天下':'敗'}</h1><div class="sub">${win?'천하는 천하인의 것':'강호에 쓰러지다'}</div></div>
 ${win?(()=>{const e=ENDINGS.find(x=>x.id===G.ending)||endingOf();return `<div class="panel serif" style="line-height:1.9;border-color:var(--gold)"><div class="chip" style="border-color:var(--gold);color:var(--gold)">엔딩</div>${imgOk("ending_"+e.id)?`<img src="img/ending_${e.id}.webp" alt="" style="width:100%;border-radius:8px;margin:8px 0">`:""}<h2>${e.n}</h2>${e.p.map(x=>`<p>${x}</p>`).join('')}</div>`})():''}
-<div class="panel"><p>${G.diff.name} · ${G.floor}층 ${G.stage}스테이지${win&&G.p.flags.mjd?' · 숨은 보스 매종도 격파':''}</p>
+<div class="panel"><p>${G.diff.name} · ${G.floor}층 ${Math.min(G.stage,ROWS*4)}스테이지${win&&G.p.flags.mjd?' · 숨은 보스 매종도 격파':''}</p>
 ${(()=>{const i=DIFFS.findIndex(d=>d.id===G.diff.id),nx=DIFFS[i+1];
   if(win){const opened=DIFFS.filter(d=>d.req===G.diff.id);const lock=DIFFS.find(d=>d.req&&!G.meta.cleared.includes(d.req));
     return `<p>${G.diff.name} 클리어! ${opened.length?opened.map(d=>d.name).join(', ')+' 난이도가 열렸다.':nx?'':'모든 난이도를 정복했다.'}</p>${!opened.length&&lock?`<p class="muted">${lock.name} 난이도는 ${DIFFS.find(d=>d.id===lock.req).name} 클리어 시 열린다.</p>`:''}`;}
