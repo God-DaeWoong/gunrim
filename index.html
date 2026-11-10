@@ -1409,6 +1409,7 @@ function completeNode(noRender){
 function endRun(win){
   G.b=null;G.screen='end';G.win=win;clearRun();
   if(win&&!G.meta.cleared.includes(G.diff.id)){G.meta.cleared.push(G.diff.id)}
+  if(win){const e=endingOf();G.ending=e.id;G.meta.endings=G.meta.endings||[];if(!G.meta.endings.includes(e.id))G.meta.endings.push(e.id)}
   saveMeta();render();
 }
 
@@ -1517,6 +1518,7 @@ function titleHTML(){
   return `<div class="title"><h1>君臨天下</h1><div class="sub">군림천하 · 종남의 검</div></div>
 <div class="panel"><p class="serif" style="margin-top:0">몰락한 종남파의 장문인 진산월이 되어 강호를 오른다. 4층, ${ROWS*4}스테이지. 죽으면 처음부터.</p>
 ${(()=>{const r=loadRun();if(!r||!r.g||!r.g.p)return'';const d=r.g.diff||{};return `<div class="row" style="margin:0 0 12px"><button class="endbtn" onclick="A.resume()">이어하기</button><span class="muted" style="font-size:13px">${d.name||''} · ${r.g.floor}층 ${r.g.stage}스테이지 · 체력 ${r.g.p.hp}/${r.g.p.max}</span></div>`})()}
+${(()=>{const s=G.meta.endings||[];return `<p class="muted" style="font-size:13px;margin:0 0 10px">엔딩 ${s.length}/${ENDINGS.length} — ${ENDINGS.map(e=>s.includes(e.id)?`<b>${e.n}</b>`:`<span title="${e.hint}">???</span>`).join(' · ')}</p>`})()}
 <div class="diffs">${DIFFS.map(d=>{const ok=!d.req||cl.includes(d.req);return `<button class="diff" ${ok?`onclick="A.start('${d.id}')"`:'disabled'}><b>${d.name}</b>${cl.includes(d.id)?' <span class="chip">클리어</span>':''}<small>${ok?d.desc:DIFFS.find(x=>x.id===d.req).name+' 클리어 시 해금'}</small></button>`}).join('')}</div>
 
 <p class="muted" style="font-size:12px;margin-bottom:0">도전 ${G.meta.runs||0}회 · 기록은 이 브라우저에 저장된다.</p></div>`;
@@ -1628,9 +1630,31 @@ function ticketHTML(){
   const body=r.k==='card'?`<div class="cards">${cardHTML(CARDS[r.id])}</div>`:relicBox(r.id);
   return `<div class="panel" style="text-align:center"><h2>획득</h2>${body}<div class="row" style="justify-content:center;margin-top:10px"><button class="endbtn" onclick="A.tkDone()">돌아간다</button></div></div>`;
 }
+// 엔딩: 위에서부터 먼저 맞는 것 하나. seen은 타이틀에 수집 현황으로 보인다
+const ENDINGS=[
+  {id:'gunrim',n:'군림천하기',hint:'나의 검정중원으로 야율척을 꺾는다',cond:()=>hasCard('geomjeong2'),p:[
+    '검각 정상. 야율척이 제세모니인을 내리치며 검정중원의 빈틈을 노렸다. 그 순간 무너진 구름 속에서 더 작고 정교한 구름이 피어났다.',
+    '"조금 전 것은 이백 년 전의 것이고, 이것이 나의 검정중원이다."',
+    '손바닥이 꿰뚫린 야율척은 "천하는 천하인의 것"이라는 말을 듣고, 중원의 하늘도 서장의 하늘과 같다고 말한 뒤 선 채로 숨을 거두었다.',
+    '새벽, 진산월은 임영옥을 안고 중봉의 석실로 갔다. 그가 삼 년을 보낸 곳이었다. 옥함 속 백의 장포 뒷면에 〈대종남천하지문(大終南天下之門)〉이라는 글과 구대문파 아홉 수장의 서명이 있었다. 하나의 깃발에 구대문파의 서약을 받는다는 군림천하기의 전설이 이루어졌다.',
+    '몇 해 뒤, 대종남파의 장문대행 소지산과 방취아가 한적한 주루 태평루에 들렀다. 주방장이 쌍둥이 남매를 안고 나왔다. 아들은 억홍, 딸은 모옥이었다. 군림을 이룬 사람은 태평 속으로 물러나 있었다.']},
+  {id:'old',n:'이백 년 전의 검',hint:'미완성 검정중원으로 야율척을 꺾는다',cond:()=>hasCard('geomjeong'),p:[
+    '검정중원이 야율척의 호신강기를 깨뜨리고 가슴을 피로 물들였다. 야율척은 그것이 검정중원임을 알아보고 끝까지 버텼지만, 끝내 무릎을 꿇었다.',
+    '이긴 뒤에도 진산월은 오래 검을 내려다보았다. 이것은 아직 이백 년 전 조사들의 검정중원이었다.',
+    '육합귀진신공을 이루지 못한 검은 거기서 멈췄다. 나의 검정중원은 아직 오지 않았다.']},
+  {id:'jajeon',n:'자전진구소',hint:'검정중원 없이, 낙전칠검으로 야율척을 꺾는다',cond:()=>hasCard('jajeon'),p:[
+    '야율척은 진산월의 유운검법과 천하삼십육검을 이미 다 읽고 있었다. 그가 모르는 것은 낙전칠검 하나였다.',
+    '불광만천이 쏟아지는 순간, 수십 년 동안 아무도 펼치지 못한 낙전칠검의 마지막 초식 자전진구소가 되살아났다.',
+    '서가보의 불탄 장경각에서 건진 비급 한 권이 서장 무림의 지배자를 꺾었다.']},
+  {id:'base',n:'종남 재건',hint:'야율척을 꺾는다',cond:()=>true,p:[
+    '야율척이 쓰러졌다. 서장과 삼십여 년 이어진 분쟁이 끝나고, 몰락했던 종남파의 이름이 다시 강호에 오르내렸다.',
+    '그러나 진산월은 알고 있었다. 종남의 진짜 검, 검정중원에는 아직 닿지 못했다는 것을.']}
+];
+function endingOf(){return ENDINGS.find(e=>e.cond())}
 function endHTML(){
   const P=G.p,win=G.win;
   return `<div class="title"><h1>${win?'君臨天下':'敗'}</h1><div class="sub">${win?'천하는 천하인의 것':'강호에 쓰러지다'}</div></div>
+${win?(()=>{const e=ENDINGS.find(x=>x.id===G.ending)||endingOf();return `<div class="panel serif" style="line-height:1.9;border-color:var(--gold)"><div class="chip" style="border-color:var(--gold);color:var(--gold)">엔딩</div><h2>${e.n}</h2>${e.p.map(x=>`<p>${x}</p>`).join('')}</div>`})():''}
 <div class="panel"><p>${G.diff.name} · ${G.floor}층 ${G.stage}스테이지${win&&G.p.flags.mjd?' · 숨은 보스 매종도 격파':''}</p>
 ${(()=>{const i=DIFFS.findIndex(d=>d.id===G.diff.id),nx=DIFFS[i+1];
   if(win){const opened=DIFFS.filter(d=>d.req===G.diff.id);const lock=DIFFS.find(d=>d.req&&!G.meta.cleared.includes(d.req));
