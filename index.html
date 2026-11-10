@@ -200,16 +200,16 @@ const ARTS={
   jk:{n:'장괘장권구식',f:'jongnam',m6:'한 턴에 장괘 초식을 이어 쓸수록 다음 장괘 초식 피해 +3씩',m10:'매 턴 처음 쓰는 장괘 초식 내력 0'}, c36:{n:'천하삼십육검',f:'jongnam',m6:'천하 초식을 쓸 때마다 방어 +2',m10:'대성 시 천하무궁 획득'},
   yuun:{n:'유운검법',f:'jongnam',m6:'운무중첩 3연타',m10:'유운검봉이 하나로 합쳐짐(총 피해 ×1.2). 대성 시 검정중원(미완) 획득'},
   yakryu:{n:'약류장',f:'jongnam'}, nakha:{n:'낙하구구검',f:'jongnam',m6:'최절초 자하천래 획득',m10:'낙하 초식 피해 +5, 쓸 때마다 방어 +3'},
-  hongdan:{n:'홍단서천',f:'jongnam'}, muyeom:{n:'무염십팔보',f:'jongnam'},
+  hongdan:{n:'홍단서천',f:'jongnam'}, muyeom:{n:'무염십팔보',f:'jongnam',m6:'회피 2',m10:'내력 0'},
   chilji:{n:'칠지매화',f:'hwasan'},
   seongra:{n:'성라검법',f:'haenam'}, namhae:{n:'남해삼십육검',f:'haenam'}, haejeo:{n:'해저발침',f:'haenam'},
   hangryong:{n:'항룡금강권',f:'seojang'}, milchong:{n:'밀종 대수인',f:'seojang'}, mueum:{n:'무음비도',f:'seojang'},
   nakroe:{n:'낙뢰신권',f:'soseon'}, guban:{n:'구반장법',f:'soseon'}, okjam:{n:'옥잠지',f:'soseon'}, taein:{n:'태인장',f:'soseon'}, okroe:{n:'옥뢰신장',f:'soseon'},
-  talhon:{n:'탈혼검',f:'kwae',m6:'심장 관통에 필요한 표식 8→6',m10:'색탈혼: 관통 후 다른 적에게 표식 3 이전'}, heomu:{n:'허무보',f:'kwae'},
+  talhon:{n:'탈혼검',f:'kwae',m6:'심장 관통에 필요한 표식 8→6',m10:'색탈혼: 관통 후 다른 적에게 표식 3 이전'}, heomu:{n:'허무보',f:'kwae',m6:'회피 2, 탈혼 표식 2',m10:'내력 0'},
   gujeol:{n:'구절마도',f:'sapa'}, hyeolhae:{n:'혈해도법',f:'sapa'}, geopryun:{n:'겁륜구절도',f:'sapa'}, maun:{n:'마운장',f:'sapa'},
   hyeolra:{n:'혈라인',f:'sapa'}, hyeoneum:{n:'현음신장',f:'sapa'}, bunroe:{n:'분뢰십팔장',f:'sapa'}, eunhyeong:{n:'은형인',f:'sapa'}, eumyang:{n:'음양건곤수',f:'sapa'},
   saeil:{n:'사일검법',f:'jeomchang'}, eungjo:{n:'응조칠식경공',f:'jeomchang'},
-  nakjeon:{n:'낙전칠검',f:'giyeon'}, chwiseon:{n:'취선 삼대절학',f:'giyeon'},
+  nakjeon:{n:'낙전칠검',f:'giyeon'}, chwiseon:{n:'취선 삼대절학',f:'giyeon',m6:'취선호 강화 3·회복 8',m10:'취선호 내력 0'},
 };
 const M6='공격 피해 +3 / 방어 +3', M10='비용 2 이상 초식 비용 -1';
 
@@ -250,7 +250,7 @@ card('bancheon','반천흥염','nakha','atk',2,'r',{dmg:11,all:1,block:6,text:'�
 card('hongye','홍예장공','nakha','atk',1,'r',{dmg:11,text:'이번 턴 천강은홍을 썼으면 피해 +8',dmgFn:b=>G.b&&G.b.playedIds.includes('cheongang')?b+8:b},['s']);
 card('cheongang','천강은홍','nakha','def',1,'r',{block:7,self:{counter:10},text:'이번 적 턴에 공격받으면 반격 7'},['s']);
 card('hongdan','홍단서천','hongdan','atk',1,'r',{dmg:14,text:'검을 던진다. 이번 턴 다른 검 초식 사용 불가',fx:()=>{G.b.noSword=true}},['s','hw']);
-card('muyeom','무염십팔보','muyeom','skill',1,'r',{self:{dodge:1},draw:1},['st']);
+card('muyeom','무염십팔보','muyeom','skill',1,'r',{self:{dodge:1},self6:{dodge:2},zero10:1,draw:1},['st']);
 // 절초
 card('geomjeong','검정중원(미완)',null,'ult',3,'l',{dmg:60,ultArt:'yuun',self:{flaw:1},hidden:1,fac:'jongnam',text:'허점: 다음 턴 내력 -1 (미완성 초식이라 내공을 지나치게 끌어 쓴다)'},['s']);
 card('geomjeong2','나의 검정중원',null,'ult',3,'l',{dmg:75,ultArt:'yuun',hidden:1,fac:'jongnam',text:'대상이 살아남으면 추가 피해 25'},['s']);
@@ -295,7 +295,7 @@ card('okroe','옥뢰신장','okroe','atk',2,'r',{dmg:9,all:1},['p']);
 card('talhon','측탈혼','talhon','atk',1,'c',{dmg:4,ap:{mark:2,weak:1},text:'인후를 노린다. 사용 시 음맥 1'},['s']);
 card('gyotalhon','교탈혼','talhon','atk',1,'c',{dmg:5,ap:{mark:2},text:'심장을 노린다. 표식이 4 이상인 적에게 표식 +2. 사용 시 음맥 1'},['s']);
 card('saektalhon','색탈혼','talhon','atk',1,'r',{dmg:6,ap:{mark:3},text:'미간을 노린다. 사용 시 음맥 1'},['s']);
-card('heomubo','허무보','heomu','skill',1,'c',{self:{dodge:1},ap:{mark:1}},['st']);
+card('heomubo','허무보','heomu','skill',1,'c',{self:{dodge:1},self6:{dodge:2},ap6:{mark:2},zero10:1,ap:{mark:1}},['st']);
 // 사파
 card('gujeol','구절마도','gujeol','atk',2,'r',{dmg:9,hits:2},['b']);
 card('hyeolhae','혈해도법','hyeolhae','atk',1,'c',{dmg:12,lose:3,text:'체력 3 소모'},['b']);
@@ -313,7 +313,7 @@ card('eungjo','응조칠식경공','eungjo','skill',1,'c',{block:5,draw:1},['st'
 card('daeeung','대응경','eungjo','skill',1,'r',{block:5,self:{dodge:1}},['st']);
 // 기연 전용
 card('nakjeon','낙전칠검','nakjeon','atk',1,'r',{dmg:10,pierce:1,hidden:1,text:'야율척에게 피해 1.5배'},['s']);
-card('chwiseonho','취선호','chwiseon','skill',1,'r',{self:{str:2},hidden:1,text:'체력 5 회복',fx:()=>healP(5)},[]);
+card('chwiseonho','취선호','chwiseon','skill',1,'r',{self:{str:2},self6:{str:3},zero10:1,hidden:1,text:'체력 5 회복 (6성: 8)',fx:({st})=>healP(st>=6?8:5)},[]);
 card('yongsu','용수각','chwiseon','atk',1,'r',{dmg:9,ap:{weak:2},hidden:1},['f']);
 card('horo','호로불방','chwiseon','def',1,'r',{block:11,hidden:1},['f']);
 card('japnyeom','잡념',null,'junk',0,'c',{hidden:1,fac:'giyeon',text:'뽑히는 순간 내력 -1, 그리고 사라진다(전투당 1회)'},[]);
@@ -874,6 +874,7 @@ function costOf(c){
   let k=c.cost;
   if(c.art&&starOf(c.art)>=10&&k>=2)k--;
   if(c.art==='jk'&&starOf('jk')>=10&&G.b&&!G.b.jkN)k=0;
+  if(c.zero10&&c.art&&starOf(c.art)>=10)k=0;
   if(DARA.includes(c.id)&&syn('dara'))k--;
   if(c.type==='ult'&&has('chwiwa'))k--;
   return Math.max(0,k);
@@ -1232,9 +1233,9 @@ function resolve(c,t){
   B.curCombo=null;
   if(c.block)gainBlock(blockOf(c));
   if(c.draw)draw(c.draw);
-  if(c.ap)for(const k in c.ap){if(k==='mark'&&c.dmg)continue;for(const tg of targets)applyEnemy(tg,k,c.ap[k])}
+  {const ap=st>=6&&c.ap6?c.ap6:c.ap;if(ap)for(const k in ap){if(k==='mark'&&c.dmg)continue;for(const tg of targets)applyEnemy(tg,k,ap[k])}}
   if(c.ap&&c.ap.mark&&c.dmg)for(const tg of targets)applyEnemy(tg,'mark',c.ap.mark);
-  if(c.self)for(const k in c.self)P.st[k]=(P.st[k]||0)+c.self[k];
+  {const sf=st>=6&&c.self6?c.self6:c.self;if(sf)for(const k in sf)P.st[k]=(P.st[k]||0)+sf[k]}
   if(c.lose){P.hp-=c.lose;flt('p','-'+c.lose)}
   if(c.art==='talhon')P.st.yinmaek=(P.st.yinmaek||0)+1;
   if(c.fx)c.fx({c,t,st});
@@ -1441,8 +1442,8 @@ function cardDesc(c){
   const p=[];const inB=!!G.b;
   if(c.dmg){const t=inB?curTarget():null;const d=inB?calcDmg(c,t):c.dmg;const h=G.p?hitsOf(c):(c.hits||1);p.push(`피해 <b>${d}</b>${h>1?' × '+h:''}${c.all?' (전체)':''}${c.pierce?' · 방어 무시':''}`)}
   if(c.block){const b=blockOf(c);p.push(`방어 <b>${b}</b>`)}
-  if(c.ap)for(const k in c.ap)p.push(`${SN[k]} ${c.ap[k]}${c.all?' (전체)':''}`);
-  if(c.self)for(const k in c.self)if(k!=='nextAtk'&&k!=='counter')p.push(`자신 ${SN[k]} ${c.self[k]}`);
+  {const ap=c.ap6&&c.art&&starOf(c.art)>=6?c.ap6:c.ap;if(ap)for(const k in ap)p.push(`${SN[k]} ${ap[k]}${c.all?' (전체)':''}`)}
+  {const sf=c.self6&&c.art&&starOf(c.art)>=6?c.self6:c.self;if(sf)for(const k in sf)if(k!=='nextAtk'&&k!=='counter')p.push(`자신 ${SN[k]} ${sf[k]}`)}
   if(c.draw)p.push(`초식 ${c.draw}장 뽑기`);
   if(c.text)p.push(c.text);
   if(c.type==='ult')p.push('<i>절초 · 전투당 1회</i>');
