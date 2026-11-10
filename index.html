@@ -132,6 +132,10 @@ table.arts td,table.arts th{border-bottom:1px solid var(--line);padding:5px 4px;
 .stars{color:var(--gold);letter-spacing:-1px}
 .scroll{width:110px;height:150px;border-radius:10px;background:repeating-linear-gradient(0deg,#7a2a22 0 6px,#8e352c 6px 12px);border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;color:#f6e7c1;font-family:'Nanum Myeongjo',serif;font-size:30px;font-weight:800;cursor:pointer;box-shadow:var(--shadow)}
 .scroll:hover{transform:translateY(-6px)}
+@media (max-height:920px) and (min-width:601px){
+  .figbox{width:140px;height:210px}
+  .unit.boss .figbox{width:170px;height:255px}
+}
 @media (max-width:600px){
   .title h1{font-size:40px}
   .unit,.unit.boss{width:46%}
@@ -248,9 +252,10 @@ card('cheongang','천강은홍','nakha','def',1,'r',{block:5,self:{counter:7},te
 card('hongdan','홍단서천','hongdan','atk',1,'r',{dmg:14,text:'검을 던진다. 이번 턴 다른 검 초식 사용 불가',fx:()=>{G.b.noSword=true}},['s','hw']);
 card('muyeom','무염십팔보','muyeom','skill',1,'r',{self:{dodge:1},draw:1},['st']);
 // 절초
-card('geomjeong','검정중원(미완)',null,'ult',3,'l',{dmg:60,ultArt:'yuun',self:{flaw:1},hidden:1,fac:'jongnam',text:'허점: 다음 적 턴에 받는 피해 1.5배'},['s']);
+card('geomjeong','검정중원(미완)',null,'ult',3,'l',{dmg:60,ultArt:'yuun',self:{flaw:1},hidden:1,fac:'jongnam',text:'허점: 다음 턴 내력 -1 (미완성 초식이라 내공을 지나치게 끌어 쓴다)'},['s']);
 card('geomjeong2','나의 검정중원',null,'ult',3,'l',{dmg:75,ultArt:'yuun',hidden:1,fac:'jongnam',text:'대상이 살아남으면 추가 피해 25'},['s']);
-card('cheonhamugung','천하무궁',null,'ult',2,'l',{dmg:3,ultArt:'c36',hits:12,hidden:1,fac:'jongnam',text:'12방위 × 3검화'},['s']);
+// 12방위의 검화를 한꺼번에. 병기·시너지 보너스는 검화마다가 아니라 전체에 한 번만(유운검봉과 같은 방식)
+card('cheonhamugung','천하무궁',null,'ult',2,'l',{dmg:4,ultArt:'c36',dmgFn:b=>4*12+(b-4),hidden:1,fac:'jongnam',text:'12방위 × 검화를 한꺼번에'},['s']);
 card('jaha','자하천래',null,'ult',2,'l',{dmg:24,ap:{vuln:3},hidden:1,fac:'jongnam'},['s']);
 card('jajeon','자전진구소',null,'ult',3,'l',{dmg:36,ultArt:'nakjeon',pierce:1,hidden:1,fac:'giyeon',text:'야율척에게 피해 1.5배'},['s']);
 card('dara1h','대라궁해(반쪽)',null,'ult',2,'l',{dmg:16,all:1,hidden:1,fac:'giyeon'},['s']);
@@ -382,7 +387,7 @@ function acquireWeapon(id){
 
 /* ================= 상태 ================= */
 const SN={str:'강화',weak:'탈진',vuln:'내상',poison:'독',burn:'화상',yin:'음기',frozen:'빙결',mark:'탈혼 표식',dodge:'회피',yinmaek:'음맥',flaw:'허점',counter:'반격',pmark:'탈혼 표식',nextAtk:'유운출곡',chill:'빙상'};
-const SD={str:'공격 피해 증가',weak:'공격 피해 25% 감소',vuln:'받는 공격 피해 50% 증가',poison:'턴 시작 시 피해, 1씩 감소',burn:'턴 종료 시 피해, 1씩 감소',yin:'쌓이면 빙결(기본 10)',frozen:'다음 행동을 건너뜀',mark:'쌓이면 심장 관통',dodge:'다음 공격 1회 무효',yinmaek:'5 이상이면 받는 피해 25% 증가(칠음진기·천양신공으로 무효)',flaw:'받는 피해 50% 증가',counter:'공격받으면 반격',pmark:'3이 되면 체력 15 손실',nextAtk:'다음 공격 피해 증가',chill:'상처가 얼어붙어 체력을 회복하지 못함'};
+const SD={str:'공격 피해 증가',weak:'공격 피해 25% 감소',vuln:'받는 공격 피해 50% 증가',poison:'턴 시작 시 피해, 1씩 감소',burn:'턴 종료 시 피해, 1씩 감소',yin:'쌓이면 빙결(기본 10)',frozen:'다음 행동을 건너뜀',mark:'쌓이면 심장 관통',dodge:'다음 공격 1회 무효',yinmaek:'5 이상이면 받는 피해 25% 증가(칠음진기·천양신공으로 무효)',flaw:'다음 턴 내력 -1',counter:'공격받으면 반격',pmark:'3이 되면 체력 15 손실',nextAtk:'다음 공격 피해 증가',chill:'상처가 얼어붙어 체력을 회복하지 못함'};
 
 /* ================= 적 ================= */
 const EN={};
@@ -871,7 +876,8 @@ function hitsOf(c){
 function calcDmg(c,t){
   const P=G.p,st=starOf(c.art);
   let b=c.dmg||0;
-  if(c.art&&st>=6)b+=3;
+  // 6성 보너스: 여러 번 때리는 초식은 한 번에 +2(한 번만 때리면 +3)
+  if(c.art&&st>=6)b+=hitsOf(c)>1?2:3;
   b+=P.st.str||0;
   if(c.tags.includes('s')&&wpn('yongyeong'))b+=2;
   if((c.tags.includes('f')||c.tags.includes('p'))&&wpn('mukryeong'))b+=3;
@@ -1250,7 +1256,7 @@ function draw(n){
 function startTurn(){
   const B=G.b,P=G.p;
   B.turn++;P.block=0;B.playedIds=[];B.chainArt=null;B.chainN=0;B.curCombo=null;
-  if(P.st.flaw)P.st.flaw--;
+  const flawNow=P.st.flaw>0;if(P.st.flaw)P.st.flaw--;
   P.st.counter=0;B.noSword=false;B.hwasanPlayed=0;B.swordPlayed=false;B.haenamDraw=false;B.firstAtk=false;
   if(syn('hwabyeok'))P.block+=6;
   if(has('cheondan'))P.block+=3;
@@ -1259,11 +1265,12 @@ function startTurn(){
   const gl=guyangLv()+(has('biryong')?2:0);if(gl&&P.st.yinmaek)P.st.yinmaek=Math.max(0,P.st.yinmaek-gl);
   if(P.st.poison){const pd=has('saeung')?Math.ceil(P.st.poison/2):P.st.poison;P.hp-=pd;flt('p','독 -'+pd);P.st.poison--;if(P.hp<=0){endRun(false);return}}
   B.energy=3+(has('yukhap')?1:0)+(B.turn===1&&has('taeeul')?(P.flags.samjeong==='eaten2'?2:1):0);
+  if(flawNow){B.energy=Math.max(0,B.energy-1);toast('허점 — 기력이 빠져 내력 -1',2200)}
   draw(5);
 }
 function enemyDmg(e,mv){
   const P=G.p;const f1=G.floor===1;let m=(f1?Math.min(G.diff.eatk,1):G.diff.eatk)*SCALE.atk*(e.kind==='boss'&&!f1?G.diff.batk:1);
-  if(e.st.weak)m*=.75;if(P.st.vuln)m*=1.5;if(P.st.flaw)m*=1.5;if(yinPenalty())m*=1.25;
+  if(e.st.weak)m*=.75;if(P.st.vuln)m*=1.5;if(yinPenalty())m*=1.25;
   return Math.floor((mv.d+(e.st.str||0))*m);
 }
 function dmgPlayer(d,e){
@@ -1564,6 +1571,7 @@ ${S.weapon?shopGood('w',ICON(S.weapon,44),'병기 '+WEAPONS[S.weapon].n+' ('+WEA
 ${!has('hongok')?shopGood('r',ICON('hongok',44),'홍옥모니주',RELICS.hongok.d,110,false,"A.buyRelic('hongok',110)"):''}
 ${shopGood('g','','비급 뽑기','이번 판에 나오는 문파의 초식 하나를 무작위로 얻는다',60,false,'A.gacha()')}
 ${shopGood('x','','초식 버리기','덱에서 초식 하나를 골라 버린다. 버린 초식은 이번 판에 다시 나오지 않는다',70,S.removed,'A.shopRemove()')}
+${shopGood('t','','심득','은자를 들여 고수의 가르침을 받는다. 가진 무공 하나 성 +1(익스트림 7성부터는 깨달음 +1)',120+40*(P.flags.simdeuk||0),S.trained||!Object.keys(P.stars).some(a=>P.stars[a]<10),'A.shopTrain()')}
 ${shopGood('p','','금창약','체력 15 회복',35,S.potion,'A.potion()')}
 ${shopGood('j','','술 한 동이','어딘가에서 인연이 닿을지도 모른다',25,P.flags.wine,'A.wine()')}
 </div>
@@ -1576,7 +1584,7 @@ function restHTML(){
 <div style="display:flex;flex-direction:column;gap:8px">
 <button onclick="A.rest('heal')" style="text-align:left">운기조식 — 체력 ${heal} 회복</button>
 ${P.flags.samjeong==='held'?`<button onclick="A.rest('samjeong')" style="text-align:left">만년삼정을 복용한다 — 최대 체력 +16, 태을신공 강화(첫 턴 내력 +2)</button>`:''}
-<div class="panel" style="margin:4px 0"><b>수련</b> — 무공 하나의 성을 1 올린다<div class="row" style="margin-top:8px">${arts.map(a=>`<button onclick="A.train('${a}')">${ARTS[a].n} ${P.stars[a]}→${P.stars[a]+1}성</button>`).join('')||'<span class="muted">올릴 무공이 없다</span>'}</div></div>
+<div class="panel" style="margin:4px 0"><b>수련</b> — 무공 하나의 성을 1 올린다<div class="row" style="margin-top:8px">${arts.map(a=>`<button onclick="A.train('${a}')">${ARTS[a].n} ${G.diff.id==='extreme'&&P.stars[a]>=6?`${P.stars[a]}성 · 깨달음 ${((P.starProg||{})[a]||0)}/2 → +1`:`${P.stars[a]}→${P.stars[a]+1}성`}</button>`).join('')||'<span class="muted">올릴 무공이 없다</span>'}</div></div>
 </div></div>`;
 }
 function campHTML(){
@@ -1613,7 +1621,7 @@ function closeModal(){const m=document.getElementById('modal');m.classList.remov
 document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!G.afterRemove)closeModal()});
 function bookHTML(){
   const P=G.p;
-  const arts=Object.keys(P.stars).map(a=>{const A0=ARTS[a],s=P.stars[a];return `<tr><td><b>${A0.n}</b><br><span class="muted">${FACS[A0.f].n}</span></td><td><span class="stars">${'★'.repeat(s)}</span><span class="muted">${'☆'.repeat(10-s)}</span> ${s}성</td><td style="font-size:12px">6성: ${A0.m6||M6}<br>10성: ${A0.m10||M10}</td></tr>`}).join('');
+  const arts=Object.keys(P.stars).map(a=>{const A0=ARTS[a],s=P.stars[a],pr=(P.starProg||{})[a]||0;return `<tr><td><b>${A0.n}</b><br><span class="muted">${FACS[A0.f].n}</span></td><td><span class="stars">${'★'.repeat(s)}</span><span class="muted">${'☆'.repeat(10-s)}</span> ${s}성${G.diff.id==='extreme'&&s>=6&&s<10?` <span class="chip">깨달음 ${pr}/2</span>`:''}</td><td style="font-size:12px">6성: ${A0.m6||M6}<br>10성: ${A0.m10||M10}</td></tr>`}).join('');
   const syns=Object.keys(SYN_INFO).map(k=>`<div style="font-size:13px;${syn(k)?'':'opacity:.5'}">${syn(k)?'✓':'·'} <b>${SYN_INFO[k][0]}</b> — ${SYN_INFO[k][1]}</div>`).join('');
   const facs=G.facs.map(f=>`<div style="font-size:13px;${facSyn(f)?'':'opacity:.6'}">${facSyn(f)?'✓':'·'} <b>${FACS[f].n}</b> ${facCount(f)}/${FACS[f].need} — ${FACS[f].bonus}</div>`).join('');
   return `<h2>무공록</h2><h3>병기</h3>${P.weapons.length?P.weapons.map(w=>`<div style="font-size:13px;margin:4px 0">${P.wpn===w?'<b>[장착]</b> ':`<button class="tbtn" onclick="A.equip('${w}')" ${G.b?'disabled title="전투 중에는 바꿀 수 없다"':''}>장착</button> `}${ICON(w,44)}<b>${WEAPONS[w].n}</b> (${WEAPONS[w].k}) — ${WEAPONS[w].d}</div>`).join(''):'<div class="muted" style="font-size:13px">아직 병기가 없다. 보스·정예·히든·상점에서 얻는다.</div>'}<h3>심법·기물</h3>${(()=>{const need=["taeeul","hyeoncheong","chileum1","chileum2","guyang1","guyang2","cheondan","taejin"];if(has("yukhap"))return `<div class="panel" style="font-size:13px;border-color:var(--gold)"><b>육합귀진신공 완성</b></div>`;const left=need.filter(r=>!has(r));return `<div class="panel" style="font-size:13px;border-color:var(--gold)"><b>육합귀진신공</b> ${need.length-left.length}/${need.length} — 남은 것: ${left.map(r=>RELICS[r].n).join(", ")}</div>`})()}${P.relics.map(r=>`<div style="font-size:13px;margin:3px 0">${ICON(r,32)}<b>${RELICS[r].n}</b> — ${RELICS[r].d}</div>`).join('')}
@@ -1664,6 +1672,8 @@ const A={
   choose:i=>{const c=G.ev.c[i];if(c[2]&&c[2]())return;const r=c[1]();if(r!=='wait')completeNode()},
   hiddenSkip:()=>{const h=HIDDEN[G.hid];if(h.skipRun)h.skipRun();completeNode();openRemove(()=>render())},
   hiddenChoose:i=>{const h=HIDDEN[G.hid];if(i<0)h.run();else h.choices[i][1]();completeNode()},
+  shopTrain:()=>{const P=G.p,pr=120+40*(P.flags.simdeuk||0);if(G.shop.trained||P.gold<pr)return;const arts=Object.keys(P.stars).filter(a=>P.stars[a]<10);modal(`<h3>심득 — 수련할 무공</h3><div class="row">${arts.map(a=>`<button onclick="A.shopTrainArt('${a}')">${ARTS[a].n} ${P.stars[a]}성</button>`).join('')}</div><div class="row" style="justify-content:center;margin-top:10px"><button onclick="A.close()">그만둔다</button></div>`)},
+  shopTrainArt:a=>{const P=G.p,pr=120+40*(P.flags.simdeuk||0);if(G.shop.trained||P.gold<pr)return;P.gold-=pr;P.flags.simdeuk=(P.flags.simdeuk||0)+1;G.shop.trained=true;G.shop.pick=null;closeModal();starUp(a,1,'심득');render()},
   pick:k=>{G.shop.pick=G.shop.pick===k?null:k;render()},
   buy:i=>{const x=G.shop.cards[i];if(x.sold||G.p.gold<x.price)return;G.p.gold-=x.price;x.sold=true;acquireCard(x.id);G.shop.pick=null;render()},
   gacha:()=>{if(G.p.gold<60)return;G.p.gold-=60;const id=gachaDraw();modal(`<h3>비급 뽑기</h3><div class="cards">${cardHTML(CARDS[id])}</div><div class="row" style="justify-content:center"><button onclick="A.close()">확인</button></div>`);acquireCard(id);render()},
