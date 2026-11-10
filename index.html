@@ -197,9 +197,9 @@ const FACS={
 
 /* ================= 무공(성 단위) ================= */
 const ARTS={
-  jk:{n:'장괘장권구식',f:'jongnam'}, c36:{n:'천하삼십육검',f:'jongnam'},
-  yuun:{n:'유운검법',f:'jongnam',m6:'운무중첩 3연타',m10:'유운검봉이 처음부터 하나로 합쳐짐(총 피해 ×1.5). 대성 시 검정중원(미완) 획득'},
-  yakryu:{n:'약류장',f:'jongnam'}, nakha:{n:'낙하구구검',f:'jongnam',m6:'최절초 자하천래 획득'},
+  jk:{n:'장괘장권구식',f:'jongnam',m6:'한 턴에 장괘 초식을 이어 쓸수록 다음 장괘 초식 피해 +3씩',m10:'매 턴 처음 쓰는 장괘 초식 내력 0'}, c36:{n:'천하삼십육검',f:'jongnam',m6:'천하 초식을 쓸 때마다 방어 +2',m10:'대성 시 천하무궁 획득'},
+  yuun:{n:'유운검법',f:'jongnam',m6:'운무중첩 3연타',m10:'유운검봉이 하나로 합쳐짐(총 피해 ×1.2). 대성 시 검정중원(미완) 획득'},
+  yakryu:{n:'약류장',f:'jongnam'}, nakha:{n:'낙하구구검',f:'jongnam',m6:'최절초 자하천래 획득',m10:'낙하 초식 피해 +5, 쓸 때마다 방어 +3'},
   hongdan:{n:'홍단서천',f:'jongnam'}, muyeom:{n:'무염십팔보',f:'jongnam'},
   chilji:{n:'칠지매화',f:'hwasan'},
   seongra:{n:'성라검법',f:'haenam'}, namhae:{n:'남해삼십육검',f:'haenam'}, haejeo:{n:'해저발침',f:'haenam'},
@@ -222,7 +222,7 @@ card('geumgang','금강서벽','jk','def',1,'c',{block:8},['f']);
 card('samhwan','삼환투일','jk','atk',1,'c',{dmg:4,hits:2},['f']);
 card('ogang','오강감계','jk','atk',1,'c',{dmg:6,ap:{weak:1}},['f']);
 card('cheonjeon','천전만권','jk','atk',1,'r',{dmg:5,all:1},['f']);
-card('danbong','단봉조양','jk','atk',2,'r',{dmg:15},['p']);
+card('danbong','단봉조양','jk','atk',2,'r',{dmg:20},['p']);
 card('cheonseong','천성탈두','jk','atk',1,'c',{dmg:8,text:'대상이 내상이면 피해 +6',dmgFn:(b,t)=>t&&t.st.vuln?b+6:b},['f']);
 card('yeongyang','영양괘각','jk','atk',1,'c',{dmg:5,block:7},['f']);
 card('nakseong','낙성연적','jk','def',1,'r',{block:8,draw:1},['f']);
@@ -244,7 +244,7 @@ card('amjeon','운중암전','yuun','atk',1,'r',{dmg:8,pierce:1},['s']);
 card('seunggi','운해승기','yuun','atk',2,'r',{dmg:12,block:8},['s']);
 card('danak','유운단악','yuun','atk',1,'r',{dmg:11},['s']);
 // 종남 · 기타
-card('yakryu','약류장','yakryu','atk',2,'l',{dmg:14,text:'대상 체력이 40% 이하면 피해 2배',dmgFn:(b,t)=>t&&t.hp<=t.max*.4?b*2:b},['p']);
+card('yakryu','약류장','yakryu','atk',2,'l',{dmg:18,text:'대상 체력이 40% 이하면 피해 2배',dmgFn:(b,t)=>t&&t.hp<=t.max*.4?b*2:b},['p']);
 card('nakha','채흥서천','nakha','atk',1,'c',{dmg:7,pierce:1,text:'낙하구구검의 첫 초식. 검광 사이를 가른다'},['s']);
 card('bancheon','반천흥염','nakha','atk',2,'r',{dmg:8,all:1,block:4,text:'두 번째 초식. 주위를 자신의 영역으로 삼킨다'},['s']);
 card('hongye','홍예장공','nakha','atk',1,'r',{dmg:8,text:'이번 턴 천강은홍을 썼으면 피해 +8',dmgFn:b=>G.b&&G.b.playedIds.includes('cheongang')?b+8:b},['s']);
@@ -270,22 +270,22 @@ card('maehwageomgi','매화검기','chilji','atk',1,'c',{dmg:6,text:'이번 턴 
 card('gunggong','궁공성사','seongra','atk',1,'c',{dmg:6,draw:1},['s']);
 card('seongrak','성락적막','seongra','atk',1,'c',{dmg:9,ap:{vuln:1}},['s']);
 card('jansung','잔성희소','seongra','atk',1,'c',{dmg:4,hits:2,block:3},['s']);
-card('goeseong','괴성척두','seongra','atk',2,'r',{dmg:17},['s']);
+card('goeseong','괴성척두','seongra','atk',2,'r',{dmg:22},['s']);
 card('namhae','남해삼십육검','namhae','atk',1,'c',{dmg:7,text:'이번 턴 앞서 검 초식을 썼으면 피해 +4',dmgFn:b=>G.b&&G.b.swordPlayed?b+4:b},['s']);
 card('haejeo','해저발침','haejeo','atk',0,'c',{dmg:4,pierce:1},['hw']);
 // 서장
-card('hangryong','항룡금강권','hangryong','atk',1,'c',{dmg:9},['f']);
-card('geumganghangma','금강항마','hangryong','def',2,'r',{block:15},['f']);
-card('daesuin','밀종 대수인','milchong','atk',2,'r',{dmg:13,pre:t=>{if(t)t.block=0},text:'대상의 방어를 먼저 부순다'},['p']);
+card('hangryong','항룡금강권','hangryong','atk',1,'c',{dmg:11},['f']);
+card('geumganghangma','금강항마','hangryong','def',2,'r',{block:19},['f']);
+card('daesuin','밀종 대수인','milchong','atk',2,'r',{dmg:17,pre:t=>{if(t)t.block=0},text:'대상의 방어를 먼저 부순다'},['p']);
 card('mueum','무음비도','mueum','atk',1,'c',{dmg:4,hits:2,pierce:1},['hw']);
 // 소선
-card('nakroe','낙뢰신권','nakroe','atk',1,'c',{dmg:8},['f']);
-card('noejeong','뇌정만균','nakroe','atk',2,'r',{dmg:6,hits:3},['f']);
+card('nakroe','낙뢰신권','nakroe','atk',1,'c',{dmg:10},['f']);
+card('noejeong','뇌정만균','nakroe','atk',2,'r',{dmg:8,hits:3},['f']);
 card('seou','서우망월','guban','atk',1,'c',{dmg:5,ap:{vuln:1}},['p']);
 card('mamyeon','마면배심','guban','atk',1,'c',{dmg:6,ap:{weak:1}},['p']);
 card('nanga','낭아선륜','guban','atk',1,'r',{dmg:4,hits:2,block:4},['p']);
 card('okjam','옥잠지','okjam','atk',1,'c',{dmg:6,pierce:1},['f']);
-card('taein','태인장','taein','atk',2,'r',{dmg:13,ap:{weak:2}},['p']);
+card('taein','태인장','taein','atk',2,'r',{dmg:17,ap:{weak:2}},['p']);
 card('okroe','옥뢰신장','okroe','atk',2,'r',{dmg:9,all:1},['p']);
 // 쾌의당
 card('talhon','측탈혼','talhon','atk',1,'c',{dmg:4,ap:{mark:2,weak:1},text:'인후를 노린다. 사용 시 음맥 1'},['s']);
@@ -293,7 +293,7 @@ card('gyotalhon','교탈혼','talhon','atk',1,'c',{dmg:5,ap:{mark:2},text:'심�
 card('saektalhon','색탈혼','talhon','atk',1,'r',{dmg:6,ap:{mark:3},text:'미간을 노린다. 사용 시 음맥 1'},['s']);
 card('heomubo','허무보','heomu','skill',1,'c',{self:{dodge:1},ap:{mark:1}},['st']);
 // 사파
-card('gujeol','구절마도','gujeol','atk',2,'r',{dmg:7,hits:2},['b']);
+card('gujeol','구절마도','gujeol','atk',2,'r',{dmg:9,hits:2},['b']);
 card('hyeolhae','혈해도법','hyeolhae','atk',1,'c',{dmg:12,lose:3,text:'체력 3 소모'},['b']);
 card('geopryun','겁륜탈혼','geopryun','atk',1,'c',{dmg:8,ap:{weak:2}},['b']);
 card('maun','마운장','maun','atk',1,'c',{dmg:6,ap:{poison:3}},['p']);
@@ -303,10 +303,10 @@ card('bunroe','분뢰경변','bunroe','atk',2,'r',{dmg:6,all:1,ap:{vuln:1}},['p'
 card('eunhyeong','은형인','eunhyeong','atk',1,'c',{dmg:2,hits:3,pierce:1},['hw']);
 card('eumyang','음양난교','eumyang','atk',1,'r',{dmg:6,ap:{yin:2,burn:2}},['p']);
 // 점창
-card('tucheon','투천환일','saeil','atk',1,'c',{dmg:8,text:'대상이 공격을 준비 중이면 피해 +5',dmgFn:(b,t)=>t&&t.intent&&t.intent.d?b+5:b},['s']);
-card('huye','후예사일','saeil','atk',2,'r',{dmg:22},['s']);
-card('eungjo','응조칠식경공','eungjo','skill',1,'c',{block:4,draw:1},['st']);
-card('daeeung','대응경','eungjo','skill',1,'r',{block:4,self:{dodge:1}},['st']);
+card('tucheon','투천환일','saeil','atk',1,'c',{dmg:10,text:'대상이 공격을 준비 중이면 피해 +5',dmgFn:(b,t)=>t&&t.intent&&t.intent.d?b+5:b},['s']);
+card('huye','후예사일','saeil','atk',2,'r',{dmg:27},['s']);
+card('eungjo','응조칠식경공','eungjo','skill',1,'c',{block:5,draw:1},['st']);
+card('daeeung','대응경','eungjo','skill',1,'r',{block:5,self:{dodge:1}},['st']);
 // 기연 전용
 card('nakjeon','낙전칠검','nakjeon','atk',1,'r',{dmg:10,pierce:1,hidden:1,text:'야율척에게 피해 1.5배'},['s']);
 card('chwiseonho','취선호','chwiseon','skill',1,'r',{self:{str:2},hidden:1,text:'체력 5 회복',fx:()=>healP(5)},[]);
@@ -719,10 +719,10 @@ function starUp(art,n,why){
   const P=G.p,before=P.stars[art]||0;
   if(before>=10){const lo=Object.keys(P.stars).filter(a=>a!==art&&P.stars[a]<10).sort((a,b)=>P.stars[a]-P.stars[b])[0];
     if(lo){toast(ARTS[art].n+' 대성의 깨달음이 '+ARTS[lo].n+'(으)로 이어진다');starUp(lo,n,why)}else{P.gold+=50;toast(ARTS[art].n+' 대성 · 은자 +50')}return}
-  // 익스트림: 7성부터는 깨달음 두 번에 한 성(starProg에 반쯤 쌓인 깨달음을 둔다)
+  // 익스트림: 8성부터는 깨달음 두 번에 한 성(starProg에 반쯤 쌓인 깨달음을 둔다)
   if(G.diff&&G.diff.id==='extreme'){
     P.starProg=P.starProg||{};let s=before,pr=P.starProg[art]||0;
-    for(let i=0;i<n&&s<10;i++){if(s<6)s++;else{pr++;if(pr>=2){s++;pr=0}}}
+    for(let i=0;i<n&&s<10;i++){if(s<7)s++;else{pr++;if(pr>=2){s++;pr=0}}}
     P.starProg[art]=pr;P.stars[art]=s;
     if(s===before){toast(`${why} → ${ARTS[art].n} 깨달음 ${pr}/2 (${s+1}성까지)`);return}
   }else P.stars[art]=Math.min(10,before+n);
@@ -735,6 +735,7 @@ function starUp(art,n,why){
     toast(ARTS[art].n+' 대성'+(rest.length?' — 모든 초식을 깨우쳤다: '+rest.map(c=>c.name).join(', '):''),4500);
   }
   if(before<10&&now>=10&&art==='yuun'&&!hasCard('geomjeong')&&!hasCard('geomjeong2'))acquireCard('geomjeong');
+  if(before<10&&now>=10&&art==='c36'&&!hasCard('cheonhamugung'))acquireCard('cheonhamugung');
 }
 function acquireCard(id){
   {const d=FXDEF[id];if(d)fxImg(d.src)}
@@ -864,6 +865,7 @@ function curTarget(){const B=G.b;let t=B.enemies[B.target];if(!t||t.hp<=0){t=ali
 function costOf(c){
   let k=c.cost;
   if(c.art&&starOf(c.art)>=10&&k>=2)k--;
+  if(c.art==='jk'&&starOf('jk')>=10&&G.b&&!G.b.jkN)k=0;
   if(DARA.includes(c.id)&&syn('dara'))k--;
   if(c.type==='ult'&&has('chwiwa'))k--;
   return Math.max(0,k);
@@ -888,6 +890,8 @@ function calcDmg(c,t){
   if(c.art==='talhon'&&chileumLv()===2)b+=Math.min(5,P.st.yinmaek||0);
   if(P.st.nextAtk&&c.type!=='def')b+=P.st.nextAtk;
   if(facSyn('jeomchang')&&t&&t.intent&&t.intent.d)b+=3;
+  if(c.art==='jk'&&st>=6&&G.b)b+=3*(G.b.jkN||0);
+  if(c.art==='nakha'&&st>=10)b+=5;
   if(c.dmgFn)b=c.dmgFn(b,t,st);
   const cb=G.b&&G.b.curCombo;if(cb&&cb.add)b+=cb.add;
   const sa=c.art?st:c.ultArt?starOf(c.ultArt):0;
@@ -1229,6 +1233,11 @@ function resolve(c,t){
     if(!B.swordPlayed&&facSyn('haenam')&&!B.haenamDraw){B.haenamDraw=true;draw(1)}
     B.swordPlayed=true;
   }
+  // 장괘장권: 이 초식까지 친 횟수(다음 장괘 초식부터 +3씩)
+  if(c.art==='jk')B.jkN=(B.jkN||0)+1;
+  // 천하삼십육검 6성: 방어 +2 / 낙하구구검 10성: 방어 +3
+  if(c.art==='c36'&&st>=6)gainBlock(2);
+  if(c.art==='nakha'&&st>=10)gainBlock(3);
 }
 function afterHit(c,t){
   if(t.hp<=0||c.type==='def')return;
@@ -1257,7 +1266,7 @@ function draw(n){
 }
 function startTurn(){
   const B=G.b,P=G.p;
-  B.turn++;P.block=0;B.playedIds=[];B.chainArt=null;B.chainN=0;B.curCombo=null;
+  B.turn++;P.block=0;B.playedIds=[];B.jkN=0;B.chainArt=null;B.chainN=0;B.curCombo=null;
   const flawNow=P.st.flaw>0;if(P.st.flaw)P.st.flaw--;
   P.st.counter=0;B.noSword=false;B.hwasanPlayed=0;B.swordPlayed=false;B.haenamDraw=false;B.firstAtk=false;
   if(syn('hwabyeok'))P.block+=6;
@@ -1577,7 +1586,7 @@ ${S.relic&&!has(S.relic)?shopGood('s',ICON(S.relic,44),'심법 '+RELICS[S.relic]
 ${!has('hongok')?shopGood('r',ICON('hongok',44),'홍옥모니주',RELICS.hongok.d,110,false,"A.buyRelic('hongok',110)"):''}
 ${shopGood('g','','비급 뽑기','이번 판에 나오는 문파의 초식 하나를 무작위로 얻는다',60,false,'A.gacha()')}
 ${shopGood('x','','초식 버리기','덱에서 초식 하나를 골라 버린다. 버린 초식은 이번 판에 다시 나오지 않는다',70,S.removed,'A.shopRemove()')}
-${shopGood('t','','심득','은자를 들여 고수의 가르침을 받는다. 가진 무공 하나 성 +1(익스트림 7성부터는 깨달음 +1). 여러 번 할 수 있고 할수록 비싸진다',120+40*(P.flags.simdeuk||0),!Object.keys(P.stars).some(a=>P.stars[a]<10),'A.shopTrain()')}
+${shopGood('t','','심득','은자를 들여 고수의 가르침을 받는다. 가진 무공 하나 성 +1(익스트림 8성부터는 깨달음 +1). 여러 번 할 수 있고 할수록 비싸진다',120+40*(P.flags.simdeuk||0),!Object.keys(P.stars).some(a=>P.stars[a]<10),'A.shopTrain()')}
 ${shopGood('p','','금창약',`최대 체력의 25% 회복 (${Math.round(P.max*.25)}). 여러 번 살 수 있고 살수록 비싸진다`,35+20*(S.potionN||0),P.hp>=P.max,'A.potion()')}
 ${shopGood('j','','술 한 동이','어딘가에서 인연이 닿을지도 모른다',25,P.flags.wine,'A.wine()')}
 </div>
@@ -1590,7 +1599,7 @@ function restHTML(){
 <div style="display:flex;flex-direction:column;gap:8px">
 <button onclick="A.rest('heal')" style="text-align:left">운기조식 — 체력 ${heal} 회복</button>
 ${P.flags.samjeong==='held'?`<button onclick="A.rest('samjeong')" style="text-align:left">만년삼정을 복용한다 — 최대 체력 +16, 태을신공 강화(첫 턴 내력 +2)</button>`:''}
-<div class="panel" style="margin:4px 0"><b>수련</b> — 무공 하나의 성을 1 올린다<div class="row" style="margin-top:8px">${arts.map(a=>`<button onclick="A.train('${a}')">${ARTS[a].n} ${G.diff.id==='extreme'&&P.stars[a]>=6?`${P.stars[a]}성 · 깨달음 ${((P.starProg||{})[a]||0)}/2 → +1`:`${P.stars[a]}→${P.stars[a]+1}성`}</button>`).join('')||'<span class="muted">올릴 무공이 없다</span>'}</div></div>
+<div class="panel" style="margin:4px 0"><b>수련</b> — 무공 하나의 성을 1 올린다<div class="row" style="margin-top:8px">${arts.map(a=>`<button onclick="A.train('${a}')">${ARTS[a].n} ${G.diff.id==='extreme'&&P.stars[a]>=7?`${P.stars[a]}성 · 깨달음 ${((P.starProg||{})[a]||0)}/2 → +1`:`${P.stars[a]}→${P.stars[a]+1}성`}</button>`).join('')||'<span class="muted">올릴 무공이 없다</span>'}</div></div>
 </div></div>`;
 }
 function campHTML(){
@@ -1627,7 +1636,7 @@ function closeModal(){const m=document.getElementById('modal');m.classList.remov
 document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!G.afterRemove)closeModal()});
 function bookHTML(){
   const P=G.p;
-  const arts=Object.keys(P.stars).map(a=>{const A0=ARTS[a],s=P.stars[a],pr=(P.starProg||{})[a]||0;return `<tr><td><b>${A0.n}</b><br><span class="muted">${FACS[A0.f].n}</span></td><td><span class="stars">${'★'.repeat(s)}</span><span class="muted">${'☆'.repeat(10-s)}</span> ${s}성${G.diff.id==='extreme'&&s>=6&&s<10?` <span class="chip">깨달음 ${pr}/2</span>`:''}</td><td style="font-size:12px">6성: ${A0.m6||M6}<br>10성: ${A0.m10||M10}</td></tr>`}).join('');
+  const arts=Object.keys(P.stars).map(a=>{const A0=ARTS[a],s=P.stars[a],pr=(P.starProg||{})[a]||0;return `<tr><td><b>${A0.n}</b><br><span class="muted">${FACS[A0.f].n}</span></td><td><span class="stars">${'★'.repeat(s)}</span><span class="muted">${'☆'.repeat(10-s)}</span> ${s}성${G.diff.id==='extreme'&&s>=7&&s<10?` <span class="chip">깨달음 ${pr}/2</span>`:''}</td><td style="font-size:12px">6성: ${A0.m6||M6}<br>10성: ${A0.m10||M10}</td></tr>`}).join('');
   const syns=Object.keys(SYN_INFO).map(k=>`<div style="font-size:13px;${syn(k)?'':'opacity:.5'}">${syn(k)?'✓':'·'} <b>${SYN_INFO[k][0]}</b> — ${SYN_INFO[k][1]}</div>`).join('');
   const facs=G.facs.map(f=>`<div style="font-size:13px;${facSyn(f)?'':'opacity:.6'}">${facSyn(f)?'✓':'·'} <b>${FACS[f].n}</b> ${facCount(f)}/${FACS[f].need} — ${FACS[f].bonus}</div>`).join('');
   return `<h2>무공록</h2><h3>병기</h3>${P.weapons.length?P.weapons.map(w=>`<div style="font-size:13px;margin:4px 0">${P.wpn===w?'<b>[장착]</b> ':`<button class="tbtn" onclick="A.equip('${w}')" ${G.b?'disabled title="전투 중에는 바꿀 수 없다"':''}>장착</button> `}${ICON(w,44)}<b>${WEAPONS[w].n}</b> (${WEAPONS[w].k}) — ${WEAPONS[w].d}</div>`).join(''):'<div class="muted" style="font-size:13px">아직 병기가 없다. 보스·정예·히든·상점에서 얻는다.</div>'}<h3>심법·기물</h3>${(()=>{const need=["taeeul","hyeoncheong","chileum1","chileum2","guyang1","guyang2","cheondan","taejin"];if(has("yukhap"))return `<div class="panel" style="font-size:13px;border-color:var(--gold)"><b>육합귀진신공 완성</b></div>`;const left=need.filter(r=>!has(r));return `<div class="panel" style="font-size:13px;border-color:var(--gold)"><b>육합귀진신공</b> ${need.length-left.length}/${need.length} — 남은 것: ${left.map(r=>RELICS[r].n).join(", ")}</div>`})()}${P.relics.map(r=>`<div style="font-size:13px;margin:3px 0">${ICON(r,32)}<b>${RELICS[r].n}</b> — ${RELICS[r].d}</div>`).join('')}
