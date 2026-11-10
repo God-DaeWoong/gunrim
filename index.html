@@ -856,6 +856,8 @@ function startBattle(group,kind){
   const P=G.p;
   G.b={enemies:group.map(makeEnemy),draw:shuffle(P.deck.map(x=>({...x}))),hand:[],discard:[],exhaust:[],energy:0,turn:0,artUse:{},kind,target:0,noSword:false,hwasanPlayed:0,swordPlayed:false,haenamDraw:false,busy:false,log:[],floats:[]};
   if(kind==='midboss')G.b.enemies.forEach(e=>{e.hp=e.max=Math.round(e.max*.75)});
+  // 헬·익스트림 2층 보스·중간보스는 체력 85%(2층부터 보스 연전이 붙어 덱이 갖춰지기 전에 벽이 되므로)
+  if(G.floor===2&&['hell','extreme'].includes(G.diff.id)&&(kind==='boss'||kind==='midboss'))G.b.enemies.forEach(e=>{e.hp=e.max=Math.round(e.max*.85)});
   preloadFx(P.deck.map(x=>x.id),group);
   P.st={};P.block=0;
   G.screen='battle';
