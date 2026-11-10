@@ -232,7 +232,8 @@ card('milmil','천하밀밀','c36','def',1,'r',{block:12,text:'가장 완벽한 
 card('seongsan','천하성산','c36','atk',2,'r',{dmg:4,hits:3,all:1,text:'유성우처럼 쏟아진다'},['s']);
 // 종남 · 유운검법
 card('unmu','운무중첩','yuun','atk',1,'c',{dmg:5,hits:2,hitsFn:st=>st>=6?3:2,text:'6성: 3연타'},['s']);
-card('geombong','유운검봉','yuun','atk',2,'r',{dmg:3,hits:4,hitsFn:st=>st>=10?1:4+Math.floor(st/3),dmgFn:(b,t,st)=>st>=10?Math.floor(b*(4+Math.floor(st/3))*1.5):b,text:'3성마다 검봉 +1. 10성: 하나로 합쳐 총 피해 ×1.5'},['s']);
+// 검봉 여럿을 한꺼번에 날린다. 6성·병기·시너지로 덧붙는 피해는 검봉마다가 아니라 전체에 한 번만 붙는다
+card('geombong','유운검봉','yuun','atk',2,'r',{dmg:4,dmgFn:(b,t,st)=>{const n=4+Math.floor(st/3);return Math.floor((4*n+(b-4))*(st>=10?1.2:1))},text:'검봉 4개를 한꺼번에(3성마다 +1). 10성: 하나로 합쳐 ×1.2'},['s']);
 card('baeun','배운축월','yuun','atk',1,'c',{dmg:8,ap:{vuln:2}},['s']);
 card('chulgok','유운출곡','yuun','def',1,'c',{block:6,self:{nextAtk:4},text:'다음 공격 피해 +4'},['s']);
 card('amjeon','운중암전','yuun','atk',1,'r',{dmg:8,pierce:1},['s']);
@@ -247,11 +248,11 @@ card('cheongang','천강은홍','nakha','def',1,'r',{block:5,self:{counter:7},te
 card('hongdan','홍단서천','hongdan','atk',1,'r',{dmg:14,text:'검을 던진다. 이번 턴 다른 검 초식 사용 불가',fx:()=>{G.b.noSword=true}},['s','hw']);
 card('muyeom','무염십팔보','muyeom','skill',1,'r',{self:{dodge:1},draw:1},['st']);
 // 절초
-card('geomjeong','검정중원(미완)',null,'ult',3,'l',{dmg:40,self:{flaw:1},hidden:1,fac:'jongnam',text:'허점: 다음 적 턴에 받는 피해 1.5배'},['s']);
-card('geomjeong2','나의 검정중원',null,'ult',3,'l',{dmg:50,hidden:1,fac:'jongnam',text:'대상이 살아남으면 추가 피해 25'},['s']);
-card('cheonhamugung','천하무궁',null,'ult',2,'l',{dmg:3,hits:12,hidden:1,fac:'jongnam',text:'12방위 × 3검화'},['s']);
+card('geomjeong','검정중원(미완)',null,'ult',3,'l',{dmg:60,ultArt:'yuun',self:{flaw:1},hidden:1,fac:'jongnam',text:'허점: 다음 적 턴에 받는 피해 1.5배'},['s']);
+card('geomjeong2','나의 검정중원',null,'ult',3,'l',{dmg:75,ultArt:'yuun',hidden:1,fac:'jongnam',text:'대상이 살아남으면 추가 피해 25'},['s']);
+card('cheonhamugung','천하무궁',null,'ult',2,'l',{dmg:3,ultArt:'c36',hits:12,hidden:1,fac:'jongnam',text:'12방위 × 3검화'},['s']);
 card('jaha','자하천래',null,'ult',2,'l',{dmg:24,ap:{vuln:3},hidden:1,fac:'jongnam'},['s']);
-card('jajeon','자전진구소',null,'ult',3,'l',{dmg:36,pierce:1,hidden:1,fac:'giyeon',text:'야율척에게 피해 1.5배'},['s']);
+card('jajeon','자전진구소',null,'ult',3,'l',{dmg:36,ultArt:'nakjeon',pierce:1,hidden:1,fac:'giyeon',text:'야율척에게 피해 1.5배'},['s']);
 card('dara1h','대라궁해(반쪽)',null,'ult',2,'l',{dmg:16,all:1,hidden:1,fac:'giyeon'},['s']);
 card('dara1','대라궁해',null,'ult',2,'l',{dmg:28,all:1,hidden:1,fac:'giyeon'},['s']);
 card('dara2','대라장천',null,'ult',2,'l',{dmg:18,self:{str:3},hidden:1,fac:'giyeon'},['s']);
@@ -653,12 +654,12 @@ function edgeOk(r,l1,l2){const a=G.map.rows[r][0].type,b=G.map.rows[r+1][0].type
 
 /* ================= 히든 스테이지 ================= */
 const HIDDEN={
-  seoksil:{n:'중봉 석실',minF:2,cond:()=>distinctArt('yuun')>=4,text:'종남산 중봉의 석실. 혈선 정립병의 애검 용영검과 《혈선비록》, 곽일산의 유운검결이 남아 있다. 《혈선비록》의 아홉 번째 비기는 육합귀진신공의 잃어버린 구결, 종남에서 가장 패도적인 태진강기다. 원작에서 진산월은 이곳에서 3년을 보내고 검정중원을 만들었다.',run:()=>{acquireWeapon('yongyeong');starUp('yuun',2,'석실 수련');acquireCard('geomjeong');if(!has('taejin'))acquireRelic('taejin')}},
-  yeolseok:{n:'열석대진',minF:2,cond:()=>starOf('c36')>=3,text:'돌무더기로 쌓은 진. 12방위에 9가지 변화, 모두 36방의 구조가 보인다.',run:()=>acquireCard('cheonhamugung')},
-  beolmo:{n:'벌모세수',minF:1,cond:()=>G.p.flags.poisoned,text:'몸에 쌓인 독을 몰아내며 체질을 씻어 낸다. 원작에서 진산월은 앙천지독과 부시독을 이겨 내고 약류장을 완성했다.',run:()=>{G.p.max+=12;healP(12);G.p.flags.poisoned=false;acquireCard('yakryu')}},
+  seoksil:{n:'중봉 석실',minF:2,cond:()=>distinctArt('yuun')>=4,text:'종남산 중봉의 석실. 혈선 정립병의 애검 용영검과 《혈선비록》, 곽일산의 유운검결이 남아 있다. 《혈선비록》의 아홉 번째 비기는 육합귀진신공의 잃어버린 구결, 종남에서 가장 패도적인 태진강기다. 원작에서 진산월은 이곳에서 3년을 보내고 검정중원을 만들었다.',run:()=>{acquireWeapon('yongyeong');starUp('yuun',G.diff.id==='extreme'?1:2,'석실 수련');acquireCard('geomjeong');if(!has('taejin'))acquireRelic('taejin')}},
+  yeolseok:{n:'열석대진',minF:2,cond:()=>starOf('c36')>=3,text:'돌무더기로 쌓은 진. 12방위에 9가지 변화, 모두 36방의 구조가 보인다.',skip:1,choices:[[`${CARDS.cheonhamugung.name}을(를) 깨우친다`,()=>acquireCard('cheonhamugung')]]},
+  beolmo:{n:'벌모세수',minF:1,cond:()=>G.p.flags.poisoned,text:'몸에 쌓인 독을 몰아내며 체질을 씻어 낸다. 원작에서 진산월은 앙천지독과 부시독을 이겨 내고 약류장을 완성했다.',skip:1,skipRun:()=>{G.p.max+=12;healP(12);G.p.flags.poisoned=false},run:()=>{G.p.max+=12;healP(12);G.p.flags.poisoned=false;acquireCard('yakryu')}},
   soseon:{n:'소선의 유진',minF:2,cond:()=>fpOther()>=3,text:'소선 우일기가 남긴 유진. 일곱 가지 절학과 천단신공이 적혀 있다. 하나만 가져갈 수 있다.',choices:[['천단신공 (심법)',()=>acquireRelic('cheondan')],['묵령갑 (병기)',()=>acquireWeapon('mukryeong')],['뇌정만균 (낙뢰신권)',()=>acquireCard('noejeong')],['서우망월 (구반장법)',()=>acquireCard('seou')]]},
-  seoga:{n:'서가보 장경각',minF:3,cond:()=>Math.random()<.3,text:'불탄 장경각에서 겉표지가 탄 비급을 건졌다. 낙전칠검이다.',run:()=>{acquireCard('nakjeon');acquireCard('jajeon')}},
-  chwiseon:{n:'취선의 비급',minF:1,cond:()=>G.p.flags.wine,text:'술잔을 나눈 노인이 비급 하나를 남기고 사라졌다. 취선의 삼대절학이다.',choices:[['취선호',()=>acquireCard('chwiseonho')],['용수각',()=>acquireCard('yongsu')],['호로불방',()=>acquireCard('horo')]]},
+  seoga:{n:'서가보 장경각',minF:3,cond:()=>Math.random()<.3,text:'불탄 장경각에서 겉표지가 탄 비급을 건졌다. 낙전칠검이다.',skip:1,choices:[[`${CARDS.nakjeon.name} (낙전칠검)`,()=>acquireCard('nakjeon')],[`${CARDS.jajeon.name} (낙전칠검)`,()=>acquireCard('jajeon')]]},
+  chwiseon:{n:'취선의 비급',minF:1,cond:()=>G.p.flags.wine,text:'술잔을 나눈 노인이 비급 하나를 남기고 사라졌다. 취선의 삼대절학이다.',skip:1,choices:[['취선호',()=>acquireCard('chwiseonho')],['용수각',()=>acquireCard('yongsu')],['호로불방',()=>acquireCard('horo')]]},
 };
 function checkHidden(){
   const F=G.p.flags,cur=G.map.cur,tr=cur?cur.r+1:0;
@@ -711,7 +712,14 @@ function starUp(art,n,why){
   const P=G.p,before=P.stars[art]||0;
   if(before>=10){const lo=Object.keys(P.stars).filter(a=>a!==art&&P.stars[a]<10).sort((a,b)=>P.stars[a]-P.stars[b])[0];
     if(lo){toast(ARTS[art].n+' 대성의 깨달음이 '+ARTS[lo].n+'(으)로 이어진다');starUp(lo,n,why)}else{P.gold+=50;toast(ARTS[art].n+' 대성 · 은자 +50')}return}
-  P.stars[art]=Math.min(10,before+n);const now=P.stars[art];
+  // 익스트림: 7성부터는 깨달음 두 번에 한 성(starProg에 반쯤 쌓인 깨달음을 둔다)
+  if(G.diff&&G.diff.id==='extreme'){
+    P.starProg=P.starProg||{};let s=before,pr=P.starProg[art]||0;
+    for(let i=0;i<n&&s<10;i++){if(s<6)s++;else{pr++;if(pr>=2){s++;pr=0}}}
+    P.starProg[art]=pr;P.stars[art]=s;
+    if(s===before){toast(`${why} → ${ARTS[art].n} 깨달음 ${pr}/2 (${s+1}성까지)`);return}
+  }else P.stars[art]=Math.min(10,before+n);
+  const now=P.stars[art];
   toast(`${why} → ${ARTS[art].n} ${now}성`);
   if(before<6&&now>=6&&art==='nakha'&&!hasCard('jaha'))acquireCard('jaha');
   if(before<10&&now>=10){
@@ -874,7 +882,8 @@ function calcDmg(c,t){
   if(facSyn('jeomchang')&&t&&t.intent&&t.intent.d)b+=3;
   if(c.dmgFn)b=c.dmgFn(b,t,st);
   const cb=G.b&&G.b.curCombo;if(cb&&cb.add)b+=cb.add;
-  let m=c.art?1+.08*(Math.max(1,st)-1):1;
+  const sa=c.art?st:c.ultArt?starOf(c.ultArt):0;
+  let m=sa?1+.08*(Math.max(1,sa)-1):1;
   if(G.b&&G.b.chainArt===c.art&&G.b.chainN>=2&&c.art)m*=Math.min(1.3,1+.08*(G.b.chainN-1));
   if(cb&&cb.mul)m*=cb.mul;
   if(P.st.weak)m*=.75;
@@ -1538,7 +1547,7 @@ function eventHTML(){
 function hiddenHTML(){
   const h=HIDDEN[G.hid];
   return `<div class="panel" style="border-color:var(--gold)"><div class="chip" style="border-color:var(--gold);color:var(--gold)">숨은 길</div><h2>${h.n}</h2><p class="serif" style="line-height:1.8">${h.text}</p>
-<div style="display:flex;flex-direction:column;gap:8px">${h.choices?h.choices.map((c,i)=>`<button onclick="A.hiddenChoose(${i})" style="text-align:left">${c[0]}</button>`).join(''):`<button onclick="A.hiddenChoose(-1)">기연을 받아들인다</button>`}</div></div>`;
+<div style="display:flex;flex-direction:column;gap:8px">${h.choices?h.choices.map((c,i)=>`<button onclick="A.hiddenChoose(${i})" style="text-align:left">${c[0]}</button>`).join(''):`<button onclick="A.hiddenChoose(-1)">기연을 받아들인다</button>`}${h.skip?`<button onclick="A.hiddenSkip()" style="text-align:left">배우지 않는다 — 대신 덱에서 초식 하나를 버린다${h.skipRun?' (몸은 씻어 낸다)':''}</button>`:''}</div></div>`;
 }
 // 상점 물건 한 줄: 아이콘·이름·설명·값과 산다 버튼. 고른 물건(S.pick)만 버튼이 "산다"로 바뀐다
 function shopGood(key,icon,name,desc,price,soldOut,act){
@@ -1653,6 +1662,7 @@ const A={
   takeExtra:id=>{acquireCard(id);G.reward.extra=[];if(!G.reward.opts.length)finishReward();else render()},
   skip:()=>finishReward(),
   choose:i=>{const c=G.ev.c[i];if(c[2]&&c[2]())return;const r=c[1]();if(r!=='wait')completeNode()},
+  hiddenSkip:()=>{const h=HIDDEN[G.hid];if(h.skipRun)h.skipRun();completeNode();openRemove(()=>render())},
   hiddenChoose:i=>{const h=HIDDEN[G.hid];if(i<0)h.run();else h.choices[i][1]();completeNode()},
   pick:k=>{G.shop.pick=G.shop.pick===k?null:k;render()},
   buy:i=>{const x=G.shop.cards[i];if(x.sold||G.p.gold<x.price)return;G.p.gold-=x.price;x.sold=true;acquireCard(x.id);G.shop.pick=null;render()},
