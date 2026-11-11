@@ -1013,7 +1013,7 @@ const TID=()=>G.m*2+G.half;
 function tagAway(){if(typeof G==='undefined'||!G||!G.ds)return;const t=TID();for(const d of G.ds){if(d.pos==='away'){if(!d.awayTag){d.awayTag=1;d.leftT=t}}else d.awayTag=0}}
 function render(){tagAway();
   const app=document.getElementById('app');
-  if(G.over||G.done){app.innerHTML=topBar()+`<div class="wrap"><div class="panel"><h2>${G.over?'몰락':(G.ending?G.ending.n:'끝')}</h2><p>${G.over||(G.ending?G.ending.p.join(' '):'')}${G.flags.choDone?' 초가보를 무너뜨렸다.':''}${G.flags.geomjeong?' 검정중원을 얻었다.':''}${G.flags.soseon?' 낙일방이 소선의 유진을 얻었다.':''}</p>
+  if(G.over||G.done){app.innerHTML=topBar()+`<div class="wrap"><div class="panel">${(()=>{const good=!G.over&&G.ending&&G.ending.n!=='몰락';return `<img src="img/${good?'bonsan2':'bonsan1'}.webp" alt="" style="width:100%;border-radius:10px;margin-bottom:10px;display:block">`})()}<h2>${G.over?'몰락':(G.ending?G.ending.n:'끝')}</h2><p>${G.over||(G.ending?G.ending.p.join(' '):'')}${G.flags.choDone?' 초가보를 무너뜨렸다.':''}${G.flags.geomjeong?' 검정중원을 얻었다.':''}${G.flags.soseon?' 낙일방이 소선의 유진을 얻었다.':''}</p>
 <p>은자 ${G.eun} · 명성 ${G.fame} · 호감 ${G.fav} · 구파 자격 ${G.qual} · 제자 ${G.ds.length}명</p><button class="main" onclick="A.restart()">처음부터</button></div><div class="panel"><div class="log">${G.log.join('<br>')}</div></div></div>`;return}
   const qn=G.q.length;
   app.innerHTML=topBar()+`<div class="wrap"><div class="tabs">${[['main','본산'],['map','지도'],['disc','제자'],['dev','개발'],['ev',`사건${qn?` (${qn})`:''}`],['cal','일정']].map(([k,n])=>`<button class="${TAB===k?'on':''}" onclick="A.tab('${k}')">${n}</button>`).join('')}
