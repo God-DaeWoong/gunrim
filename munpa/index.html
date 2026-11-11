@@ -90,7 +90,7 @@ const ROSTER=[
   {id:'eung',n:'응계성',r:'사제',img:'img/eung.webp',st:{tong:50,ji:35,jeong:25,ma:40,geom:45,gwon:80,oseong:45},ch:85,arts:{janggwae:5,taeeul:4}},
   {id:'nak',n:'낙일방',r:'사제',img:'img/nak.webp',st:{tong:45,ji:50,jeong:30,ma:65,geom:40,gwon:95,oseong:70},ch:85,arts:{janggwae:5,taeeul:3}},
   {id:'du',n:'두기춘',r:'사제',rl:'dugichun',st:{tong:40,ji:80,jeong:70,ma:70,geom:50,gwon:45,oseong:75},ch:35,arts:{yuun:5,taeeul:4}},
-  {id:'jeong',n:'정해',r:'사제',st:{tong:55,ji:80,jeong:75,ma:60,geom:60,gwon:55,oseong:70},ch:80,arts:{yuun:5,taeeul:4}},
+  {id:'jeong',n:'정해',r:'사제',img:'img/jeong.webp',st:{tong:55,ji:80,jeong:75,ma:60,geom:60,gwon:55,oseong:70},ch:80,arts:{yuun:5,taeeul:4}},
   {id:'ak',n:'악자화',r:'사형',st:{tong:60,ji:70,jeong:50,ma:55,geom:90,gwon:60,oseong:80},ch:40,arts:{yuun:6,cheonha:5,taeeul:5}},
   {id:'bang',n:'방취아',r:'막내',st:{tong:30,ji:60,jeong:40,ma:80,geom:65,gwon:45,oseong:65},ch:90,arts:{wolnyeo:4,taeeul:3}}
 ];
@@ -756,7 +756,7 @@ if(/[?&]gallery=1/.test(location.search)){const rows=[];
   for(const n in RLEN)add('로그라이크 적',n,rlImg(RLEN[n][0]),RLEN[n][1]?RLEN[n][1].join('·'):'');
   document.getElementById('app').innerHTML=`<div class="wrap"><h2>초상 점검</h2><p class="muted">✕는 파일이 있어야 하는데 안 열린 것, 글자는 아직 그림이 없는 것이다.</p><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${rows.join('')}</div></div>`}
 else if(BOT){save=()=>{};newGame();TAB="main";setInterval(botMonth,1500)}
-else if(load()){for(const d of G.ds){if(d.id==='lim')d.img='img/lim.webp';if(d.id==='mae')d.img='img/mae.webp';if(d.id==='so')d.img='img/so.webp';if(d.id==='eung')d.img='img/eung.webp';if(d.id==='nak')d.img=d.mukryeong?'img/nak2.webp':'img/nak.webp';if(d.id==='ilbi'){d.arts.muyeom=d.arts.muyeom||8;d.arts.nanhwa=d.arts.nanhwa||7;d.arts.yeomhwa=d.arts.yeomhwa||6}if(d.id==='jin'){d.rl='player';delete d.img}if(d.id==='du'){d.rl='dugichun';delete d.img}}for(const d of G.ds){if(d.st&&d.st.mugol!=null&&d.st.geom==null){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{...d.st,geom:d.st.mugol,gwon:d.st.mugol}}}for(const d of G.ds)if(!d.st){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{tong:50,ji:50,jeong:50,ma:50,geom:60,gwon:60,oseong:60}}if(G.ilbi==='early')addIlbi(false);if(G.half==null){G.half=0;G.act=Math.min(G.act,1)}if(!G.ilbi)MODAL=prologue();if(G.flags.seongsim&&!G.flags.taeeul&&!G.q.some(e=>e.id==='taeeul'))openTaeeul();render()}else newGame();
+else if(load()){for(const d of G.ds){if(d.id==='lim')d.img='img/lim.webp';if(d.id==='mae')d.img='img/mae.webp';if(d.id==='so')d.img='img/so.webp';if(d.id==='eung')d.img='img/eung.webp';if(d.id==='jeong')d.img='img/jeong.webp';if(d.id==='nak')d.img=d.mukryeong?'img/nak2.webp':'img/nak.webp';if(d.id==='ilbi'){d.arts.muyeom=d.arts.muyeom||8;d.arts.nanhwa=d.arts.nanhwa||7;d.arts.yeomhwa=d.arts.yeomhwa||6}if(d.id==='jin'){d.rl='player';delete d.img}if(d.id==='du'){d.rl='dugichun';delete d.img}}for(const d of G.ds){if(d.st&&d.st.mugol!=null&&d.st.geom==null){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{...d.st,geom:d.st.mugol,gwon:d.st.mugol}}}for(const d of G.ds)if(!d.st){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{tong:50,ji:50,jeong:50,ma:50,geom:60,gwon:60,oseong:60}}if(G.ilbi==='early')addIlbi(false);if(G.half==null){G.half=0;G.act=Math.min(G.act,1)}if(!G.ilbi)MODAL=prologue();if(G.flags.seongsim&&!G.flags.taeeul&&!G.q.some(e=>e.id==='taeeul'))openTaeeul();render()}else newGame();
 </script>
 </body>
 </html>
