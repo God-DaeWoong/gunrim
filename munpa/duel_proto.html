@@ -34,6 +34,7 @@ button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid #8a6a3a;
 <div id="app"></div></div>
 <script>
 const RL_LOCAL=location.protocol==='file:';
+const rlImg=n=>RL_LOCAL?`../../군림천하_로그라이크/img/${n}.png`:`../img/${n}.webp`;
 const rlFx=n=>RL_LOCAL?`../../군림천하_로그라이크/img/fx/${n}_sheet.png`:`../img/fx/${n}_sheet.webp`;
 // 무공(문파 경영 아이디) → 그 무공의 초식 카드. 수치는 로그라이크 그대로, 없는 무공(월녀검법·난화지·염화옥수)은 새로 만든다
 const CARDS={};const card=(id,n,art,type,cost,spec)=>CARDS[id]=Object.assign({id,n,art,type,cost},spec);
@@ -60,7 +61,7 @@ const HEROES={
  jin:{n:'진산월',img:'img/jin.png',arts:{yuun:6,cheonha:6,nakha:5,janggwae:4,yakryu:3,hongdan:1},pas:{taeeul:3,hyeoncheong:1,hoeseon:1}},
  lim:{n:'임영옥',img:'img/lim.webp',arts:{yuun:7,wolnyeo:6},pas:{taeeul:5,hoeseon:1}},
  nak:{n:'낙일방',img:'img/nak.webp',arts:{janggwae:5},pas:{taeeul:3,janggwaebo:1}}};
-const FOES={gojin:{n:'형산 고진',pw:150},seong:{n:'초가보 상관명',pw:190},gang:{n:'무당 송문',pw:230}};
+const FOES={gojin:{n:'형산 고진',pw:150,img:rlImg('gojin')},choil:{n:'초가보 초일산',pw:190,img:'img/choil.webp'},yujung:{n:'유중악',pw:240,img:rlImg('yujung')}};
 const mul=lv=>.7+.06*lv; // 5성 1.0, 10성 1.3
 let S=null,PICK={hero:'jin',foe:'gojin',arts:[]};
 function setup(){const h=HEROES[PICK.hero];if(!PICK.arts.length)PICK.arts=Object.keys(h.arts).filter(a=>Object.values(CARDS).some(c=>c.art===a)).sort((a,b)=>h.arts[b]-h.arts[a]).slice(0,3);
@@ -103,7 +104,7 @@ function enemyTurn(){if(S.over)return;S.disc.push(...S.hand);S.hand=[];const it=
   S.p.counter=0;for(const t of ['vuln','weak']){if(S.e[t])S.e[t]--;if(S.p[t])S.p[t]--}
   if(S.p.hp<=0){S.p.hp=0;return end()}if(S.e.hp<=0){S.e.hp=0;return end()}nextTurn()}
 function end(){S.over=true;const pr=S.p.hp/S.p.max,er=S.e.hp/S.e.max;S.win=S.e.hp<=0||(S.p.hp>0&&pr>er);S.log.unshift(S.win?`<b>${S.h.n}의 승리</b>`:`<b>${S.f.n}의 승리</b>`);draw()}
-function side(who){const isP=who==='p',o=isP?S.p:S.e,img=isP?S.h.img:'';
+function side(who){const isP=who==='p',o=isP?S.p:S.e,img=isP?S.h.img:S.f.img;
   const st=[o.vuln?`내상 ${o.vuln}`:'',o.weak?`약화 ${o.weak}`:'',isP&&o.dodge?`회피 ${o.dodge}`:'',isP&&o.counter?`반격 ${o.counter}`:'',isP&&o.nextAtk?`다음 공격 +${o.nextAtk}`:''].filter(Boolean).join(' · ');
   return `<div class="side ${S.fx&&S.fx.side===who?'hit':''}">${S.fx&&S.fx.side===who?`<div class="fx" data-fx="${S.fx.n}"></div>`:''}${S.pops.filter(x=>x.side===who).map(x=>`<div class="pop" style="${x.blue?'color:#9cc8ff':''}">${x.t}</div>`).join('')}
    <div class="pt" style="${img?`background-image:url(${img})`:''}"></div><b>${isP?S.h.n:S.f.n}</b>
