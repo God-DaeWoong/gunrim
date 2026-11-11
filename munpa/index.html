@@ -708,7 +708,7 @@ function modalHTML(){if(!MODAL)return'';return `<div class="modal"><div class="b
 <div class="ch">${MODAL.ch.map((c,i)=>`<button onclick="A.choose(${i})">${c[0]}</button>`).join('')}</div></div></div>`}
 function playFx(){document.querySelectorAll?.('.fx[data-fx]').forEach(el=>{const n=el.dataset.fx;el.removeAttribute('data-fx');el.style.backgroundImage=`url(${rlFx(n)})`;let f=0;const t=setInterval(()=>{el.style.backgroundPosition=`${(f%3)*50}% ${Math.floor(f/3)*100}%`;if(++f>=6){clearInterval(t);el.remove()}},90)})}
 /* ================= 연무장(도트) ================= */
-const YARD_ON=/[?&]yard=1/.test(typeof location!=='undefined'?location.search:'');
+const YARD_ON=!/[?&]yard=0/.test(typeof location!=='undefined'?location.search:'');
 // 인물마다 [머리색, 겉옷, 띠, 머리 모양] — 표지·초상 그림의 색을 따랐다
 const PAL={jin:['#1d1a16','#c9a24a','#5b4636','top'],lim:['#3b2a20','#3a3436','#3c4f8a','long'],mae:['#141414','#8a7550','#c9a020','spike'],so:['#8a8680','#c8c3bb','#c9a020','cap'],
   eung:['#8a6a45','#7a3e2c','#555','curl'],nak:['#8a5a30','#8a8580','#4a3f3f','tail'],jeong:['#141414','#4a4a63','#222','top'],bang:['#6a4a30','#6b7090','#3a4470','bob'],
