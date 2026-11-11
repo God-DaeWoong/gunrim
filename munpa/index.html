@@ -35,6 +35,7 @@ h1,h2,h3{font-family:'Nanum Myeongjo',serif;margin:.4em 0}
 .chip{display:inline-block;font-size:11px;border:1px solid var(--line);border-radius:10px;padding:1px 7px;margin:2px 2px 0 0}
 .chip.s{border-color:var(--blue);color:var(--blue)}
 .chip.m{border-color:var(--red);color:var(--red)}
+.chip.b{border-color:var(--green);color:var(--green)}
 .mind{height:5px;background:var(--paper2);border-radius:3px;margin-top:6px;overflow:hidden}
 .mind i{display:block;height:100%;background:var(--red)}
 select{font-family:inherit;font-size:13px;padding:3px}
@@ -88,26 +89,26 @@ const ARTS={
   wolnyeo:{n:'월녀검법',t:'m',w:'geom',cap:10}, yakryu:{n:'약류장',t:'m',w:'gwon',cap:10},
   taeeul:{n:'태을신공',t:'s',cap:10}, guyang:{n:'구양신공',t:'s',cap:10},
   hyeoncheong:{n:'현청건곤강기',t:'s',cap:10}, taejin:{n:'태진강기',t:'s',cap:10}, cheondan:{n:'천단신공',t:'s',cap:10},
-  muyeom:{n:'무염십팔보',t:'m',w:'sin',cap:10}, nanhwa:{n:'난화지',t:'m',w:'gwon',cap:10}, yeomhwa:{n:'염화옥수',t:'m',w:'gwon',cap:10},
+  muyeom:{n:'무염십팔보',t:'b',cap:2}, janggwaebo:{n:'장괘보',t:'b',cap:2}, eoryong:{n:'이어룡',t:'b',cap:2}, hoeseon:{n:'회선표',t:'b',cap:2}, waseon:{n:'와선보',t:'b',cap:2}, biyeon:{n:'비연신법',t:'b',cap:2}, nanhwa:{n:'난화지',t:'m',w:'gwon',cap:10}, yeomhwa:{n:'염화옥수',t:'m',w:'gwon',cap:10},
   guban:{n:'구반장법',t:'m',w:'gwon',cap:10}, nakroe:{n:'낙뢰신권',t:'m',w:'gwon',cap:10}, chileum:{n:'칠음진기',t:'s',cap:2}
 };
 // 전수할 수 있는 초식. 가르칠 사람(5성 이상)이 있어야 하고, 천하삼십육검은 충성 70 이상만 배운다
-const LIB=['yuun','cheonha','nakha','janggwae','hongdan','wolnyeo','yakryu','muyeom','nanhwa','yeomhwa','cheondan','taejin'];
+const LIB=['yuun','cheonha','nakha','janggwae','hongdan','wolnyeo','yakryu','hoeseon','eoryong','janggwaebo','waseon','biyeon','muyeom','nanhwa','yeomhwa','cheondan','taejin'];
 const SECRET={cheonha:70,muyeom:70,nanhwa:70,yeomhwa:70,cheondan:70,taejin:70};
 // 종남 심법 셋은 모두가 익히고 있고 성취만 다르다. 사부가 후계 후보로 키운 넷은 구양·현청이 1성
 const BASE_S=['taeeul','guyang','hyeoncheong'],SENIOR=['lim','mae','so','eung','ak'];
 // 제자: apt = 수련 배율, ch = 충성
 const ROSTER=[
-  {id:'jin',n:'진산월',r:'장문인',rl:'player',st:{tong:85,ji:80,jeong:65,ma:80,geom:95,gwon:70,oseong:80},ch:100,arts:{yuun:6,cheonha:6,nakha:5,janggwae:4,yakryu:3,hongdan:1,taeeul:3,guyang:1,hyeoncheong:1}},
-  {id:'lim',n:'임영옥',r:'사매',img:'img/lim.webp',st:{tong:55,ji:75,jeong:45,ma:85,geom:95,gwon:50,oseong:85},ch:95,taeum:1,arts:{yuun:7,wolnyeo:6,taeeul:5}},
-  {id:'mae',n:'매상',r:'사제',img:'img/mae.webp',st:{tong:60,ji:45,jeong:30,ma:40,geom:80,gwon:60,oseong:55},ch:80,arts:{cheonha:6,taeeul:5}},
-  {id:'so',n:'소지산',r:'사제',img:'img/so.webp',st:{tong:70,ji:55,jeong:55,ma:45,geom:70,gwon:50,oseong:60},ch:90,arts:{nakha:5,taeeul:4}},
-  {id:'eung',n:'응계성',r:'사제',img:'img/eung.webp',st:{tong:50,ji:35,jeong:25,ma:40,geom:45,gwon:80,oseong:45},ch:85,arts:{janggwae:5,taeeul:4}},
-  {id:'nak',n:'낙일방',r:'사제',img:'img/nak.webp',st:{tong:45,ji:50,jeong:30,ma:65,geom:40,gwon:95,oseong:70},ch:85,arts:{janggwae:5,taeeul:3}},
-  {id:'du',n:'두기춘',r:'사제',img:'img/du.webp',st:{tong:40,ji:80,jeong:70,ma:70,geom:50,gwon:45,oseong:75},ch:35,arts:{yuun:5,taeeul:4}},
-  {id:'jeong',n:'정해',r:'사제',img:'img/jeong.webp',st:{tong:55,ji:80,jeong:75,ma:60,geom:60,gwon:55,oseong:70},ch:80,arts:{yuun:5,taeeul:4}},
-  {id:'ak',n:'악자화',r:'사형',st:{tong:60,ji:70,jeong:50,ma:55,geom:90,gwon:60,oseong:80},ch:40,arts:{yuun:6,cheonha:5,taeeul:5}},
-  {id:'bang',n:'방취아',r:'막내',img:'img/bang.webp',st:{tong:30,ji:60,jeong:40,ma:80,geom:65,gwon:45,oseong:65},ch:90,arts:{wolnyeo:4,taeeul:3}}
+  {id:'jin',n:'진산월',r:'장문인',rl:'player',st:{tong:85,ji:80,jeong:65,ma:80,geom:95,gwon:70,oseong:80},ch:100,arts:{hoeseon:1,janggwaebo:1,eoryong:1,yuun:6,cheonha:6,nakha:5,janggwae:4,yakryu:3,hongdan:1,taeeul:3,guyang:1,hyeoncheong:1}},
+  {id:'lim',n:'임영옥',r:'사매',img:'img/lim.webp',st:{tong:55,ji:75,jeong:45,ma:85,geom:95,gwon:50,oseong:85},ch:95,taeum:1,arts:{hoeseon:1,eoryong:1,yuun:7,wolnyeo:6,taeeul:5}},
+  {id:'mae',n:'매상',r:'사제',img:'img/mae.webp',st:{tong:60,ji:45,jeong:30,ma:40,geom:80,gwon:60,oseong:55},ch:80,arts:{waseon:1,cheonha:6,taeeul:5}},
+  {id:'so',n:'소지산',r:'사제',img:'img/so.webp',st:{tong:70,ji:55,jeong:55,ma:45,geom:70,gwon:50,oseong:60},ch:90,arts:{eoryong:1,nakha:5,taeeul:4}},
+  {id:'eung',n:'응계성',r:'사제',img:'img/eung.webp',st:{tong:50,ji:35,jeong:25,ma:40,geom:45,gwon:80,oseong:45},ch:85,arts:{janggwaebo:1,janggwae:5,taeeul:4}},
+  {id:'nak',n:'낙일방',r:'사제',img:'img/nak.webp',st:{tong:45,ji:50,jeong:30,ma:65,geom:40,gwon:95,oseong:70},ch:85,arts:{janggwaebo:1,janggwae:5,taeeul:3}},
+  {id:'du',n:'두기춘',r:'사제',img:'img/du.webp',st:{tong:40,ji:80,jeong:70,ma:70,geom:50,gwon:45,oseong:75},ch:35,arts:{eoryong:1,yuun:5,taeeul:4}},
+  {id:'jeong',n:'정해',r:'사제',img:'img/jeong.webp',st:{tong:55,ji:80,jeong:75,ma:60,geom:60,gwon:55,oseong:70},ch:80,arts:{waseon:1,yuun:5,taeeul:4}},
+  {id:'ak',n:'악자화',r:'사형',st:{tong:60,ji:70,jeong:50,ma:55,geom:90,gwon:60,oseong:80},ch:40,arts:{hoeseon:1,waseon:1,yuun:6,cheonha:5,taeeul:5}},
+  {id:'bang',n:'방취아',r:'막내',img:'img/bang.webp',st:{tong:30,ji:60,jeong:40,ma:80,geom:65,gwon:45,oseong:65},ch:90,arts:{biyeon:2,hoeseon:1,eoryong:1,wolnyeo:4,taeeul:3}}
 ];
 // 능력치 이름. 무골은 초식, 오성은 심법이 오르는 속도(80이 보통)
 const STN={tong:'통솔',ji:'지력',jeong:'정치',ma:'매력',geom:'검재',gwon:'권재',oseong:'오성'};
@@ -167,8 +168,8 @@ const costOf=lv=>lv<3?1:lv<6?2:lv<9?3:4;
 function gateOf(d,a){const lv=d.arts[a];if(a==='chileum'&&d.taeum&&has('ilbi'))return 0;if(lv===5)return 1;if(lv===9)return 2;return 0}
 function gainWis(d,n,why){d.wis=(d.wis||0)+n;log(`${d.n}이(가) ${why}에서 깨달음 ${n}을(를) 얻었다. (가진 깨달음 ${d.wis})`)}
 function capOf(d,a){if(a==='chileum')return d.taeum?10:2;if(d.capUp&&d.capUp[a])return 10;return ARTS[a].cap}
-function power(d){const ms=[],ss=[];for(const a in d.arts)(ARTS[a].t==='m'?ms:ss).push(d.arts[a]);ms.sort((a,b)=>b-a);ss.sort((a,b)=>b-a);
-  let p=(ms[0]||0)*10+(ms[1]||0)*3+(ss[0]||0)*5+(d.mukryeong?10:0);if(d.id==='jin'){if(G.flags.yongyeong)p+=15;if(G.flags.geomjeong)p+=20;if(d.capUp&&d.capUp.cheonha)p+=5}return p}
+function power(d){const ms=[],ss=[];for(const a in d.arts){if(ARTS[a].t==='b')continue;(ARTS[a].t==='m'?ms:ss).push(d.arts[a])}ms.sort((a,b)=>b-a);ss.sort((a,b)=>b-a);
+  let p=(ms[0]||0)*10+(ms[1]||0)*3+(ss[0]||0)*5+(d.mukryeong?10:0)+(d.arts.muyeom?d.arts.muyeom*8:0);if(d.id==='jin'){if(G.flags.yongyeong)p+=15;if(G.flags.geomjeong)p+=20;if(d.capUp&&d.capUp.cheonha)p+=5}return p}
 // 수련 방향이 없으면 올릴 수 있는 것 중 가장 높은 무공(한 우물)
 function pickFocus(d,t){
   const cur=t==='m'?d.focusM:d.focusS;
@@ -231,7 +232,7 @@ function endRetreat(){const j=D('jin');G.flags.yongyeong=1;gainWis(j,3,'석실 �
     ch:[['산을 내려간다.',()=>{log(`진산월이 출관했다. 용영검, 태진강기 3성, 태을신공 +1, 유운검법 → 유운검결 ${D('jin').arts.yuungyeol}성(+2)`+(gj?', 검정중원':''))}]]}}
 // 강일비: 임장홍의 사형. 본산에 머물지만 싸움에는 나서지 않는다(파견·위기·기습 제외). 늦은 길이면 정체를 숨긴 떠돌이 사내으로 지낸다
 function addIlbi(hidden){if(has('ilbi'))return;G.ds.push({id:'ilbi',n:hidden?'삿갓 쓴 사내':'강일비',r:hidden?'떠돌이 객':'사백(원로)',elder:1,img:hidden?'img/ilbi_hat.webp':'img/ilbi.webp',ch:90,
-  st:{tong:60,ji:90,jeong:50,ma:55,geom:95,gwon:70,oseong:95},arts:{yuun:8,cheonha:8,taeeul:8,guyang:3,hyeoncheong:3,chileum:2,muyeom:8,nanhwa:7,yeomhwa:6},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null})}
+  st:{tong:60,ji:90,jeong:50,ma:55,geom:95,gwon:70,oseong:95},arts:{yuun:8,cheonha:8,taeeul:8,guyang:3,hyeoncheong:3,chileum:2,muyeom:2,hoeseon:2,nanhwa:7,yeomhwa:6},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null})}
 // 문파 개발: 장문인 행동 1번과 은자로 시작하고, 순마다 진행된다. 동시에 둘까지
 const INCN={nohae:'노해광 첩보망',gyeong:'경요궁',sang:'서안 상권',yak:'약초밭',ju:'조암령 주루',pyo:'표국',land:'초가보 옛 땅'};
 const DEV=[
@@ -306,7 +307,7 @@ function startDuels(eid,lanes){const e=G.q.find(x=>x.id===eid);const list=[];
 function nextDuel(){const c=DUEL.list[DUEL.i];if(!c){const X=DUEL;DUEL=null;if(X.kind==='match')matchEnd(X);else fight(X.eid,X.lanes,X.mods);return}
   const d=D(c.d);DUEL.cur={...c,hp:[100,100],r:0,msg:[`${c.t}. ${c.bn}이(가) 앞으로 나섰다. ${d.n}이(가) 검을 뽑았다.`],emv:pickMove(),hit:null};render()}
 function pickMove(){const ks=['kang','kwae','su'];return ks[Math.floor(Math.random()*3)]}
-function tellOf(c){if(c.fake==null||c.fakeR!==c.r){c.fakeR=c.r;c.fake=Math.random()<.5?['kang','kwae','su'].filter(k=>k!==c.emv)[Math.floor(Math.random()*2)]:c.emv}return TELL[c.fake][c.r%2]}
+function tellOf(c){if(c.fake==null||c.fakeR!==c.r){c.fakeR=c.r;c.fake=Math.random()<(.5-Math.max(boV(D(c.d),'waseon'),0))?['kang','kwae','su'].filter(k=>k!==c.emv)[Math.floor(Math.random()*2)]:c.emv}return TELL[c.fake][c.r%2]}
 // 일기토에 쓰는 무공: 수련 중인 초식, 없으면 가장 높은 초식
 function duelArt(d){const ms=Object.keys(d.arts).filter(a=>ARTS[a].t==='m'&&MOVES[a]);if(d.focusM&&MOVES[d.focusM])return d.focusM;return ms.sort((a,b)=>d.arts[b]-d.arts[a])[0]}
 function mvName(d,mv){const a=duelArt(d),i=['kang','kwae','su'].indexOf(mv);if(!a)return MV[mv];if(a==='cheonha'&&mv==='kang'&&d.capUp&&d.capUp.cheonha)return '천하무궁';return MOVES[a][i][0]}
@@ -314,11 +315,11 @@ function mvFx(d,mv){const a=duelArt(d),i=['kang','kwae','su'].indexOf(mv);if(!a)
 function duelMove(mv){const c=DUEL.cur;if(!c||c.over)return;c.fx=null;const d=D(c.d),pw=power(d),bp=c.bpw,em=c.emv;c.r++;
   const dmg=(a,b)=>Math.round(22*Math.pow(a/b,.7)*(.85+Math.random()*.3));let line;
   if(mv===em){c.hp[0]-=8;c.hp[1]-=8;line=`${c.r}합: 「${mvName(d,mv)}」과 ${c.bn}의 「${emvName(c.bn,em)}」이(가) 맞부딪쳐 서로 밀려났다.`;c.hit='both';c.fx={side:'e',n:mvFx(d,mv)}}
-  else if(BEAT[mv]===em){const x=dmg(pw,bp);c.hp[1]-=x;line=`${c.r}합: ${d.n}의 「${mvName(d,mv)}」이(가) ${c.bn}의 「${emvName(c.bn,em)}」을(를) 꺾었다. (-${x})`;c.hit='e';c.fx={side:'e',n:mvFx(d,mv)}}
-  else{const x=dmg(bp,pw);c.hp[0]-=x;line=`${c.r}합: ${c.bn}의 「${emvName(c.bn,em)}」에 ${d.n}의 「${mvName(d,mv)}」이(가) 밀렸다. (-${x})`;c.hit='p';c.fx={side:'p',n:ENEMY_FX[Math.floor(Math.random()*ENEMY_FX.length)]}}
+  else if(BEAT[mv]===em){const da=duelArt(d),x=Math.round(dmg(pw,bp)*(1+(da&&ARTS[da].w==='gwon'?boV(d,'janggwaebo'):0)));c.hp[1]-=x;line=`${c.r}합: ${d.n}의 「${mvName(d,mv)}」이(가) ${c.bn}의 「${emvName(c.bn,em)}」을(를) 꺾었다. (-${x})`;c.hit='e';c.fx={side:'e',n:mvFx(d,mv)}}
+  else{const x=Math.round(dmg(bp,pw)*(1-Math.min(.35,boV(d,'hoeseon')+boV(d,'muyeom'))));c.hp[0]-=x;line=`${c.r}합: ${c.bn}의 「${emvName(c.bn,em)}」에 ${d.n}의 「${mvName(d,mv)}」이(가) 밀렸다. (-${x})`;c.hit='p';c.fx={side:'p',n:ENEMY_FX[Math.floor(Math.random()*ENEMY_FX.length)]}}
   c.msg.push(line);c.hp=c.hp.map(v=>Math.max(0,v));
   if(c.hp[0]<=0||c.hp[1]<=0||c.r>=6){c.over=true;const win=c.hp[1]<c.hp[0]||(c.hp[1]===c.hp[0]&&pw>=bp);c.win=win;
-    DUEL.list[DUEL.i].win=win;
+    DUEL.list[DUEL.i].win=win;boExp(d);
     if(win){if(DUEL.kind==='lane')DUEL.mods[c.l]={o:1,e:.7,t:`${d.n} 일기토 승`};c.msg.push(`${c.bn}이(가) 무릎을 꿇었다.`);gainWis(d,1,`${c.bn}와(과)의 일기토`)}
     else{if(DUEL.kind==='lane')DUEL.mods[c.l]={o:.85,e:1,t:`${d.n} 일기토 패`};c.msg.push(`${d.n}이(가) 물러났다. 아군의 기세가 꺾였다.`);if(d.id!=='jin'&&Math.random()<.5){d.pos='hurt';d.away=4}}}
   else c.emv=pickMove();
@@ -377,6 +378,12 @@ function applicants(){if(G.fame<10)return;let n=G.fame<25?(Math.random()<.4?1:0)
     const nm=sur[Math.floor(Math.random()*sur.length)]+giv[Math.floor(Math.random()*giv.length)]+giv[Math.floor(Math.random()*giv.length)];
     const main=st.geom>=st.gwon?['nakha','yuun'][Math.floor(Math.random()*2)]:'janggwae',lv=1+Math.floor(Math.random()*Math.min(4,1+G.fame/25));
     G.q.push({t:'appl',id:'ap'+G.m+i+Math.random().toString(36).slice(2,5),title:'입문 지원: '+nm,due:G.m,nm,st,arts:{[main]:lv,taeeul:Math.max(1,lv-1),guyang:0,hyeoncheong:0}})}}
+// 보법 보정(익힘, 통달). 통달은 실전 8번
+const BO={janggwaebo:{d:'권장 일기토에서 주는 피해',v:[.10,.18]},eoryong:{d:'의뢰·위기 승률',v:[5,9]},hoeseon:{d:'일기토에서 받는 피해 감소',v:[.10,.16]},
+  waseon:{d:'일기토 상대 몸짓의 속임수 감소',v:[.10,.18]},biyeon:{d:'두 달 이상 원행 기간 단축(순)',v:[1,2]},muyeom:{d:'일기토에서 받는 피해 감소, 전력',v:[.15,.24]}};
+const boLv=(d,a)=>d.arts[a]||0,boTal=d=>d.id==='bang',boNeed=d=>boTal(d)?4:8,boV=(d,a)=>{const l=boLv(d,a);if(!l)return 0;const v=BO[a].v[l-1];return boTal(d)?(v<1?Math.round(v*150)/100:Math.round(v*1.5)):v};
+function boExp(d,why){for(const a in d.arts){if(ARTS[a].t!=='b'||d.arts[a]>=2)continue;d.boxp=d.boxp||{};d.boxp[a]=(d.boxp[a]||0)+1;if(d.boxp[a]>=boNeed(d)){d.arts[a]=2;log(`<b>${d.n}이(가) ${ARTS[a].n}에 통달했다.</b> (${BO[a].d})`)}}}
+function boMigrate(){const S={"jin":{"hoeseon":1,"janggwaebo":1,"eoryong":1},"lim":{"hoeseon":1,"eoryong":1},"mae":{"waseon":1},"so":{"eoryong":1},"eung":{"janggwaebo":1},"nak":{"janggwaebo":1},"du":{"eoryong":1},"jeong":{"waseon":1},"bang":{"biyeon":2,"hoeseon":1,"eoryong":1},"ak":{"hoeseon":1,"waseon":1}};for(const d of G.ds){if(d.arts.muyeom>2)d.arts.muyeom=d.arts.muyeom>=6?2:1;if(d.id==='ilbi'&&d.arts.muyeom){d.arts.muyeom=2;if(d.arts.hoeseon==null)d.arts.hoeseon=2}if(S[d.id])for(const k in S[d.id])if(d.arts[k]==null)d.arts[k]=S[d.id][k];if(d.focusM==='muyeom')d.focusM=null}}
 function addArt(id,a){const d=D(id);if(d&&d.arts[a]==null){d.arts[a]=0;d.xp[a]=0}}
 // 이달 시작에 들어오는 정해진 사건
 function scheduled(m){
@@ -488,13 +495,13 @@ const A={
     log(`${n}을(를) 새 제자로 받았다. (검재 ${st.geom}, 권재 ${st.gwon}, 오성 ${st.oseong})`);save();render()},
   pos(id,v){const d=D(id);if(!d||d.pos==='away'||d.pos==='hurt')return;d.pos=v;save();render()},
   teach(id){const sel=document.getElementById('tc_'+id);const a=sel&&sel.value,d=D(id),t=a&&teacher(a,id);if(!a||!t||(id!=='jin'&&SECRET[a]&&d.ch<SECRET[a])||!useAct()){render();return}
-    d.arts[a]=1;d.xp[a]=0;if(ARTS[a].t==='s')d.focusS=a;else d.focusM=a;t.teachHalf=true;log(`${t.n}이(가) ${d.n}에게 ${ARTS[a].n}을(를) 가르쳤다. (${t.n}은 이달 수련이 절반)`);save();render()},
+    d.arts[a]=1;d.xp[a]=0;if(ARTS[a].t==='s')d.focusS=a;else if(ARTS[a].t==='m')d.focusM=a;t.teachHalf=true;log(`${t.n}이(가) ${d.n}에게 ${ARTS[a].n}을(를) 가르쳤다. (${t.n}은 이달 수련이 절반)`);save();render()},
   jdir(t,v){const j=D('jin');if(t==='m')j.focusM=v||null;else j.focusS=v||null;save();render()},
   dir(id,t,v){const d=D(id);if(t==='m')d.focusM=v||null;else d.focusS=v||null;save();render()},
   auto(){const p=suggest();for(const id in p){const e=G.q.find(x=>x.id===id);if(!e)continue;
     if(e.t==='crisis'){document.getElementById('cs_'+id).value=p[id].d;A.defend(id,p[id].o)}else{document.getElementById('js_'+id).value=p[id].d;A.sendJob(id)}}render()},
   sendJob(eid){const e=G.q.find(x=>x.id===eid);const sel=document.getElementById('js_'+eid);const d=sel&&D(sel.value);if(!e||!d)return;
-    d.pos='away';d.away=(e.mon||1)===1?1:e.mon*2;d.job={need:e.need,k:e.k,pay:e.pay,fame:e.fame,fav:e.fav,sp:e.sp,title:e.title};G.q=G.q.filter(x=>x!==e);log(`${d.n}을(를) ${e.title}에 보냈다. (승률 ${chanceK(d,e.need,e.k)}%)`);save();render()},
+    d.pos='away';d.away=(e.mon||1)===1?1:Math.max(2,e.mon*2-boV(d,'biyeon'));d.job={need:e.need,k:e.k,pay:e.pay,fame:e.fame,fav:e.fav,sp:e.sp,title:e.title};G.q=G.q.filter(x=>x!==e);log(`${d.n}을(를) ${e.title}에 보냈다. (승률 ${chanceK(d,e.need,e.k)}%)`);save();render()},
   defend(eid,k){const e=G.q.find(x=>x.id===eid);const sel=document.getElementById('cs_'+eid);const d=sel&&D(sel.value);if(!e||!d)return;
     const o=e.opts.find(x=>x.k===k);const win=Math.random()*100<chance(d,o.need);d.mind+=15;d.pos='away';d.away=1;d.job=null;
     for(const x of e.opts)if(x!==o)lose(x);
@@ -527,15 +534,15 @@ const A={
   restart(){if(confirm('처음부터 다시 할까요?')){localStorage.removeItem(SAVE);newGame()}}
 };
 // 가르칠 사람: 그 무공 5성 이상, 배우는 사람 말고. 요양·파견 중이면 못 가르친다
-function teacher(a,not){return G.ds.filter(x=>x.id!==not&&x.n!=='삿갓 쓴 사내'&&(x.arts[a]||0)>=5&&x.pos!=='away'&&x.pos!=='hurt').sort((x,y)=>y.arts[a]-x.arts[a])[0]}
+function teacher(a,not){return G.ds.filter(x=>x.id!==not&&x.n!=='삿갓 쓴 사내'&&(x.arts[a]||0)>=(ARTS[a].t==='b'?1:5)&&x.pos!=='away'&&x.pos!=='hurt').sort((x,y)=>y.arts[a]-x.arts[a])[0]}
 // 폐관 중 초가보 기습: 수비는 전력 그대로, 수련 중은 절반, 외당 단계마다 +25
 function raid(){G.flags.raided=1;const def=G.ds.filter(d=>d.id!=='jin'&&!d.elder&&(d.pos==='guard'||d.pos==='train'||d.pos==='rest'||d.pos==='study')).reduce((s,d)=>s+power(d)*(d.pos==='guard'?1:.5)*(.6+d.st.tong/250),0)+25*G.fac.oe+40*(G.wall||0),atk=Math.round(200+5*G.m);
   if(def>=atk){G.fame+=6;G.qual+=3;log(`장문인이 없는 틈에 초가보가 본산을 쳤다. 남은 제자들이 막아 냈다. (방어 ${Math.round(def)} : 공격 ${atk}) 명성 +6`)}
   else{G.income.sang=Math.max(25,G.income.sang-10);for(const d of G.ds.filter(d=>d.pos==='guard'))if(Math.random()<.5){d.pos='hurt';d.away=4}
     log(`장문인이 없는 틈에 초가보가 본산을 쳤다. 막지 못했다. (방어 ${Math.round(def)} : 공격 ${atk}) 서안 상권 수입 -10, 수비하던 제자 일부 부상`)}}
 function lose(o){G.income[o.k]=Math.max(o.k==='sang'?25:5,G.income[o.k]-(o.k==='sang'?8:5));log(`초가보에게 밀렸다: ${o.loss}`)}
-function chanceK(d,need,k){if(!k||k==='mu')return chance(d,need);return Math.max(5,Math.min(95,Math.round(50+(d.st[k]-need)*1.5)))}
-function chance(d,need){return Math.max(5,Math.min(95,Math.round(50+(power(d)-need)*1.2)))}
+function chanceK(d,need,k){if(!k||k==='mu')return chance(d,need);return Math.max(5,Math.min(95,Math.round(50+(d.st[k]-need)*1.5+boV(d,'eoryong'))))}
+function chance(d,need){return Math.max(5,Math.min(95,Math.round(50+(power(d)-need)*1.2+boV(d,'eoryong'))))}
 
 /* ================= 월말 ================= */
 function endHalf(){
@@ -546,7 +553,7 @@ function endHalf(){
   for(const d of G.ds)train(d);
   // 파견·요양 (순 단위)
   for(const d of G.ds)if(d.pos==='away'&&--d.away<=0){const j=d.job;d.pos='train';d.job=null;if(!j)continue;if(j.nak){nakReturn(d);continue}
-    if(Math.random()*100<chanceK(d,j.need,j.k)){G.eun+=j.pay||0;G.fame+=j.fame||0;G.fav+=j.fav||0;let x='';if((!j.k||j.k==='mu')&&Math.random()<(j.need>=80?.4:.2)*d.st.oseong/70)gainWis(d,1,j.title);
+    if(Math.random()*100<chanceK(d,j.need,j.k)){boExp(d);G.eun+=j.pay||0;G.fame+=j.fame||0;G.fav+=j.fav||0;let x='';if((!j.k||j.k==='mu')&&Math.random()<(j.need>=80?.4:.2)*d.st.oseong/70)gainWis(d,1,j.title);
       if(j.sp==='herb'){for(const o of G.ds)o.mind=Math.max(0,o.mind-10);x=' 약재로 제자들 심마 -10'}
       if(j.sp==='clue'&&G.task){G.task.prog=Math.min(100,G.task.prog+25);x=' 옛 기록을 찾아 성심록 해독 +25%'}
       log(`${d.n}이(가) ${j.title}을(를) 마치고 돌아왔다.${j.pay?` 은자 +${j.pay}`:''}${j.fame?` 명성 +${j.fame}`:''}${j.fav?` 호감 +${j.fav}`:''}${x}`)}
@@ -609,7 +616,7 @@ function gameOver(t){G.over=t;save();render()}
 
 /* ================= 화면 ================= */
 function pt(d){const src=d.rl?rlImg(d.rl):d.img;return `<div class="pt">${src?`<img src="${src}" alt="" onerror="this.remove()">`:''}${src?'':d.n[0]}</div>`}
-function artChips(d){return Object.keys(d.arts).sort((a,b)=>ARTS[a].t.localeCompare(ARTS[b].t)||d.arts[b]-d.arts[a]).map(a=>{
+function artChips(d){const order={m:0,s:1,b:2};return Object.keys(d.arts).sort((a,b)=>order[ARTS[a].t]-order[ARTS[b].t]||d.arts[b]-d.arts[a]).map(a=>{if(ARTS[a].t==='b'){const l=d.arts[a];return `<span class="chip b" title="${BO[a].d}${l<2?` · ${boTal(d)?'신법 재능 · ':''}통달까지 실전 ${boNeed(d)-((d.boxp||{})[a]||0)}번`:''}">${ARTS[a].n} ${l>=2?'통달':'익힘'}</span>`}
   const cap=capOf(d,a),f=a===pickFocus(d,ARTS[a].t),pc=d.arts[a]>=cap?0:Math.min(100,Math.floor(100*(d.xp[a]||0)/costOf(d.arts[a])));return `<span class="chip ${ARTS[a].t}" title="상한 ${cap}성">${f?'▸':''}${ARTS[a].n} ${d.arts[a]}성${d.arts[a]>=cap?'(상한)':gateOf(d,a)&&(d.wis||0)<gateOf(d,a)&&pc>=100?' <b style="color:var(--red)">깨달음 필요</b>':f?` <b>${pc}%</b> <small class="muted">+${monthPct(d,a)}%/월</small>`:''}</span>`}).join('')}
 function taskRate(){return Math.round(G.ds.filter(d=>d.pos==='study').reduce((s,d)=>s+20*d.st.ji/70,0)*(1+.5*(G.fac.jang-1)))}
 function topBar(){return `<div class="top"><span class="serif" style="font-size:17px">終南</span>
@@ -880,7 +887,7 @@ if(/[?&]gallery=1/.test(location.search)){const rows=[];
   for(const n in RLEN)add('로그라이크 적',n,rlImg(RLEN[n][0]),RLEN[n][1]?RLEN[n][1].join('·'):'');
   document.getElementById('app').innerHTML=`<div class="wrap"><h2>초상 점검</h2><p class="muted">✕는 파일이 있어야 하는데 안 열린 것, 글자는 아직 그림이 없는 것이다.</p><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${rows.join('')}</div></div>`}
 else if(BOT){save=()=>{};newGame();TAB="main";setInterval(botMonth,1500)}
-else if(load()){for(const d of G.ds){if(d.id==='lim')d.img='img/lim.webp';if(d.id==='mae')d.img='img/mae.webp';if(d.id==='so')d.img='img/so.webp';if(d.id==='eung')d.img='img/eung.webp';if(d.id==='jeong')d.img='img/jeong.webp';if(d.id==='bang')d.img='img/bang.webp';if(d.id==='jeonp')d.img='img/jeonp.webp';if(d.id==='jeonh')d.img='img/jeonh.webp';if(d.id==='ilbi')d.img=d.n==='강일비'?'img/ilbi.webp':'img/ilbi_hat.webp';if(d.id==='nak')d.img=d.mukryeong?'img/nak2.webp':'img/nak.webp';if(d.id==='ilbi'){d.arts.muyeom=d.arts.muyeom||8;d.arts.nanhwa=d.arts.nanhwa||7;d.arts.yeomhwa=d.arts.yeomhwa||6}if(d.id==='jin'){d.rl='player';delete d.img;if(d.arts.nakha==null){d.arts.nakha=5;d.xp.nakha=0}if(d.arts.yakryu==null){d.arts.yakryu=3;d.xp.yakryu=0}}if(d.id==='du'){delete d.rl;d.img='img/du.webp'}}for(const d of G.ds){if(d.st&&d.st.mugol!=null&&d.st.geom==null){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{...d.st,geom:d.st.mugol,gwon:d.st.mugol}}}for(const d of G.ds)if(!d.st){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{tong:50,ji:50,jeong:50,ma:50,geom:60,gwon:60,oseong:60}}if(G.ilbi==='early')addIlbi(false);if(G.half==null){G.half=0;G.act=Math.min(G.act,1)}if(!G.ilbi)MODAL=prologue();if(G.flags.seongsim&&!G.flags.taeeul&&!G.q.some(e=>e.id==='taeeul'))openTaeeul();render()}else newGame();
+else if(load()){boMigrate();for(const d of G.ds){if(d.id==='lim')d.img='img/lim.webp';if(d.id==='mae')d.img='img/mae.webp';if(d.id==='so')d.img='img/so.webp';if(d.id==='eung')d.img='img/eung.webp';if(d.id==='jeong')d.img='img/jeong.webp';if(d.id==='bang')d.img='img/bang.webp';if(d.id==='jeonp')d.img='img/jeonp.webp';if(d.id==='jeonh')d.img='img/jeonh.webp';if(d.id==='ilbi')d.img=d.n==='강일비'?'img/ilbi.webp':'img/ilbi_hat.webp';if(d.id==='nak')d.img=d.mukryeong?'img/nak2.webp':'img/nak.webp';if(d.id==='ilbi'){d.arts.muyeom=d.arts.muyeom||8;d.arts.nanhwa=d.arts.nanhwa||7;d.arts.yeomhwa=d.arts.yeomhwa||6}if(d.id==='jin'){d.rl='player';delete d.img;if(d.arts.nakha==null){d.arts.nakha=5;d.xp.nakha=0}if(d.arts.yakryu==null){d.arts.yakryu=3;d.xp.yakryu=0}}if(d.id==='du'){delete d.rl;d.img='img/du.webp'}}for(const d of G.ds){if(d.st&&d.st.mugol!=null&&d.st.geom==null){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{...d.st,geom:d.st.mugol,gwon:d.st.mugol}}}for(const d of G.ds)if(!d.st){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{tong:50,ji:50,jeong:50,ma:50,geom:60,gwon:60,oseong:60}}if(G.ilbi==='early')addIlbi(false);if(G.half==null){G.half=0;G.act=Math.min(G.act,1)}if(!G.ilbi)MODAL=prologue();if(G.flags.seongsim&&!G.flags.taeeul&&!G.q.some(e=>e.id==='taeeul'))openTaeeul();render()}else newGame();
 </script>
 </body>
 </html>
