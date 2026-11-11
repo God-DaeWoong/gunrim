@@ -427,7 +427,7 @@ function scheduled(m){
     28:{id:'seongrak',n:'성락중',img:'img/seongrak.webp',r:'사숙',st:{tong:70,ji:65,jeong:50,ma:55,geom:85,gwon:55,oseong:85},ch:85,arts:{nakha:5,hyeoncheong:5,taeeul:4,guyang:1},t:'현청건곤강기를 쓰는 성락중이 합류했다.'},
     30:[{id:'danri',n:'단리상',img:'img/danri.webp',r:'진산월의 제자',st:{tong:40,ji:75,jeong:35,ma:55,geom:90,gwon:70,oseong:90},ch:85,arts:{punghan:3,pungroe:2,taeeul:0,guyang:0,hyeoncheong:0},t:()=>'아홉 살 단리상이 입문했다. 가전무공을 펼쳐 보이자 '+(has('jeonp')?'전풍개가 "강일비 같은 놈이 또 있었군" 하고 중얼거렸다.':'진산월이 한참 말없이 그 검로를 지켜보았다.')},
         {id:'sonp',n:'손풍',img:'img/sonp.webp',r:'진산월의 제자',st:{tong:45,ji:60,jeong:70,ma:60,geom:55,gwon:70,oseong:60},ch:80,arts:{taeeul:0,guyang:0,hyeoncheong:0},t:'손가장의 손풍이 입문했다.'}]};
-  for(const r of [].concat(JOIN[m]||[]))if(!has(r.id)){G.ds.push({...r,xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null});E.push({t:'event',id:'join_'+r.id,info:1,title:r.n+' 합류',text:typeof r.t==='function'?r.t():r.t})}
+  for(const r of [].concat(JOIN[m]||[]))if(!has(r.id)){G.ds.push(starter({...r,arts:{...r.arts},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null}));E.push({t:'event',id:'join_'+r.id,info:1,title:r.n+' 합류',text:typeof r.t==='function'?r.t():r.t})}
   if(m===10)E.push({t:'quest',id:'gorge',title:'협곡 정찰',due:17,text:'초가보 척후들이 종남산 뒤 절벽 쪽 협곡으로 숨어들었다는 소문이다. 한 사람을 보내 살핀다. 길이 험하다.',btn:'보낸다'});
   if(m===12&&G.ilbi==='early'){addArt('jin','chileum');E.push({t:'event',id:'ilbiteach',title:'사백의 가르침',info:1,text:'강일비가 진산월을 불렀다. "이제 너도 칠음진기의 첫머리를 알아 두어라. 태음신맥이 아니니 깊이 들어가지는 못할 것이다."'})}
   if(m===18&&!G.flags.raided&&!G.flags.choDone){raid();E.push({t:'event',id:'raid18',title:'초가보의 기습',info:1,text:'초가보가 본산을 쳤다. 결과는 기록에 남았다.'})}
@@ -504,7 +504,7 @@ const A={
   patrol(){if(G.patrol||!useAct())return;G.patrol=true;log('이달은 진산월이 서안 상권을 돌며 순찰한다.');save();render()},
   recruit(){if(G.eun<60||G.fame<15||!useAct())return;G.eun-=60;if(dsCount()>=capOfDs()){G.eun+=60;G.act++;alertMsg('정원이 찼다. 숙소를 늘려야 한다.');return}const sur='왕,유,하,장,조,한,서,오'.split(','),giv='진,명,호,성,연,우,평,기'.split(',');
     const n=sur[Math.floor(Math.random()*8)]+giv[Math.floor(Math.random()*8)]+giv[Math.floor(Math.random()*8)];const rs=()=>Math.round(30+Math.min(25,G.fame/2)+Math.random()*30),st={tong:rs(),ji:rs(),jeong:rs(),ma:rs(),geom:rs(),gwon:rs(),oseong:rs()};
-    G.ds.push({id:'r'+G.m+Math.random().toString(36).slice(2,5),n,r:'새 제자',st,ch:70,arts:{taeeul:0,guyang:0,hyeoncheong:0},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null});
+    G.ds.push(starter({id:'r'+G.m+Math.random().toString(36).slice(2,5),n,r:'새 제자',st,ch:70,arts:{taeeul:0,guyang:0,hyeoncheong:0},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null}));
     log(`${n}을(를) 새 제자로 받았다. (검재 ${st.geom}, 권재 ${st.gwon}, 오성 ${st.oseong})`);save();render()},
   pos(id,v){const d=D(id);if(!d||d.pos==='away'||d.pos==='hurt')return;d.pos=v;save();render()},
   teach(id){const sel=document.getElementById('tc_'+id);const a=sel&&sel.value,d=D(id),t=a&&teacher(a,id);if(!a||!t||(id!=='jin'&&SECRET[a]&&d.ch<SECRET[a])||!useAct()){render();return}
@@ -698,6 +698,7 @@ function discTab(){
 ${lib.length?`<div style="margin-top:6px;font-size:12px"><select id="tc_${d.id}"><option value="">전수할 무공</option>${lib.map(a=>`<option value="${a}" ${okA(a)?'':'disabled'}>${ARTS[a].n}${tOf(a)?` (스승 ${tOf(a).n})`:' (가르칠 사람 없음)'}${SECRET[a]&&d.ch<SECRET[a]?' (충성 부족)':''}</option>`).join('')}</select> <button onclick="A.teach('${d.id}')" ${G.act<=0?'disabled':''}>전수</button></div>`:''}
 </div>`}).join('')}</div>`;
 }
+function starter(d){const m=d.st.gwon>d.st.geom?'janggwae':'yuun';if(d.arts[m]==null||d.arts[m]<1){d.arts[m]=1;d.xp[m]=0}for(const s of ['taeeul','hyeoncheong'])if((d.arts[s]||0)<1){d.arts[s]=1;d.xp[s]=0}return d}
 function freeDs(){return G.ds.filter(d=>d.id!=='jin'&&!d.elder&&d.pos!=='away'&&d.pos!=='hurt')}
 function suggest(){
   const used=new Set(),pick={};
