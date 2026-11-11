@@ -762,10 +762,14 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
       if(ph===5||ph===6){c.fillStyle='rgba(255,255,230,.9)';c.beginPath();c.arc(x-16,y+20,7,0,7);c.fill()}}
     else if(pose==='stand0'){dy=-Math.abs(Math.sin(t*.15))*1.5}
     else if(pose==='stand'){const w=Math.sin(t*.06+x);dx=w*16;flip=Math.cos(t*.06+x)>0;dy=-Math.abs(Math.sin(t*.5))*2}
-    else if(pose==='sit'){dy=6;if(Math.floor(t/12+x)%3===0)bub='Zz'}
+    else if(pose==='sit'){const cyc=(t+Math.round(x))%40;dy=6+Math.sin(t*.12)*1;var nod=cyc<30?cyc/30*.22:(cyc<32?.22-(cyc-30)*.11:0);var doze=1}
     else if(pose==='read'){if(Math.floor(t/15+x)%4===0)bub='?'}
     c.fillStyle='rgba(40,30,20,.25)';c.beginPath();c.ellipse(x+dx+W2/2,y+56,W2*.32,4,0,0,7);c.fill();
-    c.save();c.imageSmoothingEnabled=false;c.translate(x+dx+(flip?W2:0),y+56-H2+dy);if(flip)c.scale(-1,1);c.drawImage(im,0,0,W2,H2);c.restore();
+    c.save();c.imageSmoothingEnabled=false;
+    if(doze){c.translate(x+W2/2,y+56+dy-6);c.rotate(-nod);c.translate(-W2/2,-H2);if(c.filter!==undefined)c.filter='brightness(.85)';c.drawImage(im,0,0,W2,H2*.9)}
+    else{c.translate(x+dx+(flip?W2:0),y+56-H2+dy);if(flip)c.scale(-1,1);c.drawImage(im,0,0,W2,H2)}
+    c.restore();
+    if(doze){for(let z=0;z<3;z++){const ph=((t+z*14+Math.round(x))%42)/42;c.globalAlpha=Math.max(0,1-ph);c.fillStyle='#e8f0ff';c.strokeStyle='#1d1a16';c.lineWidth=2;c.font='bold '+(10+z*3)+'px sans-serif';const zx=x+W2*.7+ph*14+z*4,zy=y-4-ph*26;c.strokeText('Z',zx,zy);c.fillText('Z',zx,zy)}c.globalAlpha=1}
     if(bub){c.fillStyle='#fff';c.strokeStyle='#1d1a16';c.lineWidth=1;c.beginPath();c.roundRect?c.roundRect(x+W2-6,y-14,20,14,4):c.rect(x+W2-6,y-14,20,14);c.fill();c.stroke();c.fillStyle='#1d1a16';c.font='bold 10px sans-serif';c.fillText(bub,x+W2-2,y-3)}
     YARD.hit.push({x:x+dx,y:y+56-H2,w:W2,h:H2,n:d.n+' · '+(d.id==='jin'?'장문인':POS[d.pos]||'')})};
   const put=(d,x,y,pose,ff)=>{const sd=sdOf(d),sim=sd&&getIm(sd);if(sim)return putSD(d,x,y,pose,sim);if(!SDONLY_OFF)return;const src=srcOf(d),hh=74,ww=49,bx=x-6,by=y+54-hh;
