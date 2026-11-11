@@ -755,7 +755,7 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
   const groups={train:[],guard:[],rest:[],study:[]};for(const d of home){if(d.id==='jin'){groups.train.unshift(d);continue}(groups[d.pos]||groups.train).push(d)}
   const srcOf=d=>d.img||(d.rl?rlImg(d.rl):null);YARD.imgs=YARD.imgs||{};
   // SD 도트(왼쪽을 보는 그림). 받은 사람만
-  const SDS={jin:'img/sd_jin.png',lim:'img/sd_lim.png'};const SDONLY_OFF=false;const sdOf=d=>d.id==='nak'&&d.mukryeong&&SDS.nak2?SDS.nak2:SDS[d.id];
+  const SDS={jin:'img/sd_jin.png',lim:'img/sd_lim.png',mae:'img/sd_mae.png'};const SDONLY_OFF=false;const sdOf=d=>d.id==='nak'&&d.mukryeong&&SDS.nak2?SDS.nak2:SDS[d.id];
   const getIm=src=>{let im=YARD.imgs[src];if(!im){im=YARD.imgs[src]=new Image();im.src=src}return im.complete&&im.naturalWidth?im:null};
   const putSD=(d,x,y,pose,im)=>{const H2=64,W2=Math.round(im.naturalWidth*H2/im.naturalHeight),t=YARD.t,k=t*.35+x*.07;let dx=0,dy=0,flip=false,bub='';
     if(pose==='swing'||pose==='punch'){const ph=(t+Math.round(x))%24;if(ph<6){dx=-ph*2;dy=-Math.sin(ph/6*Math.PI)*6}else if(ph<10){dx=-12+(ph-6)*3}else{dy=-Math.abs(Math.sin(k))*2}
