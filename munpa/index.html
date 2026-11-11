@@ -54,6 +54,15 @@ select{font-family:inherit;font-size:13px;padding:3px}
 .box.duel.gorge .duelside .pt{background:rgba(241,233,216,.15)}.box.duel.gorge .vs{color:#ff8a6a;text-shadow:0 0 8px #000}
 .duelrow{display:flex;align-items:center;justify-content:space-around;gap:10px;margin-top:10px}
 .box.duel.gorge.bimu{background:linear-gradient(rgba(16,14,20,.55),rgba(16,12,10,.82)),url(img/sd_gate_bg.webp) center/cover}
+.hand{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px}
+.ccard{width:138px;min-height:108px;background:#f1e9d8;color:#1d1a16;border-radius:10px;padding:8px 8px 6px;border:2px solid #8a6a3a;cursor:pointer;position:relative;transition:transform .12s;display:flex;flex-direction:column;gap:2px;text-align:left}
+.ccard:hover{transform:translateY(-6px)}.ccard.off{opacity:.45;cursor:not-allowed;transform:none}.ccard.def{border-color:#3d6ea0}.ccard.ult{border-color:#c9a227;box-shadow:0 0 10px rgba(217,178,90,.6)}
+.ccard .cost{position:absolute;top:-9px;left:-9px;width:26px;height:26px;border-radius:50%;background:#2d4f7c;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #f1e9d8}
+.ccard b{font-size:14px;color:#1d1a16}.ccard i{font-style:normal;font-size:11px;color:#7a5a2a}.ccard small{font-size:12px;color:#1d1a16}
+.intent{padding:2px 10px;border-radius:12px;background:rgba(0,0,0,.5);font-size:13px;margin-top:2px}
+.pop{position:absolute;top:30px;font-weight:800;font-size:24px;color:#ffdf8a;text-shadow:0 0 6px #000;animation:pop .9s forwards;z-index:4;pointer-events:none}@keyframes pop{to{transform:translateY(-40px);opacity:0}}
+.hpb{width:100%}
+.box.duel.gorge button.main{background:#1d1a16;color:#f1e9d8;border-color:#d9b25a}.box.duel.gorge button.main:hover{background:#3a2f27}
 .fx{position:absolute;width:320px;height:213px;margin-top:-50px;filter:brightness(1.35) saturate(1.3);background-size:300% 200%;pointer-events:none;mix-blend-mode:screen;z-index:2}
 .duelside{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:140px}
 .duelside .pt{width:72px;height:72px;font-size:28px}
@@ -96,7 +105,7 @@ const ARTS={
 // 전수할 수 있는 초식. 가르칠 사람(5성 이상)이 있어야 하고, 천하삼십육검은 충성 70 이상만 배운다
 // 상위 무공을 익히면 그 하위 무공은 이미 아는 것으로 친다
 const SUPER={yuun:'yuungyeol'},knows=(d,a)=>d.arts[a]!=null||!!(SUPER[a]&&d.arts[SUPER[a]]!=null);
-const LIB=['yuun','cheonha','nakha','janggwae','hongdan','wolnyeo','yakryu','hoeseon','eoryong','janggwaebo','waseon','biyeon','muyeom','nanhwa','yeomhwa','cheondan','taejin'];
+const LIB=['chileum','yuun','cheonha','nakha','janggwae','hongdan','wolnyeo','yakryu','hoeseon','eoryong','janggwaebo','waseon','biyeon','muyeom','nanhwa','yeomhwa','cheondan','taejin'];
 const SECRET={cheonha:70,muyeom:70,nanhwa:70,yeomhwa:70,cheondan:70,taejin:70};
 // 종남 심법 셋은 모두가 익히고 있고 성취만 다르다. 사부가 후계 후보로 키운 넷은 구양·현청이 1성
 const BASE_S=['taeeul','guyang','hyeoncheong'],SENIOR=['lim','mae','so','eung','ak'];
@@ -318,7 +327,7 @@ function startDuels(eid,lanes){const e=G.q.find(x=>x.id===eid);const list=[];
   lanes.forEach((ids,l)=>{const d=ids[0]&&D(ids[0]);const b=LN(e)[l].boss;if(d&&b)list.push({l,t:LN(e)[l].n,d:d.id,bn:b.n,bpw:Math.round(b.pw*(e.k||1))})});
   DUEL={kind:'lane',eid,lanes,list,i:0,mods:[{o:1,e:1},{o:1,e:1},{o:1,e:1}]};nextDuel()}
 function nextDuel(){const c=DUEL.list[DUEL.i];if(!c){const X=DUEL;DUEL=null;if(X.kind==='match')matchEnd(X);else fight(X.eid,X.lanes,X.mods);return}
-  const d=D(c.d);DUEL.cur={...c,hp:[100,100],r:0,msg:[`${c.t}. ${c.bn}이(가) 앞으로 나섰다. ${d.n}이(가) 검을 뽑았다.`],emv:pickMove(),hit:null};render()}
+  const d=D(c.d);DUEL.cur={...c,hp:[100,100],r:0,msg:[`${c.t}. ${c.bn}이(가) 앞으로 나섰다. ${d.n}이(가) 검을 뽑았다.`],emv:pickMove(),hit:null};cardInit(DUEL.cur);render()}
 function pickMove(){const ks=['kang','kwae','su'];return ks[Math.floor(Math.random()*3)]}
 function tellOf(c){if(c.fake==null||c.fakeR!==c.r){c.fakeR=c.r;c.fake=Math.random()<(.5-Math.max(boV(D(c.d),'waseon'),0))?['kang','kwae','su'].filter(k=>k!==c.emv)[Math.floor(Math.random()*2)]:c.emv}return TELL[c.fake][c.r%2]}
 // 일기토에 쓰는 무공: 수련 중인 초식, 없으면 가장 높은 초식
@@ -337,8 +346,95 @@ function duelMove(mv){const c=DUEL.cur;if(!c||c.over)return;c.fx=null;const d=D(
     else{if(DUEL.kind==='lane')DUEL.mods[c.l]={o:.85,e:1,t:`${d.n} 일기토 패`};c.msg.push(`${d.n}이(가) 물러났다. 아군의 기세가 꺾였다.`);if(d.id!=='jin'&&Math.random()<.5){d.pos='hurt';d.away=4}}}
   else c.emv=pickMove();
   render()}
-function duelAuto(){const c=DUEL.cur;while(c&&!c.over){const ks=['kang','kwae','su'];duelMove(ks[Math.floor(Math.random()*3)])}}
-function duelHTML(){if(!DUEL||!DUEL.cur)return'';const c=DUEL.cur,d=D(c.d),bar=v=>`<div class="hpb"><i style="width:${v}%"></i></div>`;
+function duelAuto(){const c=DUEL.cur;if(c&&c.k){cardAI(c);return}while(c&&!c.over){const ks=['kang','kwae','su'];duelMove(ks[Math.floor(Math.random()*3)])}}
+/* ================= 카드 일기토 ================= */
+// 로그라이크 초식 카드를 가져왔다. 덱은 제자가 고른 초식 무공 셋(안 고르면 성 높은 순 셋), 심법·보법은 패시브.
+// 턴마다 내력 3, 다섯 장. 상대는 다음 행동을 보여 준다. 6턴 안에 쓰러뜨리거나 끝날 때 체력 비율이 높으면 이긴다
+const CARDS={};const card=(id,n,art,type,cost,spec)=>CARDS[id]=Object.assign({id,n,art,type,cost},spec);
+card('jounyuk','조운육환','janggwae','atk',1,{dmg:6});card('geumgang','금강서벽','janggwae','def',1,{block:8,fxn:'milmil'});card('samhwan','삼환투일','janggwae','atk',1,{dmg:4,hits:2});
+card('ogang','오강감계','janggwae','atk',1,{dmg:6,weak:1,fxn:'jounyuk'});card('danbong','단봉조양','janggwae','atk',2,{dmg:20});card('yeongyang','영양괘각','janggwae','atk',1,{dmg:5,block:7});card('cheonseong','천성탈두','janggwae','atk',1,{dmg:8,vulnBonus:6});
+card('dodo','천하도도','cheonha','atk',1,{dmg:8,vuln:1});card('seongjin','천하성진','cheonha','atk',1,{dmg:3,hits:3});card('bisa','천하비사','cheonha','atk',1,{dmg:6,draw:1});
+card('suzo','천하수조','cheonha','atk',2,{dmg:28});card('jetan','천하제탄','cheonha','atk',1,{dmg:2,hits:4});card('milmil','천하밀밀','cheonha','def',1,{block:12});
+card('unmu','운무중첩','yuun','atk',1,{dmg:5,hits:2,hits6:3});card('geombong','유운검봉','yuun','atk',2,{dmg:4,hits:4,hitsPer3:1});card('baeun','배운축월','yuun','atk',1,{dmg:8,vuln:2});
+card('chulgok','유운출곡','yuun','def',1,{block:6,nextAtk:4});card('amjeon','운중암전','yuun','atk',1,{dmg:8,pierce:1});card('seunggi','운해승기','yuun','atk',2,{dmg:12,block:8});card('danak','유운단악','yuun','atk',1,{dmg:11});
+card('nakha','채흥서천','nakha','atk',1,{dmg:10,pierce:1});card('bancheon','반천흥염','nakha','atk',2,{dmg:11,block:6});card('hongye','홍예장공','nakha','atk',1,{dmg:11,combo:'cheongang',comboDmg:8});card('cheongang','천강은홍','nakha','def',1,{block:7,counter:7});
+card('yakryu','약류장','yakryu','atk',2,{dmg:18,execute:1});card('hongdan','홍단서천','hongdan','atk',1,{dmg:14});
+card('wol1','월녀천사','wolnyeo','atk',1,{dmg:4,hits:2,fxn:'unmu'});card('wol2','월녀회풍','wolnyeo','atk',1,{dmg:7,draw:1,fxn:'bisa'});card('wol3','월녀영월','wolnyeo','def',1,{block:9,fxn:'milmil'});card('wol4','월녀분광','wolnyeo','atk',2,{dmg:6,hits:3,fxn:'seongjin'});
+card('nan1','난화불혈','nanhwa','atk',1,{dmg:9,weak:1,fxn:'nakha'});card('nan2','난화점화','nanhwa','atk',2,{dmg:6,hits:3,fxn:'seongjin'});card('nan3','난화탄지','nanhwa','atk',1,{dmg:7,pierce:1,fxn:'amjeon'});
+card('yeom1','염화옥수','yeomhwa','atk',2,{dmg:22,fxn:'danbong'});card('yeom2','옥수봉환','yeomhwa','def',1,{block:10,counter:5,fxn:'milmil'});
+card('pung1','풍한참','punghan','atk',1,{dmg:9,fxn:'danak'});card('pung2','풍한연환','punghan','atk',1,{dmg:3,hits:3,fxn:'seongjin'});card('pung3','풍한회선','punghan','def',1,{block:8,fxn:'milmil'});
+card('roe1','풍뢰벽','pungroe','atk',2,{dmg:19,fxn:'danbong'});card('roe2','풍뢰질주','pungroe','atk',1,{dmg:6,draw:1,fxn:'jetan'});
+card('gb1','검보 직자','geombo','atk',1,{dmg:9,fxn:'danak'});card('gb2','검보 연자','geombo','atk',1,{dmg:4,hits:2,fxn:'unmu'});card('gb3','검보 봉자','geombo','def',1,{block:9,fxn:'chulgok'});
+// 절초(덱에 한 장): 천하삼십육검 상한이 풀리면 천하무궁, 검정중원을 얻으면 검정중원
+card('mugung','천하무궁','cheonha','atk',2,{dmg:7,hits:4,pierce:1,fxn:'cheonha_mugung',ult:1});card('geomjeong','검정중원','yuungyeol','atk',3,{dmg:34,pierce:1,fxn:'geombong',ult:1});
+const CART=a=>a==='yuungyeol'?'yuun':a;  // 유운검결은 유운검법 초식을 쓴다
+const cardsOf=a=>Object.values(CARDS).filter(c=>!c.ult&&c.art===CART(a));
+const deckArts=d=>{const own=Object.keys(d.arts).filter(a=>ARTS[a].t==='m'&&d.arts[a]>=1&&cardsOf(a).length);const pick=(d.deck||[]).filter(a=>own.includes(a));
+  return (pick.length?pick:own.sort((a,b)=>d.arts[b]-d.arts[a])).slice(0,3)};
+const cmul=lv=>.85+.03*lv;
+const CK={php:100,ehp:150,atk:34,multi:12,def:18,buff:12,pr:.9,er:.7};
+function cardInit(c){const d=D(c.d),P=power(d),E=c.bpw,arts=deckArts(d);const deck=[];for(const a of arts)for(const x of cardsOf(a))deck.push(x.id);
+  if(d.capUp&&d.capUp.cheonha&&arts.includes('cheonha'))deck.push('mugung');if(d.id==='jin'&&G.flags.geomjeong&&arts.includes('yuungyeol'))deck.push('geomjeong');
+  if(!deck.length)deck.push('jounyuk','jounyuk','geumgang');
+  const hp=CK.php,ehp=CK.ehp,ratio=P/Math.max(1,E);
+  const k={arts,P,E,ps:Math.pow(ratio,CK.pr),es:Math.pow(1/ratio,CK.er)*(G.flags.yongyeong&&d.id==='jin'?1.1:1),turn:0,max:6,p:{hp,max:hp,block:0,vuln:0,weak:0,dodge:0,counter:0,nextAtk:0},e:{hp:ehp,max:ehp,block:0,vuln:0,weak:0,pw:E},
+    deck:shuffleA(deck),disc:[],hand:[],nae:0,played:[]};
+  if((d.arts.hyeoncheong||0)>=1)k.p.block=3+d.arts.hyeoncheong;if((d.arts.guyang||0)>=5){k.p.max=k.p.hp=Math.round(hp*1.1)}
+  c.k=k;c.over=false;c.hit=null;c.fx=null;cardTurn(c)}
+const shuffleA=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+function cardDraw(k,n){for(let i=0;i<n;i++){if(!k.deck.length){k.deck=shuffleA(k.disc);k.disc=[]}if(k.deck.length)k.hand.push(k.deck.pop())}}
+function cardPlan(k){const s=k.es*(k.e.pw/k.E),r=Math.random();k.intent=r<.45?{k:'atk',v:Math.round(CK.atk*s)}:r<.7?{k:'multi',v:Math.round(CK.multi*s),n:3}:r<.88?{k:'def',v:Math.round(CK.def*s)}:{k:'buff',v:Math.round(k.E*.1)}}
+function cardTurn(c){const k=c.k,d=D(c.d);k.turn++;if(k.turn>k.max)return cardEnd(c);if(k.turn>1)k.p.block=0;
+  k.nae=3+(k.turn===1&&(d.arts.taeeul||0)>=1?1:0)+((d.arts.taeeul||0)>=10?1:0);k.played=[];cardDraw(k,5);cardPlan(k)}
+function cardLv(d,c){return d.arts[c.art]!=null?d.arts[c.art]:c.art==='yuun'&&d.arts.yuungyeol!=null?d.arts.yuungyeol:5}
+function cardDmg(c,x){const d=D(c.d),k=c.k,lv=cardLv(d,x);let v=x.dmg||0;if(x.combo&&k.played.includes(x.combo))v+=x.comboDmg;if(x.vulnBonus&&k.e.vuln)v+=x.vulnBonus;v=v*cmul(lv)*k.ps;if(k.p.nextAtk)v+=k.p.nextAtk;
+  if(k.p.weak)v*=.75;if(k.e.vuln)v*=1.5;if(ARTS[x.art]&&ARTS[x.art].w==='gwon')v*=1+boV(d,'janggwaebo');if(x.execute&&k.e.hp<=k.e.max*.4)v*=2;return Math.round(v)}
+function cardHits(c,x){const lv=cardLv(D(c.d),x);if(x.hits6&&lv>=6)return x.hits6;if(x.hitsPer3)return x.hits+Math.floor(lv/3)-1;return x.hits||1}
+function cardPlay(i){const c=DUEL&&DUEL.cur;if(!c||c.over)return;const k=c.k,d=D(c.d),id=k.hand[i],x=CARDS[id];if(!x||x.cost>k.nae)return;k.nae-=x.cost;k.hand.splice(i,1);if(!x.ult)k.disc.push(id);
+  const lv=cardLv(d,x);let tot=0,per=0,n=0;c.fx=null;c.hit=null;c.pops=[];
+  if(x.dmg){n=cardHits(c,x);per=cardDmg(c,x);for(let j=0;j<n;j++){let v=per;if(!x.pierce&&k.e.block){const b=Math.min(k.e.block,v);k.e.block-=b;v-=b}k.e.hp-=v;tot+=v}k.p.nextAtk=0;c.fx={side:'e',n:x.fxn||x.id};c.hit='e';c.pops.push({side:'e',t:n>1?`${per}×${n}`:String(tot)})}
+  let bl=0;if(x.block){bl=Math.round(x.block*cmul(lv));k.p.block+=bl;if(!x.dmg){c.fx={side:'p',n:x.fxn||x.id};c.pops.push({side:'p',t:'+'+bl,blue:1})}}
+  if(x.vuln)k.e.vuln+=x.vuln;if(x.weak)k.e.weak+=x.weak;if(x.draw)cardDraw(k,x.draw);if(x.nextAtk)k.p.nextAtk+=x.nextAtk;if(x.counter)k.p.counter+=x.counter;if(x.dodge)k.p.dodge+=x.dodge;
+  k.played.push(id);c.msg.push(`${k.turn}턴: ${d.n}의 「${x.n}」${tot?` → ${tot}`:''}${bl?` (방어 +${bl})`:''}`);
+  if(k.e.hp<=0){k.e.hp=0;return cardEnd(c)}render()}
+function cardFoe(c){const k=c.k,d=D(c.d),it=k.intent;k.disc.push(...k.hand);k.hand=[];k.e.block=0;c.fx=null;c.hit=null;c.pops=[];
+  const red=1-Math.min(.25,boV(d,'hoeseon')+boV(d,'muyeom'));
+  const hitP=v=>{let x=v;if(k.e.weak)x*=.75;if(k.p.vuln)x*=1.5;x=Math.round(x*red);if(k.p.dodge){k.p.dodge--;c.msg.push('몸을 흘려 공격을 피했다.');return}
+    const b=Math.min(k.p.block,x);k.p.block-=b;x-=b;k.p.hp-=x;if(x)c.pops.push({side:'p',t:'-'+x});if(k.p.counter){k.e.hp-=k.p.counter;c.pops.push({side:'e',t:'반격 '+k.p.counter})}};
+  if(it.k==='atk'){hitP(it.v);c.fx={side:'p',n:ENEMY_FX[Math.floor(Math.random()*ENEMY_FX.length)]};c.hit='p';c.msg.push(`${k.turn}턴: ${c.bn}의 「${emvName(c.bn,'kang')}」 ${it.v}`)}
+  else if(it.k==='multi'){for(let j=0;j<it.n;j++)hitP(it.v);c.fx={side:'p',n:ENEMY_FX[Math.floor(Math.random()*ENEMY_FX.length)]};c.hit='p';c.msg.push(`${k.turn}턴: ${c.bn}의 「${emvName(c.bn,'kwae')}」 ${it.v}×${it.n}`)}
+  else if(it.k==='def'){k.e.block+=it.v;c.msg.push(`${k.turn}턴: ${c.bn}이(가) 「${emvName(c.bn,'su')}」로 자세를 굳혔다 (방어 ${it.v})`)}
+  else{k.e.pw+=it.v;c.msg.push(`${k.turn}턴: ${c.bn}의 기세가 오른다`)}
+  k.p.counter=0;for(const t of['vuln','weak']){if(k.e[t])k.e[t]--;if(k.p[t])k.p[t]--}
+  if(k.p.hp<=0){k.p.hp=0;return cardEnd(c)}if(k.e.hp<=0){k.e.hp=0;return cardEnd(c)}cardTurn(c);render()}
+function cardEnd(c){const k=c.k,d=D(c.d);c.over=true;k.p.hp=Math.max(0,k.p.hp);k.e.hp=Math.max(0,k.e.hp);
+  const win=k.e.hp<=0||(k.p.hp>0&&k.p.hp/k.p.max>k.e.hp/k.e.max);c.win=win;c.hp=[Math.round(100*k.p.hp/k.p.max),Math.round(100*k.e.hp/k.e.max)];
+  DUEL.list[DUEL.i].win=win;boExp(d);
+  if(win){if(DUEL.kind==='lane')DUEL.mods[c.l]={o:1,e:.7,t:`${d.n} 일기토 승`};c.msg.push(`${c.bn}이(가) 무릎을 꿇었다.`);gainWis(d,1,`${c.bn}와(과)의 일기토`)}
+  else{if(DUEL.kind==='lane')DUEL.mods[c.l]={o:.85,e:1,t:`${d.n} 일기토 패`};c.msg.push(`${d.n}이(가) 물러났다. 아군의 기세가 꺾였다.`);if(d.id!=='jin'&&Math.random()<.5){d.pos='hurt';d.away=4}}
+  render()}
+// 맡긴다: 들어올 공격을 보고 방어를 먼저 쌓고, 남은 내력으로 내력당 피해가 큰 초식부터
+function cardAI(c){const k=c.k;let guard=0;while(!c.over&&k.turn<=k.max){const it=k.intent,inc=it.k==='atk'?it.v:it.k==='multi'?it.v*it.n:0;
+  const can=k.hand.map((id,i)=>({i,x:CARDS[id]})).filter(o=>o.x.cost<=k.nae);if(!can.length||guard++>40){if(c.over)break;cardFoe(c);guard=0;continue}
+  const needDef=k.p.block<inc*.7,defs=can.filter(o=>o.x.block).sort((a,b)=>b.x.block/b.x.cost-a.x.block/a.x.cost);
+  const atks=can.filter(o=>o.x.dmg).sort((a,b)=>cardDmg(c,b.x)*cardHits(c,b.x)/b.x.cost-cardDmg(c,a.x)*cardHits(c,a.x)/a.x.cost);
+  const pick=(needDef&&defs[0])||atks[0]||can[0];cardPlay(pick.i)}}
+function cardHTML(){const c=DUEL.cur,k=c.k,d=D(c.d);const bar=(v,m)=>`<div class="hpb"><i style="width:${Math.max(0,100*v/m)}%"></i></div>`;
+  const st=(o,isP)=>[o.vuln?`내상 ${o.vuln}`:'',o.weak?`약화 ${o.weak}`:'',isP&&o.dodge?`회피 ${o.dodge}`:'',isP&&o.counter?`반격 ${o.counter}`:'',isP&&o.nextAtk?`다음 공격 +${o.nextAtk}`:''].filter(Boolean).join(' · ');
+  const pops=s=>(c.pops||[]).filter(x=>x.side===s).map(x=>`<div class="pop" style="${x.blue?'color:#9cc8ff':''}">${x.t}</div>`).join('');
+  const tx=x=>{const v=x.dmg?cardDmg(c,x):0,n=x.dmg?cardHits(c,x):0,lv=cardLv(d,x);return [v?`피해 ${v}${n>1?`×${n}`:''}`:'',x.block?`방어 ${Math.round(x.block*cmul(lv))}`:'',x.vuln?`내상 ${x.vuln}`:'',x.weak?`약화 ${x.weak}`:'',x.pierce?'방어 무시':'',x.draw?`${x.draw}장 뽑기`:'',x.nextAtk?`다음 공격 +${x.nextAtk}`:'',x.counter?`반격 ${x.counter}`:'',x.combo?'천강은홍 뒤 +8':'',x.execute?'체력 40% 이하면 2배':''].filter(Boolean).join(' · ')};
+  const intent=k.intent&&!c.over?({atk:`⚔️ 공격 ${k.intent.v}`,multi:`⚔️ 연타 ${k.intent.v}×${k.intent.n}`,def:`🛡️ 방어 ${k.intent.v}`,buff:'🔥 기세를 끌어올린다'})[k.intent.k]:'';
+  return `<div class="modal"><div class="box duel gorge${DUEL.kind==='lane'?'':' bimu'}" style="max-width:860px"><h2>일기토 · ${c.t}</h2>
+<div class="duelrow"><div class="duelside ${c.hit==='p'?'hit':''}">${c.fx&&c.fx.side==='p'?`<div class="fx" data-fx="${c.fx.n}"></div>`:''}${pops('p')}${pt(d)}<b>${d.n}</b>${bar(k.p.hp,k.p.max)}<span>${k.p.hp}/${k.p.max}${k.p.block?` <b style="color:#9cc8ff">방어 ${k.p.block}</b>`:''}</span><span class="muted" style="font-size:12px">${st(k.p,1)}</span></div>
+<div class="vs serif">對</div>
+<div class="duelside ${c.hit==='e'?'hit':''}">${c.fx&&c.fx.side==='e'?`<div class="fx" data-fx="${c.fx.n}"></div>`:''}${pops('e')}<div class="pt">${enemyImg(c.bn)?`<img src="${enemyImg(c.bn)}" alt="" onerror="this.remove()">`:c.bn[0]}</div><b>${c.bn}</b>${bar(k.e.hp,k.e.max)}<span>${k.e.hp}/${k.e.max}${k.e.block?` <b style="color:#9cc8ff">방어 ${k.e.block}</b>`:''}</span><span class="muted" style="font-size:12px">${st(k.e)}</span>${intent?`<span class="intent">${intent}</span>`:''}</div></div>
+${c.over?`<div class="log" style="max-height:140px;margin:10px 0">${c.msg.slice().reverse().join('<br>')}</div><button class="main" onclick="A.duelNext()">${DUEL.i+1<DUEL.list.length?(DUEL.kind==='match'?'다음 판으로':'다음 갈래로'):'결과 보기'}</button>`:
+`<div class="hand">${k.hand.map((id,i)=>{const x=CARDS[id],off=x.cost>k.nae;return `<div class="ccard ${x.type}${x.ult?' ult':''}${off?' off':''}" onclick="A.cardPlay(${i})"><span class="cost">${x.cost}</span><b>${x.n}</b><i>${(ARTS[x.art]||ARTS[CART(x.art)]||{n:''}).n} ${cardLv(d,x)}성</i><small>${tx(x)}</small></div>`}).join('')}</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px"><span>${k.turn}/${k.max}턴 · 내력 <b style="color:#9cc8ff;font-size:18px">${k.nae}</b> · 덱 ${k.deck.length} · 버린 ${k.disc.length} <span class="muted" style="font-size:12px">· 덱: ${k.arts.map(a=>ARTS[a].n).join(', ')}</span></span>
+<span><button class="main" onclick="A.cardFoe()">턴 끝내기</button> <button onclick="A.duelAuto()">맡긴다</button></span></div>
+<div class="log" style="max-height:90px;margin:8px 0 0">${c.msg.slice(-6).reverse().join('<br>')}</div>`}</div></div>`}
+
+function duelHTML(){if(DUEL&&DUEL.cur&&DUEL.cur.k)return cardHTML();if(!DUEL||!DUEL.cur)return'';const c=DUEL.cur,d=D(c.d),bar=v=>`<div class="hpb"><i style="width:${v}%"></i></div>`;
   return `<div class="modal"><div class="box duel gorge${DUEL.kind==='lane'?'':' bimu'}"><h2>일기토 · ${c.t}</h2>
 <div class="duelrow"><div class="duelside ${c.hit==='p'||c.hit==='both'?'hit':''}">${c.fx&&c.fx.side==='p'&&c.fx.n?`<div class="fx" data-fx="${c.fx.n}"></div>`:''}${pt(d)}<b>${d.n}</b><span class="muted">전력 ${power(d)}</span>${bar(c.hp[0])}<span>${c.hp[0]}</span></div>
 <div class="vs serif">對</div>
@@ -423,7 +519,7 @@ function scheduled(m){
     E.push({t:'event',id:'hadong',info:1,title:'하동원 귀환',text:'전풍개의 둘째 제자 하동원이 돌아왔다. 산문에 들어서자마자 소지산에게 대련을 청했다.'})}
   const JOIN={8:{id:'dong',n:'동중산',r:'진산월의 제자',img:'img/dong.webp',st:{tong:50,ji:85,jeong:70,ma:75,geom:55,gwon:50,oseong:65},ch:75,arts:{taeeul:0,guyang:0,hyeoncheong:0},t:'비천호리 동중산이 종남의 문을 두드렸다. 쫓기던 몸을 거두어 준 데 대한 보답이라고 했다.'},
     16:{id:'yuso',n:'유소응',img:'img/yuso.webp',r:'진산월의 제자',st:{tong:50,ji:70,jeong:40,ma:60,geom:85,gwon:60,oseong:85},ch:95,arts:{taeeul:0,guyang:0,hyeoncheong:0},t:'자각봉 아래에서 몽고 혼혈 소년 하나를 거두었다. 유소응이다. 진산월이 직접 거둔 제자가 하나 늘었다.'},
-    22:{id:'seomun',n:'서문연상',img:'img/seomun.webp',r:'빈객(검보)',st:{tong:55,ji:65,jeong:55,ma:70,geom:80,gwon:50,oseong:70},ch:80,arts:{geombo:4,taeeul:0,guyang:0,hyeoncheong:0},t:'검보의 서문연상이 종남에 들어왔다.'},
+    22:{id:'seomun',n:'서문연상',img:'img/seomun.webp',r:'빈객(검보)',st:{tong:55,ji:65,jeong:55,ma:70,geom:80,gwon:50,oseong:70},ch:80,arts:{geombo:4,wolnyeo:1,chileum:1,cheonha:1,yuun:1,taeeul:1},t:'검보의 서문연상이 종남에 들어왔다.'},
     28:{id:'seongrak',n:'성락중',img:'img/seongrak.webp',r:'사숙',st:{tong:70,ji:65,jeong:50,ma:55,geom:85,gwon:55,oseong:85},ch:85,arts:{nakha:5,hyeoncheong:5,taeeul:4,guyang:1},t:'현청건곤강기를 쓰는 성락중이 합류했다.'},
     30:[{id:'danri',n:'단리상',img:'img/danri.webp',r:'진산월의 제자',st:{tong:40,ji:75,jeong:35,ma:55,geom:90,gwon:70,oseong:90},ch:85,arts:{punghan:3,pungroe:2,taeeul:0,guyang:0,hyeoncheong:0},t:()=>'아홉 살 단리상이 입문했다. 가전무공을 펼쳐 보이자 '+(has('jeonp')?'전풍개가 "강일비 같은 놈이 또 있었군" 하고 중얼거렸다.':'진산월이 한참 말없이 그 검로를 지켜보았다.')},
         {id:'sonp',n:'손풍',img:'img/sonp.webp',r:'진산월의 제자',st:{tong:45,ji:60,jeong:70,ma:60,geom:55,gwon:70,oseong:60},ch:80,arts:{taeeul:0,guyang:0,hyeoncheong:0},t:'손가장의 손풍이 입문했다.'}]};
@@ -536,7 +632,8 @@ const A={
   bsug(eid){const p=battleSuggest();for(let l=0;l<3;l++)for(let i=0;i<2;i++){const el=document.getElementById(`bl_${l}_${i}`);if(el)el.value=p[l][i]||''}},
   battle(eid){startDuels(eid,readLanes())},
   match(eid){startMatch(eid)},
-  duelMove(k){duelMove(k)},duelAuto(){duelAuto()},duelNext(){DUEL.i++;nextDuel()},
+  duelMove(k){duelMove(k)},duelAuto(){duelAuto();render()},cardPlay(i){cardPlay(i)},cardFoe(){const c=DUEL&&DUEL.cur;if(c&&c.k&&!c.over)cardFoe(c)},
+  setDeck(id,a,v){const d=D(id);if(!d)return;let s=deckArts(d).slice();if(d.deck&&d.deck.length)s=d.deck.filter(x=>d.arts[x]!=null);s=v?[...s.filter(x=>x!==a),a].slice(-3):s.filter(x=>x!==a);d.deck=s;save();render()},duelNext(){DUEL.i++;nextDuel()},
   accept(eid){const e=G.q.find(x=>x.id===eid);if(!e)return;if(dsCount()>=capOfDs()){alertMsg('정원이 찼다. 숙소를 늘려야 한다.');return}G.q=G.q.filter(x=>x!==e);
     G.ds.push({id:'r'+G.m+Math.random().toString(36).slice(2,6),n:e.nm,r:'새 제자',st:e.st,ch:70,arts:{...e.arts},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null});log(`${e.nm}을(를) 제자로 받았다.`);save();render()},
   mapSel(k){MAPSEL=MAPSEL===k?null:k;render()},
@@ -548,7 +645,7 @@ const A={
   restart(){if(confirm('처음부터 다시 할까요?')){localStorage.removeItem(SAVE);newGame()}}
 };
 // 가르칠 사람: 그 무공 5성 이상, 배우는 사람 말고. 요양·파견 중이면 못 가르친다
-function teacher(a,not){return G.ds.filter(x=>x.id!==not&&x.n!=='삿갓 쓴 사내'&&(x.arts[a]||0)>=(ARTS[a].t==='b'?1:5)&&x.pos!=='away'&&x.pos!=='hurt').sort((x,y)=>y.arts[a]-x.arts[a])[0]}
+function teacher(a,not){return G.ds.filter(x=>x.id!==not&&x.n!=='삿갓 쓴 사내'&&(x.arts[a]||0)>=(ARTS[a].t==='b'?1:a==='chileum'?2:5)&&x.pos!=='away'&&x.pos!=='hurt').sort((x,y)=>y.arts[a]-x.arts[a])[0]}
 // 폐관 중 초가보 기습: 수비는 전력 그대로, 수련 중은 절반, 외당 단계마다 +25
 function raid(){G.flags.raided=1;const def=G.ds.filter(d=>d.id!=='jin'&&!d.elder&&(d.pos==='guard'||d.pos==='train'||d.pos==='rest'||d.pos==='study')).reduce((s,d)=>s+power(d)*(d.pos==='guard'?1:.5)*(.6+d.st.tong/250),0)+25*G.fac.oe+40*(G.wall||0),atk=Math.round(200+5*G.m);
   if(def>=atk){G.fame+=6;G.qual+=3;log(`${G.retreat?'장문인이 없는 틈에 ':''}초가보가 본산을 쳤다. 남은 제자들이 막아 냈다. (방어 ${Math.round(def)} : 공격 ${atk}) 명성 +6`)}
@@ -690,7 +787,7 @@ function discTab(){
     const ms=Object.keys(d.arts).filter(a=>ARTS[a].t==='m'),ss=Object.keys(d.arts).filter(a=>ARTS[a].t==='s');
     return `<div class="d"><div class="hd">${pt(d)}<div><b>${d.n}</b> <span class="muted">${d.r}</span><br>전력 ${power(d)} · 충성 ${d.ch} · 깨달음 ${d.wis||0}</div></div>
 <div style="margin-top:4px;font-size:12px">${['tong','ji','jeong','ma'].map(k=>`${STN[k]} <b>${d.st[k]}</b>`).join(' · ')}<br>${['geom','gwon','oseong'].map(k=>`${STN[k]} <b>${d.st[k]}</b>`).join(' · ')} <span class="muted">(수련 속도: 검법·권장·심법)</span></div>
-<div style="margin-top:6px">${artChips(d)}</div>
+<div style="margin-top:6px">${artChips(d)}</div>${(()=>{const own=Object.keys(d.arts).filter(a=>ARTS[a].t==='m'&&d.arts[a]>=1&&cardsOf(a).length);if(own.length<2)return '';const cur=deckArts(d);return `<div style="margin-top:4px;font-size:12px">일기토 덱(셋): ${own.map(a=>`<label style="margin-right:6px"><input type="checkbox" ${cur.includes(a)?'checked':''} onchange="A.setDeck('${d.id}','${a}',this.checked)">${ARTS[a].n}</label>`).join('')}</div>`})()}
 <div class="mind" title="심마 ${d.mind}"><i style="width:${Math.min(100,d.mind)}%"></i></div><span class="muted" style="font-size:11px">심마 ${d.mind}</span>
 <div style="margin-top:6px">${lock?`<b>${POS[d.pos]}</b> (${d.away}달 남음)`:`<select onchange="A.pos('${d.id}',this.value)">${['train','guard','rest','shop',...(G.task?['study']:[])].map(p=>`<option value="${p}" ${d.pos===p?'selected':''}>${POS[p]}</option>`).join('')}</select>`}</div>
 <div style="margin-top:6px;font-size:12px">초식 <select onchange="A.dir('${d.id}','m',this.value)"><option value="">자동</option>${ms.map(a=>`<option value="${a}" ${d.focusM===a?'selected':''} ${d.arts[a]>=capOf(d,a)?'disabled':''}>${ARTS[a].n}${d.arts[a]>=capOf(d,a)?(d.arts[a]>=10?' (대성)':' (상한)'):''}</option>`).join('')}</select>
@@ -698,7 +795,7 @@ function discTab(){
 ${lib.length?`<div style="margin-top:6px;font-size:12px"><select id="tc_${d.id}"><option value="">전수할 무공</option>${lib.map(a=>`<option value="${a}" ${okA(a)?'':'disabled'}>${ARTS[a].n}${tOf(a)?` (스승 ${tOf(a).n})`:' (가르칠 사람 없음)'}${SECRET[a]&&d.ch<SECRET[a]?' (충성 부족)':''}</option>`).join('')}</select> <button onclick="A.teach('${d.id}')" ${G.act<=0?'disabled':''}>전수</button></div>`:''}
 </div>`}).join('')}</div>`;
 }
-function starter(d){const m=d.st.gwon>d.st.geom?'janggwae':'yuun';if(d.arts[m]==null||d.arts[m]<1){d.arts[m]=1;d.xp[m]=0}for(const s of ['taeeul','hyeoncheong'])if((d.arts[s]||0)<1){d.arts[s]=1;d.xp[s]=0}return d}
+function starter(d){if(d.id==='seomun')return d;const m=d.st.gwon>d.st.geom?'janggwae':'yuun';if(d.arts[m]==null||d.arts[m]<1){d.arts[m]=1;d.xp[m]=0}for(const s of ['taeeul','hyeoncheong'])if((d.arts[s]||0)<1){d.arts[s]=1;d.xp[s]=0}return d}
 function freeDs(){return G.ds.filter(d=>d.id!=='jin'&&!d.elder&&d.pos!=='away'&&d.pos!=='hurt')}
 function suggest(){
   const used=new Set(),pick={};
