@@ -48,6 +48,9 @@ select{font-family:inherit;font-size:13px;padding:3px}
 .modal .ch{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .modal .ch button{text-align:left}
 .log{font-size:13px;line-height:1.7;max-height:220px;overflow:auto}
+.box.duel.gorge{background:linear-gradient(rgba(20,12,10,.55),rgba(20,12,10,.78)),url(img/gorge.webp) center/cover;color:#f4ead8}
+.box.duel.gorge h2,.box.duel.gorge .duelside b,.box.duel.gorge p b{color:#fff3dc}.box.duel.gorge>.muted,.box.duel.gorge .duelside .muted,.box.duel.gorge p.muted{color:#d8c8b0}.box.duel.gorge button{color:#1d1a16}.box.duel.gorge button b{color:#1d1a16}.box.duel.gorge button .muted{color:#7a6a55}.box.duel.gorge .log{background:rgba(0,0,0,.35);padding:6px 8px;border-radius:6px}
+.box.duel.gorge .duelside .pt{background:rgba(241,233,216,.15)}.box.duel.gorge .vs{color:#ff8a6a;text-shadow:0 0 8px #000}
 .duelrow{display:flex;align-items:center;justify-content:space-around;gap:10px;margin-top:10px}
 .fx{position:absolute;width:240px;height:160px;margin-top:-30px;background-size:300% 200%;pointer-events:none;mix-blend-mode:screen;z-index:2}
 .duelside{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:140px}
@@ -322,7 +325,7 @@ function duelMove(mv){const c=DUEL.cur;if(!c||c.over)return;c.fx=null;const d=D(
   render()}
 function duelAuto(){const c=DUEL.cur;while(c&&!c.over){const ks=['kang','kwae','su'];duelMove(ks[Math.floor(Math.random()*3)])}}
 function duelHTML(){if(!DUEL||!DUEL.cur)return'';const c=DUEL.cur,d=D(c.d),bar=v=>`<div class="hpb"><i style="width:${v}%"></i></div>`;
-  return `<div class="modal"><div class="box duel"><h2>일기토 · ${c.t}</h2>
+  return `<div class="modal"><div class="box duel${DUEL.kind==='lane'?' gorge':''}"><h2>일기토 · ${c.t}</h2>
 <div class="duelrow"><div class="duelside ${c.hit==='p'||c.hit==='both'?'hit':''}">${c.fx&&c.fx.side==='p'&&c.fx.n?`<div class="fx" data-fx="${c.fx.n}"></div>`:''}${pt(d)}<b>${d.n}</b><span class="muted">전력 ${power(d)}</span>${bar(c.hp[0])}<span>${c.hp[0]}</span></div>
 <div class="vs serif">對</div>
 <div class="duelside ${c.hit==='e'||c.hit==='both'?'hit':''}">${c.fx&&c.fx.side==='e'&&c.fx.n?`<div class="fx" data-fx="${c.fx.n}"></div>`:''}<div class="pt">${enemyImg(c.bn)?`<img src="${enemyImg(c.bn)}" alt="" onerror="this.remove()">`:c.bn[0]}</div><b>${c.bn}</b><span class="muted">전력 ${c.bpw}</span>${bar(c.hp[1])}<span>${c.hp[1]}</span></div></div>
