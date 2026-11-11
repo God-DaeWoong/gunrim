@@ -317,7 +317,7 @@ function duelMove(mv){const c=DUEL.cur;if(!c||c.over)return;c.fx=null;const d=D(
   const dmg=(a,b)=>Math.round(22*Math.pow(a/b,.7)*(.85+Math.random()*.3));let line;
   if(mv===em){c.hp[0]-=8;c.hp[1]-=8;line=`${c.r}합: 「${mvName(d,mv)}」과 ${c.bn}의 「${emvName(c.bn,em)}」이(가) 맞부딪쳐 서로 밀려났다.`;c.hit='both';c.fx={side:'e',n:mvFx(d,mv)}}
   else if(BEAT[mv]===em){const da=duelArt(d),x=Math.round(dmg(pw,bp)*(1+(da&&ARTS[da].w==='gwon'?boV(d,'janggwaebo'):0)));c.hp[1]-=x;line=`${c.r}합: ${d.n}의 「${mvName(d,mv)}」이(가) ${c.bn}의 「${emvName(c.bn,em)}」을(를) 꺾었다. (-${x})`;c.hit='e';c.fx={side:'e',n:mvFx(d,mv)}}
-  else{const x=Math.round(dmg(bp,pw)*(1-Math.min(.35,boV(d,'hoeseon')+boV(d,'muyeom'))));c.hp[0]-=x;line=`${c.r}합: ${c.bn}의 「${emvName(c.bn,em)}」에 ${d.n}의 「${mvName(d,mv)}」이(가) 밀렸다. (-${x})`;c.hit='p';c.fx={side:'p',n:ENEMY_FX[Math.floor(Math.random()*ENEMY_FX.length)]}}
+  else{const x=Math.round(dmg(bp,pw)*(1-Math.min(.25,boV(d,'hoeseon')+boV(d,'muyeom'))));c.hp[0]-=x;line=`${c.r}합: ${c.bn}의 「${emvName(c.bn,em)}」에 ${d.n}의 「${mvName(d,mv)}」이(가) 밀렸다. (-${x})`;c.hit='p';c.fx={side:'p',n:ENEMY_FX[Math.floor(Math.random()*ENEMY_FX.length)]}}
   c.msg.push(line);c.hp=c.hp.map(v=>Math.max(0,v));
   if(c.hp[0]<=0||c.hp[1]<=0||c.r>=6){c.over=true;const win=c.hp[1]<c.hp[0]||(c.hp[1]===c.hp[0]&&pw>=bp);c.win=win;
     DUEL.list[DUEL.i].win=win;boExp(d);
@@ -801,7 +801,8 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
       c.translate(bx+ww/2+dx,by+hh+dy);c.rotate(rot);c.drawImage(im,-ww/2,-hh,ww,pose==='sit'?hh*.88:hh);c.restore()}
     else sprite(c,x,y,s,palOf(d),pose,ff);
     YARD.hit.push({x:bx,y:by,w:ww,h:hh,n:d.n+' · '+(d.id==='jin'?'장문인':POS[d.pos]||'')})};
-  groups.guard.forEach((d,i)=>put(d,90+i*44,H-64-(i%2)*12,'stand',0));
+  // 수비는 산문을 지키러 나가 있으니 연무장에 그리지 않고, 왼쪽 위에 표지만
+  const gd=home.filter(d=>d.pos==='guard'&&d.id!=='jin');if(gd.length){const tx=`산문 수비 · ${gd.length>3?gd.slice(0,3).map(d=>d.n).join(', ')+` 외 ${gd.length-3}명`:gd.map(d=>d.n).join(', ')}`;c.font='bold 12px sans-serif';const tw=c.measureText(tx).width+14;c.fillStyle='rgba(29,26,22,.72)';c.fillRect(8,8,tw,22);c.fillStyle='#f1e9d8';c.fillText(tx,15,23);YARD.hit.push({x:8,y:8,w:tw,h:22,n:gd.map(d=>d.n).join(', ')+' · 산문 수비'})}
   const nT=groups.train.length,cols=Math.max(5,Math.min(9,Math.ceil(nT/2))),gapX=(W*.62)/cols;
   if(jinD)put(jinD,W*.5-24,G.retreat?-999:62,G.jinFocus||G.retreat?'swing':'stand0',f);
   groups.train.forEach((d,i)=>{const row=Math.floor(i/cols),x=W*.18+(i%cols)*gapX+(row%2?gapX/2:0),y=118+row*42;const m=Object.keys(d.arts).filter(a=>ARTS[a].t==='m').sort((a,b)=>d.arts[b]-d.arts[a])[0];put(d,x,Math.min(y,H-56),m&&ARTS[m].w==='gwon'?'punch':'swing',(f+i)%2)});
