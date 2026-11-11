@@ -152,8 +152,6 @@ function power(d){const ms=[],ss=[];for(const a in d.arts)(ARTS[a].t==='m'?ms:ss
 function pickFocus(d,t){
   const cur=t==='m'?d.focusM:d.focusS;
   if(cur&&d.arts[cur]!=null&&d.arts[cur]<capOf(d,cur))return cur;
-  // 태음신맥은 칠음진기부터(목숨이 걸려 있다)
-  if(t==="s"&&d.taeum&&d.arts.chileum!=null&&d.arts.chileum<capOf(d,"chileum"))return "chileum";
   let best=null;for(const a in d.arts){if(ARTS[a].t!==t||d.arts[a]>=capOf(d,a))continue;if(gateOf(d,a)&&(d.wis||0)<gateOf(d,a)&&(d.xp[a]||0)>=costOf(d.arts[a]))continue;if(!best||d.arts[a]>d.arts[best])best=a}
   return best;
 }
@@ -192,7 +190,7 @@ function prologue(){return{title:'장례',art:'img/jin.png',p:[
     ['사부님 뜻대로 제가 먹겠습니다.',()=>{G.ilbi='late';G.flags.samUse='jin';log('삿갓 쓴 사내은 말없이 떠났다.')}],
     ['문파를 위해 쓰겠습니다.',()=>{G.ilbi='late';G.flags.samUse='jin';log('삿갓 쓴 사내은 말없이 떠났다.')}],
     ['사매의 몸이 요즘 이상합니다. 사매에게 쓸까 합니다.',()=>{G.ilbi='early';G.flags.samUse='lim';
-      MODAL={title:'삿갓 쓴 사내',p:['사내가 임영옥의 증상을 하나하나 물었다. 손끝이 차고, 기침이 잦고, 한여름에도 얼굴이 희다는 말을 듣자 사내의 얼굴이 굳었다.','"그 영약으로는 그 병을 못 고친다. 태음신맥이다." 사내는 삿갓을 벗었다. "내 이름은 강일비다. 네 사부의 사형이지. 그 아이는 내가 맡으마. 다만 내가 돌아왔다는 것은 문 밖에 알리지 마라."'],ch:[['알겠습니다, 사백님.',()=>{addArt('lim','chileum');addIlbi(false);log('강일비가 본산에 머물며 임영옥에게 칠음진기를 가르치기 시작했다.')}]]};
+      MODAL={title:'삿갓 쓴 사내',p:['사내가 임영옥의 증상을 하나하나 물었다. 손끝이 차고, 기침이 잦고, 한여름에도 얼굴이 희다는 말을 듣자 사내의 얼굴이 굳었다.','"그 영약으로는 그 병을 못 고친다. 태음신맥이다." 사내는 삿갓을 벗었다. "내 이름은 강일비다. 네 사부의 사형이지. 그 아이는 내가 맡으마. 다만 내가 돌아왔다는 것은 문 밖에 알리지 마라."'],ch:[['알겠습니다, 사백님.',()=>{addArt('lim','chileum');addIlbi(false);log('(제자 탭에서 임영옥의 심법을 칠음진기로 정해 두어야 한다) ');log('강일비가 본산에 머물며 임영옥에게 칠음진기를 가르치기 시작했다.')}]]};
       return true}]
   ]}}
 // 태을선거: 진산월이 직접 간다(한 달을 다 쓴다). 열석대진은 천하삼십육검 6성 이상이어야 뚫는다
@@ -257,7 +255,7 @@ function fight(eid,lanes,mods){const e=G.q.find(x=>x.id===eid);if(!e)return;cons
   save();render()}
 // 늦은 길: 초가보 멸망으로 이름이 오르자 떠돌이 사내이 정체를 밝힌다
 function ilbiArrive(why){if(has('ilbi'))return;addIlbi(false);addArt('lim','chileum');addArt('jin','chileum');G.flags.ilbiFound=G.m;
-  MODAL={title:'강일비',p:[why,'사내는 임영옥의 손목을 잡아 보고 얼굴이 굳었다. "태음신맥이다. 지금이라도 칠음진기를 익혀야 한다." 사내는 삿갓을 벗었다. "내 이름은 강일비다. 네 사부의 사형이지."'],ch:[['사백님을 뵙습니다.',()=>{log('강일비가 본산에 들어왔다. 임영옥이 칠음진기를 배우기 시작했다. 진산월도 배울 수 있다.')}]]}}
+  MODAL={title:'강일비',p:[why,'사내는 임영옥의 손목을 잡아 보고 얼굴이 굳었다. "태음신맥이다. 지금이라도 칠음진기를 익혀야 한다." 사내는 삿갓을 벗었다. "내 이름은 강일비다. 네 사부의 사형이지."'],ch:[['사백님을 뵙습니다.',()=>{log('강일비가 본산에 들어왔다. 임영옥이 칠음진기를 배우기 시작했다(제자 탭에서 심법을 칠음진기로 정해 두어야 한다). 진산월도 배울 수 있다.')}]]}}
 function revealIlbi(){if(G.ilbi==='late'&&!has('ilbi')){ilbiArrive('초가보가 무너졌다는 소문이 퍼진 지 며칠 뒤, 장례식 날의 삿갓 쓴 사내이 산문 앞에 나타났다. "종남의 이름이 다시 들리기에 왔다."');return}const i=D('ilbi');if(G.ilbi==='late'&&i&&i.n!=='강일비'){i.n='강일비';i.r='사백(원로)';
   MODAL={title:'떠돌이 사내',p:['후산 초막의 사내가 처음으로 산문 앞까지 내려왔다. 사내는 삿갓을 벗었다.','"종남의 이름이 다시 들리는구나. 내 이름은 강일비다. 네 사부의 사형이지." 그동안 임영옥에게 가르친 것이 칠음진기였다고 했다.'],ch:[['사백님을 뵙습니다.',()=>{addArt('jin','chileum');log('삿갓 쓴 사내의 정체는 강일비였다. 진산월도 칠음진기를 배울 수 있다.')}]]}}}
 // 일기토: 강공·쾌검·수비. 강공은 쾌검을, 쾌검은 수비를, 수비는 강공을 이긴다. 체력 100, 여섯 합
@@ -473,6 +471,7 @@ function endMonth(){
   else if(G.m>=2)log('형산이 종남의 구파 자격을 문제 삼는다. 구파 자격 -1');
   // 임영옥 점검
   if(G.m===12||G.m===24){const l=D('lim'),need=(G.m===12?4:7)-(G.flags.taeumSlow?1:0),v=l.arts.chileum||0;
+    if(v<need&&has('ilbi')&&l.arts.chileum!=null&&l.focusS!=='chileum'){l.focusS='chileum';log('강일비가 크게 꾸짖고 임영옥의 수련을 칠음진기로 돌려 놓았다.')}
     if(v<need){l.pos='hurt';l.away=G.m===12?2:6;log(`임영옥이 ${G.m===12?'발작을 일으켰다':'위독해졌다'}. 칠음진기 ${v}성 (기준 ${need}성). 한 달 요양`)}else log(`임영옥의 칠음진기 ${v}성. 이번 해는 넘겼다. (기준 ${need}성)`)}
   if(G.m>=24){G.done=true;save();render();return}
   // 다음 달
@@ -495,6 +494,7 @@ ${G.task?`<span title="제자 탭에서 장경각 해독에 배치">《성심록
 function recs(){const r=[];
   if(G.task&&G.task.due-G.m<=3&&G.task.prog<100)r.push(['read','《성심록》 기한이 ${G.task.due-G.m}달 남았다. 직접 읽으면 +30%']);
   const hard=G.q.find(e=>e.t==='crisis'&&!suggest()[e.id]);if(hard)r.push(['sortie','막을 만한 제자가 없는 위기가 있다. 직접 출전']);
+  {const l=D('lim');if(l&&l.arts.chileum!=null&&l.arts.chileum<7&&pickFocus(l,'s')!=='chileum')r.unshift(['limfocus','임영옥이 칠음진기를 수련하지 않고 있다(제자 탭에서 심법을 칠음진기로)'])}
   const tired=G.ds.filter(d=>d.id!=='jin'&&d.mind>=60).sort((a,b)=>b.mind-a.mind)[0];if(tired)r.push(['meet',`${tired.n}의 심마가 ${tired.mind}이다. 면담`]);
   if(G.ilbi==='late'&&!has('ilbi')&&G.m>=4&&!G.q.some(e=>e.id==='findilbi')&&G.eun>=20)r.push(['rumor','임영옥이 위험하다. 삿갓 쓴 사내의 행방을 탐문']);
   if(G.eun<80&&G.m>=4)r.push(['patrol','은자가 적다. 서안 순찰로 상권을 지킨다']);
@@ -629,7 +629,7 @@ function botMonth(){
   for(let k=0;k<1&&G.act>0;k++){const r=recs()[k]||recs()[0];const n0=G.act;
     if(r[0]==='sortie'){const h=G.q.find(e=>e.t==='crisis');if(h)document.getElementById('jin_sortie').value=h.id}
     if(r[0]==='meet'){const t=G.ds.filter(d=>d.id!=='jin').sort((a,b)=>b.mind-a.mind)[0];document.getElementById('jin_meet').value=t.id}
-    if(r[0]==='tq'){if((D('jin').arts.cheonha||0)>=5&&G.half===0&&G.act===1)A.quest('taeeul');else A.focus()}else if(r[0]==='sq'){freeDs().filter(d=>d.id!=='lim').sort((a,b)=>power(b)-power(a)).slice(0,3).forEach(d=>A.pos(d.id,'guard'));A.quest('seokshil')}else A[r[0]]();if(G.act<n0)say.push(r[1].split('. ').pop());else if(G.act>0&&!G.jinFocus&&!G.jinBusy){A.focus();say.push('수련 전념')}else break}
+    if(r[0]==='limfocus'){D('lim').focusS='chileum';A.focus()}else if(r[0]==='tq'){if((D('jin').arts.cheonha||0)>=5&&G.half===0&&G.act===1)A.quest('taeeul');else A.focus()}else if(r[0]==='sq'){freeDs().filter(d=>d.id!=='lim').sort((a,b)=>power(b)-power(a)).slice(0,3).forEach(d=>A.pos(d.id,'guard'));A.quest('seokshil')}else A[r[0]]();if(G.act<n0)say.push(r[1].split('. ').pop());else if(G.act>0&&!G.jinFocus&&!G.jinBusy){A.focus();say.push('수련 전념')}else break}
   log("<span style=\"color:var(--blue)\">[봇] "+(say.join(", ")||"할 일 없음")+"</span>");
   A.next();
 }
