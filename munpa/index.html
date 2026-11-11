@@ -754,7 +754,7 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
   const groups={train:[],guard:[],rest:[],study:[]};for(const d of home){if(d.id==='jin'){groups.train.unshift(d);continue}(groups[d.pos]||groups.train).push(d)}
   const srcOf=d=>d.img||(d.rl?rlImg(d.rl):null);YARD.imgs=YARD.imgs||{};
   // SD 도트(왼쪽을 보는 그림). 받은 사람만
-  const SDS={jin:'img/sd_jin.png'};const sdOf=d=>d.id==='nak'&&d.mukryeong&&SDS.nak2?SDS.nak2:SDS[d.id];
+  const SDS={jin:'img/sd_jin.png'};const SDONLY_OFF=false;const sdOf=d=>d.id==='nak'&&d.mukryeong&&SDS.nak2?SDS.nak2:SDS[d.id];
   const getIm=src=>{let im=YARD.imgs[src];if(!im){im=YARD.imgs[src]=new Image();im.src=src}return im.complete&&im.naturalWidth?im:null};
   const putSD=(d,x,y,pose,im)=>{const H2=64,W2=Math.round(im.naturalWidth*H2/im.naturalHeight),t=YARD.t,k=t*.35+x*.07;let dx=0,dy=0,flip=false,bub='';
     if(pose==='swing'||pose==='punch'){const ph=(t+Math.round(x))%24;if(ph<6){dx=-ph*2;dy=-Math.sin(ph/6*Math.PI)*6}else if(ph<10){dx=-12+(ph-6)*3}else{dy=-Math.abs(Math.sin(k))*2}
@@ -766,7 +766,7 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
     c.save();c.imageSmoothingEnabled=false;c.translate(x+dx+(flip?W2:0),y+56-H2+dy);if(flip)c.scale(-1,1);c.drawImage(im,0,0,W2,H2);c.restore();
     if(bub){c.fillStyle='#fff';c.strokeStyle='#1d1a16';c.lineWidth=1;c.beginPath();c.roundRect?c.roundRect(x+W2-6,y-14,20,14,4):c.rect(x+W2-6,y-14,20,14);c.fill();c.stroke();c.fillStyle='#1d1a16';c.font='bold 10px sans-serif';c.fillText(bub,x+W2-2,y-3)}
     YARD.hit.push({x:x+dx,y:y+56-H2,w:W2,h:H2,n:d.n+' · '+(d.id==='jin'?'장문인':POS[d.pos]||'')})};
-  const put=(d,x,y,pose,ff)=>{const sd=sdOf(d),sim=sd&&getIm(sd);if(sim)return putSD(d,x,y,pose,sim);const src=srcOf(d),hh=74,ww=49,bx=x-6,by=y+54-hh;
+  const put=(d,x,y,pose,ff)=>{const sd=sdOf(d),sim=sd&&getIm(sd);if(sim)return putSD(d,x,y,pose,sim);if(!SDONLY_OFF)return;const src=srcOf(d),hh=74,ww=49,bx=x-6,by=y+54-hh;
     c.fillStyle='rgba(40,30,20,.25)';c.beginPath();c.ellipse(bx+ww/2,y+55,ww*.42,5,0,0,7);c.fill();
     let im=src&&YARD.imgs[src];if(src&&!im){im=YARD.imgs[src]=new Image();im.src=src}
     if(im&&im.complete&&im.naturalWidth){c.save();const k=YARD.t/2+x*.13;let dx=0,dy=0,rot=0;
