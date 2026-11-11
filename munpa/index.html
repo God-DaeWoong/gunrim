@@ -73,11 +73,12 @@ const ARTS={
   wolnyeo:{n:'월녀검법',t:'m',w:'geom',cap:10}, yakryu:{n:'약류장',t:'m',w:'gwon',cap:10},
   taeeul:{n:'태을신공',t:'s',cap:10}, guyang:{n:'구양신공',t:'s',cap:10},
   hyeoncheong:{n:'현청건곤강기',t:'s',cap:10}, taejin:{n:'태진강기',t:'s',cap:10}, cheondan:{n:'천단신공',t:'s',cap:10},
+  muyeom:{n:'무염십팔보',t:'m',w:'sin',cap:10}, nanhwa:{n:'난화지',t:'m',w:'gwon',cap:10}, yeomhwa:{n:'염화옥수',t:'m',w:'gwon',cap:10},
   guban:{n:'구반장법',t:'m',w:'gwon',cap:10}, nakroe:{n:'낙뢰신권',t:'m',w:'gwon',cap:10}, chileum:{n:'칠음진기',t:'s',cap:2}
 };
 // 전수할 수 있는 초식. 가르칠 사람(5성 이상)이 있어야 하고, 천하삼십육검은 충성 70 이상만 배운다
-const LIB=['yuun','cheonha','nakha','janggwae','hongdan','wolnyeo','yakryu'];
-const SECRET={cheonha:70};
+const LIB=['yuun','cheonha','nakha','janggwae','hongdan','wolnyeo','yakryu','muyeom','nanhwa','yeomhwa'];
+const SECRET={cheonha:70,muyeom:70,nanhwa:70,yeomhwa:70};
 // 종남 심법 셋은 모두가 익히고 있고 성취만 다르다. 사부가 후계 후보로 키운 넷은 구양·현청이 1성
 const BASE_S=['taeeul','guyang','hyeoncheong'],SENIOR=['lim','mae','so','eung'];
 // 제자: apt = 수련 배율, ch = 충성
@@ -94,7 +95,7 @@ const ROSTER=[
 ];
 // 능력치 이름. 무골은 초식, 오성은 심법이 오르는 속도(80이 보통)
 const STN={tong:'통솔',ji:'지력',jeong:'정치',ma:'매력',geom:'검재',gwon:'권재',oseong:'오성'};
-const growOf=(d,a)=>(ARTS[a].t==='s'?d.st.oseong:d.st[ARTS[a].w]||60)/80;
+const growOf=(d,a)=>(ARTS[a].t==='s'?d.st.oseong:ARTS[a].w==='sin'?(d.st.geom+d.st.gwon)/2:d.st[ARTS[a].w]||60)/80;
 const POS={train:'수련',guard:'수비',rest:'휴식',study:'장경각 해독',away:'파견 중',hurt:'요양'};
 const FAC={yeon:{n:'연무장',d:'수련치 +10%/단계'},jang:{n:'장경각',d:'해독 속도, 전수할 수 있는 무공 수'},yak:{n:'약방',d:'심마·부상 회복'},oe:{n:'외당',d:'본산 방어, 잠입 차단, 사건을 일찍 앎'}};
 // 로그라이크 그림을 같은 사이트에서 불러 쓴다. 사이트: /gunrim/munpa/ → /gunrim/img/, 내 컴퓨터: 로그라이크 폴더
@@ -110,6 +111,9 @@ const MOVES={
   janggwae:[['천전만권','cheonjeon'],['조운육환','jounyuk'],['단봉조양','danbong']],
   hongdan:[['홍단서천','hongdan'],['홍단서천','hongdan'],['홍단서천','hongdan']],
   yakryu:[['약류장','yakryu'],['약류장','yakryu'],['약류장','yakryu']],
+  muyeom:[['무염십팔보','muyeom'],['무염십팔보','muyeom'],['무염십팔보','muyeom']],
+  nanhwa:[['난화지',null],['난화지',null],['난화지',null]],
+  yeomhwa:[['염화옥수',null],['염화옥수',null],['염화옥수',null]],
   guban:[['서우망월',null],['낭아선륜',null],['마면배심',null]],
   nakroe:[['뇌정만균',null],['낙뢰신권',null],['낙뢰신권',null]]};
 const ENEMY_FX=['b_noesin','b_biryong','b_baekhwa','b_hyeolhwa','b_paewang','b_samji'];
@@ -206,7 +210,7 @@ function endRetreat(){const j=D('jin');G.flags.yongyeong=1;gainWis(j,3,'석실 �
     ch:[['산을 내려간다.',()=>{log(`진산월이 출관했다. 용영검, 태진강기 3성, 태을신공 +1, 유운검법 → 유운검결 ${D('jin').arts.yuungyeol}성(+2)`+(gj?', 검정중원':''))}]]}}
 // 강일비: 임장홍의 사형. 본산에 머물지만 싸움에는 나서지 않는다(파견·위기·기습 제외). 늦은 길이면 정체를 숨긴 떠돌이 노인으로 지낸다
 function addIlbi(hidden){if(has('ilbi'))return;G.ds.push({id:'ilbi',n:hidden?'삿갓 노인':'강일비',r:hidden?'떠돌이 객':'사백(원로)',elder:1,ch:90,
-  st:{tong:60,ji:90,jeong:50,ma:55,geom:95,gwon:70,oseong:95},arts:{yuun:8,cheonha:8,taeeul:8,guyang:3,hyeoncheong:3,chileum:2},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null})}
+  st:{tong:60,ji:90,jeong:50,ma:55,geom:95,gwon:70,oseong:95},arts:{yuun:8,cheonha:8,taeeul:8,guyang:3,hyeoncheong:3,chileum:2,muyeom:8,nanhwa:7,yeomhwa:6},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null})}
 // 문파 개발: 장문인 행동 1번과 은자로 시작하고, 순마다 진행된다. 동시에 둘까지
 const INCN={sang:'서안 상권',yak:'약초밭',ju:'조암령 주루',pyo:'표국',land:'초가보 옛 땅'};
 const DEV=[
@@ -399,7 +403,7 @@ const A={
   restart(){if(confirm('처음부터 다시 할까요?')){localStorage.removeItem(SAVE);newGame()}}
 };
 // 가르칠 사람: 그 무공 5성 이상, 배우는 사람 말고. 요양·파견 중이면 못 가르친다
-function teacher(a,not){return G.ds.filter(x=>x.id!==not&&(x.arts[a]||0)>=5&&x.pos!=='away'&&x.pos!=='hurt').sort((x,y)=>y.arts[a]-x.arts[a])[0]}
+function teacher(a,not){return G.ds.filter(x=>x.id!==not&&x.n!=='삿갓 노인'&&(x.arts[a]||0)>=5&&x.pos!=='away'&&x.pos!=='hurt').sort((x,y)=>y.arts[a]-x.arts[a])[0]}
 // 폐관 중 초가보 기습: 수비는 전력 그대로, 수련 중은 절반, 외당 단계마다 +25
 function raid(){G.flags.raided=1;const def=G.ds.filter(d=>d.id!=='jin'&&!d.elder&&(d.pos==='guard'||d.pos==='train'||d.pos==='rest'||d.pos==='study')).reduce((s,d)=>s+power(d)*(d.pos==='guard'?1:.5)*(.6+d.st.tong/250),0)+25*G.fac.oe,atk=Math.round(200+5*G.m);
   if(def>=atk){G.fame+=6;G.qual+=3;log(`장문인이 없는 틈에 초가보가 본산을 쳤다. 남은 제자들이 막아 냈다. (방어 ${Math.round(def)} : 공격 ${atk}) 명성 +6`)}
@@ -616,7 +620,7 @@ function botMonth(){
   A.next();
 }
 if(BOT){save=()=>{};newGame();TAB="main";setInterval(botMonth,1500)}
-else if(load()){for(const d of G.ds){if(d.id==='jin'){d.rl='player';delete d.img}if(d.id==='du'){d.rl='dugichun';delete d.img}}for(const d of G.ds){if(d.st&&d.st.mugol!=null&&d.st.geom==null){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{...d.st,geom:d.st.mugol,gwon:d.st.mugol}}}for(const d of G.ds)if(!d.st){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{tong:50,ji:50,jeong:50,ma:50,geom:60,gwon:60,oseong:60}}if(G.ilbi==='early'||(G.ilbi==='late'&&G.m>=3))addIlbi(G.ilbi==='late');if(G.half==null){G.half=0;G.act=Math.min(G.act,1)}if(!G.ilbi)MODAL=prologue();if(G.flags.seongsim&&!G.flags.taeeul&&!G.q.some(e=>e.id==='taeeul'))openTaeeul();render()}else newGame();
+else if(load()){for(const d of G.ds){if(d.id==='ilbi'){d.arts.muyeom=d.arts.muyeom||8;d.arts.nanhwa=d.arts.nanhwa||7;d.arts.yeomhwa=d.arts.yeomhwa||6}if(d.id==='jin'){d.rl='player';delete d.img}if(d.id==='du'){d.rl='dugichun';delete d.img}}for(const d of G.ds){if(d.st&&d.st.mugol!=null&&d.st.geom==null){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{...d.st,geom:d.st.mugol,gwon:d.st.mugol}}}for(const d of G.ds)if(!d.st){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{tong:50,ji:50,jeong:50,ma:50,geom:60,gwon:60,oseong:60}}if(G.ilbi==='early'||(G.ilbi==='late'&&G.m>=3))addIlbi(G.ilbi==='late');if(G.half==null){G.half=0;G.act=Math.min(G.act,1)}if(!G.ilbi)MODAL=prologue();if(G.flags.seongsim&&!G.flags.taeeul&&!G.q.some(e=>e.id==='taeeul'))openTaeeul();render()}else newGame();
 </script>
 </body>
 </html>
