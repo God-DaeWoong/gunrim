@@ -553,12 +553,12 @@ function endHalf(){
   // 수련(순)
   for(const d of G.ds)train(d);
   // 파견·요양 (순 단위)
-  for(const d of G.ds)if(d.pos==='away'&&--d.away<=0){const j=d.job;d.pos='train';d.job=null;if(!j)continue;if(j.nak){nakReturn(d);continue}
+  for(const d of G.ds)if(d.pos==='away'&&--d.away<=0){const j=d.job;d.pos='train';d.job=null;d.backT=TID()+1;d.backHurt=0;if(!j)continue;if(j.nak){nakReturn(d);continue}
     if(Math.random()*100<chanceK(d,j.need,j.k)){boExp(d);G.eun+=j.pay||0;G.fame+=j.fame||0;G.fav+=j.fav||0;let x='';if((!j.k||j.k==='mu')&&Math.random()<(j.need>=80?.4:.2)*d.st.oseong/70)gainWis(d,1,j.title);
       if(j.sp==='herb'){for(const o of G.ds)o.mind=Math.max(0,o.mind-10);x=' 약재로 제자들 심마 -10'}
       if(j.sp==='clue'&&G.task){G.task.prog=Math.min(100,G.task.prog+25);x=' 옛 기록을 찾아 성심록 해독 +25%'}
       log(`${d.n}이(가) ${j.title}을(를) 마치고 돌아왔다.${j.pay?` 은자 +${j.pay}`:''}${j.fame?` 명성 +${j.fame}`:''}${j.fav?` 호감 +${j.fav}`:''}${x}`)}
-    else{d.pos='hurt';d.away=4;log(`${d.n}이(가) ${j.title}에서 다쳐 돌아왔다. 두 달 요양`)}}
+    else{d.pos='hurt';d.away=4;d.backHurt=1;log(`${d.n}이(가) ${j.title}에서 다쳐 돌아왔다. 두 달 요양`)}}
     else if(d.pos==='hurt'&&--d.away<=0){d.pos='rest';log(`${d.n}이(가) 회복했다.`)}
   // 심마(순)
   for(const d of G.ds){if(d.id==='jin')continue;
@@ -777,7 +777,7 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
   // SD 도트(왼쪽을 보는 그림). 받은 사람만
   const SDONLY_ON=true;const SDS={jin:'img/sd_jin.png',lim:'img/sd_lim.png',mae:'img/sd_mae.png',so:'img/sd_so.png',eung:'img/sd_eung.png',nak:'img/sd_nak.png',jeong:'img/sd_jeong.png',bang:'img/sd_bang.png',du:'img/sd_du.png',jeonp:'img/sd_jeonp.png',ilbi:'img/sd_ilbi.png',jeonh:'img/sd_jeonh.png'};const SDONLY_OFF=false;const sdOf=d=>d.id==='nak'&&d.mukryeong&&SDS.nak2?SDS.nak2:SDS[d.id];
   const getIm=src=>{let im=YARD.imgs[src];if(!im){im=YARD.imgs[src]=new Image();im.src=src}return im.complete&&im.naturalWidth?im:null};
-  const groups={train:[],guard:[],rest:[],study:[]};let jinD=null;for(const d of home){if(d.id==='jin'){jinD=d;continue}if(SDONLY_ON&&!sdOf(d))continue;(groups[d.pos]||groups.train).push(d)}
+  const groups={train:[],guard:[],rest:[],study:[]};let jinD=null;const tid=TID();for(const d of home){if(d.id==='jin'){jinD=d;continue}if(d.backT===tid)continue;if(SDONLY_ON&&!sdOf(d))continue;(groups[d.pos]||groups.train).push(d)}
   const putSD=(d,x,y,pose,im)=>{const H2=64,W2=Math.round(im.naturalWidth*H2/im.naturalHeight),t=YARD.t,k=t*.35+x*.07;let dx=0,dy=0,flip=false,bub='';
     if(pose==='swing'||pose==='punch'){const ph=(t+Math.round(x))%24;if(ph<6){dx=-ph*2;dy=-Math.sin(ph/6*Math.PI)*6}else if(ph<10){dx=-12+(ph-6)*3}else{dy=-Math.abs(Math.sin(k))*2}
       if(ph===5||ph===6){c.fillStyle='rgba(255,255,230,.9)';c.beginPath();c.arc(x-16,y+20,7,0,7);c.fill()}}
@@ -785,6 +785,7 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
     else if(pose==='stand'){const w=Math.sin(t*.06+x);dx=w*16;flip=Math.cos(t*.06+x)>0;dy=-Math.abs(Math.sin(t*.5))*2}
     else if(pose==='sit'){const cyc=(t+Math.round(x))%40;dy=6+Math.sin(t*.12)*1;var nod=cyc<30?cyc/30*.22:(cyc<32?.22-(cyc-30)*.11:0);var doze=1}
     else if(pose==='read'){if(Math.floor(t/15+x)%4===0)bub='?'}
+    else if(pose==='out'||pose==='in'||pose==='limp'){const L=(YARD.gx||120)+90,ph=(t*(pose==='limp'?1:2)+Math.abs(x)*3)%L;dx=pose==='out'?-ph:ph;flip=pose!=='out';dy=pose==='limp'?-Math.abs(Math.sin(t*.25))*4+(Math.floor(t/3)%2?2:0):-Math.abs(Math.sin(t*.6))*3}
     c.fillStyle='rgba(40,30,20,.25)';c.beginPath();c.ellipse(x+dx+W2/2,y+56,W2*.32,4,0,0,7);c.fill();
     c.save();c.imageSmoothingEnabled=false;
     if(doze){c.translate(x+W2/2,y+56+dy-6);c.rotate(-nod);c.translate(-W2/2,-H2);if(c.filter!==undefined)c.filter='brightness(.85)';c.drawImage(im,0,0,W2,H2*.9)}
@@ -802,7 +803,13 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
     else sprite(c,x,y,s,palOf(d),pose,ff);
     YARD.hit.push({x:bx,y:by,w:ww,h:hh,n:d.n+' · '+(d.id==='jin'?'장문인':POS[d.pos]||'')})};
   // 수비는 산문을 지키러 나가 있으니 연무장에 그리지 않고, 왼쪽 위에 표지만
-  const gd=home.filter(d=>d.pos==='guard'&&d.id!=='jin');if(gd.length){const tx=`산문 수비 · ${gd.length>3?gd.slice(0,3).map(d=>d.n).join(', ')+` 외 ${gd.length-3}명`:gd.map(d=>d.n).join(', ')}`;c.font='bold 12px sans-serif';const tw=c.measureText(tx).width+14;c.fillStyle='rgba(29,26,22,.72)';c.fillRect(8,8,tw,22);c.fillStyle='#f1e9d8';c.fillText(tx,15,23);YARD.hit.push({x:8,y:8,w:tw,h:22,n:gd.map(d=>d.n).join(', ')+' · 산문 수비'})}
+  const gd=home.filter(d=>d.pos==='guard'&&d.id!=='jin');const gate=getIm('img/sd_gate.png');
+  if(gate){const gh=H*.92,gw=gate.naturalWidth*gh/gate.naturalHeight;c.drawImage(gate,0,H-gh,gw,gh);const sd=gd.filter(d=>sdOf(d)&&getIm(sdOf(d)));sd.forEach((d,i)=>put(d,gw*.18+(i%3)*gw*.26-(i>2?gw*.1:0),H-70-(i>2?18:0),'stand0',0));var gdRest=gd.filter(d=>!sd.includes(d))}
+  YARD.gx=gate?c.canvas.height*.92*gate.naturalWidth/gate.naturalHeight*.8:120;
+  G.ds.filter(d=>d.pos==='away'&&d.leftT===tid).forEach((d,i)=>put(d,YARD.gx+i*25,H-74-(i%2)*10,'out',0));
+  G.ds.filter(d=>d.backT===tid&&d.pos!=='away').forEach((d,i)=>put(d,-50-i*25,H-70-(i%2)*10,d.backHurt?'limp':'in',0));
+  const outL=G.ds.filter(d=>d.pos==='away'&&d.leftT!==tid);
+  const gdLab=gate?gdRest:gd;if(gdLab.length||outL.length){const gd=gdLab,few=(a,f)=>a.length>3?a.slice(0,3).map(f).join(', ')+` 외 ${a.length-3}명`:a.map(f).join(', ');const rows=[];    if(gd.length)rows.push([`산문 수비 · ${few(gd,d=>d.n)}`,gd.map(d=>d.n).join(', ')+' · 산문 수비']);    if(outL.length)rows.push([`출타 중 · ${few(outL,d=>d.n)}`,outL.map(d=>`${d.n}(${d.job&&d.job.title?d.job.title:'원행'}, ${d.away}순 남음)`).join(', ')]);    c.font='bold 12px sans-serif';rows.forEach(([tx,tip],i)=>{const tw=c.measureText(tx).width+14,y=8+i*26;c.fillStyle='rgba(29,26,22,.72)';c.fillRect(8,y,tw,22);c.fillStyle='#f1e9d8';c.fillText(tx,15,y+15);YARD.hit.push({x:8,y,w:tw,h:22,n:tip})})}
   const nT=groups.train.length,cols=Math.max(5,Math.min(9,Math.ceil(nT/2))),gapX=(W*.62)/cols;
   if(jinD)put(jinD,W*.5-24,G.retreat?-999:62,G.jinFocus||G.retreat?'swing':'stand0',f);
   groups.train.forEach((d,i)=>{const row=Math.floor(i/cols),x=W*.18+(i%cols)*gapX+(row%2?gapX/2:0),y=118+row*42;const m=Object.keys(d.arts).filter(a=>ARTS[a].t==='m').sort((a,b)=>d.arts[b]-d.arts[a])[0];put(d,x,Math.min(y,H-56),m&&ARTS[m].w==='gwon'?'punch':'swing',(f+i)%2)});
@@ -834,7 +841,9 @@ function mapTab(){const here={};for(const e of G.q){const k=placeOf(e);(here[k]=
   return `<p class="muted" style="font-size:13px">장소를 누르면 그곳의 일이 아래에 뜬다. 📦 의뢰 · ⚔️ 위기 · 🚩 비무 · ⭐ 기연 · 💬 소식. 파견 간 제자는 그 장소 옆에 작게 보인다.</p>
 <div class="map"><img src="img/map.webp" alt="강호 지도">${pins}</div>
 ${sel?`<h3 style="margin-top:12px">${sel[0]}</h3>${(here[MAPSEL]||[]).length?evTab(e=>placeOf(e)===MAPSEL):'<p class="muted">지금 이곳에는 할 일이 없다.</p>'}`:''}`}
-function render(){
+const TID=()=>G.m*2+G.half;
+function tagAway(){if(typeof G==='undefined'||!G||!G.ds)return;const t=TID();for(const d of G.ds){if(d.pos==='away'){if(!d.awayTag){d.awayTag=1;d.leftT=t}}else d.awayTag=0}}
+function render(){tagAway();
   const app=document.getElementById('app');
   if(G.over||G.done){app.innerHTML=topBar()+`<div class="wrap"><div class="panel"><h2>${G.over?'몰락':(G.ending?G.ending.n:'끝')}</h2><p>${G.over||(G.ending?G.ending.p.join(' '):'')}${G.flags.choDone?' 초가보를 무너뜨렸다.':''}${G.flags.geomjeong?' 검정중원을 얻었다.':''}${G.flags.soseon?' 낙일방이 소선의 유진을 얻었다.':''}</p>
 <p>은자 ${G.eun} · 명성 ${G.fame} · 호감 ${G.fav} · 구파 자격 ${G.qual} · 제자 ${G.ds.length}명</p><button class="main" onclick="A.restart()">처음부터</button></div><div class="panel"><div class="log">${G.log.join('<br>')}</div></div></div>`;return}
