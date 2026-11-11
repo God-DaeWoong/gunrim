@@ -750,7 +750,7 @@ const PAL={jin:['#1d1a16','#c9a24a','#5b4636','top'],lim:['#3b2a20','#3a3436','#
   jeonh:['#1d1a16','#5a6a8a','#2a2f4a','top'],nohae:['#555','#8a6a3a','#5b4636','top'],hadong:['#1d1a16','#5a6a7a','#333','top'],dong:['#2a2a2a','#3a3a3a','#7a5a3a','top'],
   yuso:['#141414','#8a8070','#5b4636','top'],seomun:['#1d1a16','#a7a9b0','#555','top'],seongrak:['#1d1a16','#4a6a8a','#2a3a5a','top'],danri:['#141414','#c8c0b0','#5b4636','top'],sonp:['#3a2a20','#9a7a5a','#5b4636','top']};
 function palOf(d){if(PAL[d.id])return PAL[d.id];let h=0;for(const c of d.id)h=(h*31+c.charCodeAt(0))>>>0;const robes=['#7a6a55','#5a6a7a','#6a5a6a','#7a5a45','#55705a','#8a8070'];return['#1d1a16',robes[h%robes.length],'#4a3f3f','top']}
-const SK='#e8c4a0';let YARD={t:0,hit:[],timer:null};
+const SK='#e8c4a0';let YARD={t:0,hit:[],timer:null,wi:{}};
 // 12×18 칸 사람. pose: swing(검)/punch(권)/stand/sit/read
 function sprite(c,x,y,s,P,pose,f){const px=(i,j,col)=>{c.fillStyle=col;c.fillRect(x+i*s,y+j*s,s,s)};const [hair,robe,sash,hs]=P;
   const sit=pose==='sit';const by=sit?3:0;
@@ -799,7 +799,7 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
     else if(pose==='stand'){const w=Math.sin(t*.06+x);dx=w*16;flip=Math.cos(t*.06+x)>0;dy=-Math.abs(Math.sin(t*.5))*2}
     else if(pose==='sit'){const cyc=(t+Math.round(x))%40;dy=6+Math.sin(t*.12)*1;var nod=cyc<30?cyc/30*.22:(cyc<32?.22-(cyc-30)*.11:0);var doze=1}
     else if(pose==='read'){if(Math.floor(t/15+x)%4===0)bub='?'}
-    else if((pose==='out'||pose==='in'||pose==='limp')&&YARD.door){const Dd=YARD.door,seed=(d.n.charCodeAt(0)%7)/7+(Dd.ph||0),q=(t*(pose==='limp'?.006:.012)+seed)%1,pp=pose==='out'?q:1-q;
+    else if((pose==='out'||pose==='in'||pose==='limp')&&YARD.door){const Dd=YARD.door,seed=(YARD.wi&&YARD.wi[d.id]!=null?YARD.wi[d.id]:(d.n.charCodeAt(0)%7)/7)+(Dd.ph||0),q=(t*(pose==='limp'?.006:.012)+seed)%1,pp=pose==='out'?q:1-q;
       const X=Dd.ax+(Dd.bx-Dd.ax)*pp-W2/2,Y=Dd.ay+(Dd.by-Dd.ay)*pp;dx=X-x;dy=Y-(y+56);flip=pose!=='out';var fade=Math.min(pp>.8?(1-pp)/.2:1,Dd.fadeA&&pp<.2?pp/.2:1);
       dy+=pose==='limp'?-Math.abs(Math.sin(t*.25))*4+(Math.floor(t/3)%2?2:0):-Math.abs(Math.sin(t*.6))*3}
     else if(pose==='out'||pose==='in'||pose==='limp'){const L=(YARD.gx||120)+90,ph=(t*(pose==='limp'?1:2)+Math.abs(x)*3)%L;dx=pose==='out'?-ph:ph;flip=pose!=='out';dy=pose==='limp'?-Math.abs(Math.sin(t*.25))*4+(Math.floor(t/3)%2?2:0):-Math.abs(Math.sin(t*.6))*3}
@@ -828,8 +828,8 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
     }
   const gIm=PW?getIm('img/sd_gate.png'):null,gdOut=gIm?gd.filter(d=>sdOf(d)&&getIm(sdOf(d))).slice(0,4):[],gdRest=gd.filter(d=>!gdOut.includes(d));
   YARD.gx=120;
-  G.ds.filter(d=>d.pos==='away'&&d.leftT===tid).forEach((d,i)=>put(d,YARD.gx+i*25,H-74-(i%2)*10,'out',0));
-  G.ds.filter(d=>d.backT===tid&&d.pos!=='away').forEach((d,i)=>put(d,-50-i*25,H-70-(i%2)*10,d.backHurt?'limp':'in',0));
+  G.ds.filter(d=>d.pos==='away'&&d.leftT===tid).forEach((d,i,L)=>put((YARD.wi[d.id]=i/L.length,d),YARD.gx+i*25,H-74-(i%2)*10,'out',0));
+  G.ds.filter(d=>d.backT===tid&&d.pos!=='away').forEach((d,i,L)=>put((YARD.wi[d.id]=i/L.length,d),-50-i*25,H-70-(i%2)*10,d.backHurt?'limp':'in',0));
   const outL=G.ds.filter(d=>d.pos==='away'&&d.leftT!==tid);
   const gdLab=gdRest;if(gdLab.length||outL.length){const gd=gdLab,few=(a,f)=>a.length>3?a.slice(0,3).map(f).join(', ')+` 외 ${a.length-3}명`:a.map(f).join(', ');const rows=[];    if(gd.length)rows.push([`산문 수비 · ${few(gd,d=>d.n)}`,gd.map(d=>d.n).join(', ')+' · 산문 수비']);    if(outL.length)rows.push([`출타 중 · ${few(outL,d=>d.n)}`,outL.map(d=>`${d.n}(${d.job&&d.job.title?d.job.title:'원행'}, ${d.away}순 남음)`).join(', ')]);    c.font='bold 12px sans-serif';rows.forEach(([tx,tip],i)=>{const tw=c.measureText(tx).width+14,y=8+i*26;c.fillStyle='rgba(29,26,22,.72)';c.fillRect(8,y,tw,22);c.fillStyle='#f1e9d8';c.fillText(tx,15,y+15);YARD.hit.push({x:8,y,w:tw,h:22,n:tip})})}
   // 허수아비: 수련하는 사람 왼쪽(치는 쪽)에. 칠 때(박자 5~9) 밑동을 축으로 흔들린다
@@ -838,8 +838,8 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
   const nT=groups.train.length,cols=Math.max(5,Math.min(9,Math.ceil(nT/2))),gapX=(YARD.gx0?W*.86-YARD.gx0-30:W*.62)/cols;
   if(jinD)put(jinD,W*.5-24,G.retreat?-999:62,G.jinFocus||G.retreat?'swing':'stand0',f);
   groups.train.forEach((d,i)=>{const row=Math.floor(i/cols),x=(YARD.gx0?YARD.gx0+30:W*.18)+(i%cols)*gapX+(row%2?gapX/2:0),y=118+row*42;const m=Object.keys(d.arts).filter(a=>ARTS[a].t==='m').sort((a,b)=>d.arts[b]-d.arts[a])[0];const yy=Math.min(y,H-56);dummy(x,yy);put(d,x,yy,m&&ARTS[m].w==='gwon'?'punch':'swing',(f+i)%2)});
-  groups.study.forEach((d,i)=>put(d,W-150+i*44,H-68,'read',0));
-  groups.rest.forEach((d,i)=>put(d,W-300+i*44,H-56,'sit',0));
+  groups.study.forEach((d,i,L)=>put((YARD.wi[d.id]=i/L.length,d),W-150+i*44,H-68,'read',0));
+  groups.rest.forEach((d,i,L)=>put((YARD.wi[d.id]=i/L.length,d),W-300+i*44,H-56,'sit',0));
   c.restore();for(const h of YARD.hit)h.x+=PW;if(!PW)return;c.save();c.beginPath();c.rect(0,0,PW-3,H);c.clip();
   // 산문 밖: 하늘·먼 산·흙길, 가운데 산문, 계단 양옆에 수비
   if(!getIm('img/sd_gate_bg.webp')){const sky=c.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#bcd6e8');sky.addColorStop(.55,'#e6eee0');sky.addColorStop(.56,'#a9b98a');sky.addColorStop(1,'#8f9c6e');c.fillStyle=sky;c.fillRect(0,0,PW,H);
@@ -853,8 +853,8 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
     const base=gy+gh,SP=oBg?[[gx+gw*.9,base+2],[PW*.2,H*.6],[PW*.27,H*.87],[gx+gw*.66,base+24]]:[[gx+gw*.2,gy+gh*.97+6],[gx+gw*.8,gy+gh*.97+6],[gx+gw*.06,gy+gh*.97-2],[gx+gw*.94,gy+gh*.97-2]];
     gdOut.map((d,i)=>[d,SP[i]]).sort((u,v)=>u[1][1]-v[1][1]).forEach(([d,[x,y]])=>put(d,x-22,y-56,'stand0',0));
     YARD.door=oBg?{ax:gx+gw*.5,ay:gy+gh*.8,bx:PW*.04,by:H+24,fadeA:1,ph:.5}:{ax:gx+gw*.5,ay:gy+gh*.8,bx:gx+gw*.05,by:H+30,fadeA:1,ph:.5};
-    G.ds.filter(d=>d.pos==='away'&&d.leftT===tid).forEach((d,i)=>put(d,i*25,0,'out',0));
-    G.ds.filter(d=>d.backT===tid&&d.pos!=='away').forEach((d,i)=>put(d,-50-i*25,0,d.backHurt?'limp':'in',0));
+    G.ds.filter(d=>d.pos==='away'&&d.leftT===tid).forEach((d,i,L)=>put((YARD.wi[d.id]=i/L.length,d),i*25,0,'out',0));
+    G.ds.filter(d=>d.backT===tid&&d.pos!=='away').forEach((d,i,L)=>put((YARD.wi[d.id]=i/L.length,d),-50-i*25,0,d.backHurt?'limp':'in',0));
     YARD.door=null}
   c.fillStyle='rgba(29,26,22,.72)';c.fillRect(6,6,58,20);c.fillStyle='#f1e9d8';c.font='bold 12px sans-serif';c.fillText('산문 밖',13,20);c.restore();
   c.fillStyle='#5b4636';c.fillRect(PW-3,0,3,H)}
