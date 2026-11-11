@@ -146,7 +146,8 @@ const costOf=lv=>lv<3?1:lv<6?2:lv<9?3:4;
 function gateOf(d,a){const lv=d.arts[a];if(lv===5)return a==='chileum'&&d.taeum?0:1;if(lv===9)return 2;return 0}
 function gainWis(d,n,why){d.wis=(d.wis||0)+n;log(`${d.n}이(가) ${why}에서 깨달음 ${n}을(를) 얻었다. (가진 깨달음 ${d.wis})`)}
 function capOf(d,a){if(a==='chileum')return d.taeum?10:2;if(d.capUp&&d.capUp[a])return 10;return ARTS[a].cap}
-function power(d){let m=0,s=0;for(const a in d.arts){const v=d.arts[a];if(ARTS[a].t==='m')m=Math.max(m,v);else s=Math.max(s,v)}return m*10+s*5+(d.mukryeong?10:0)}
+function power(d){const ms=[],ss=[];for(const a in d.arts)(ARTS[a].t==='m'?ms:ss).push(d.arts[a]);ms.sort((a,b)=>b-a);ss.sort((a,b)=>b-a);
+  let p=(ms[0]||0)*10+(ms[1]||0)*3+(ss[0]||0)*5+(d.mukryeong?10:0);if(d.id==='jin'){if(G.flags.yongyeong)p+=15;if(G.flags.geomjeong)p+=20;if(d.capUp&&d.capUp.cheonha)p+=5}return p}
 // 수련 방향이 없으면 올릴 수 있는 것 중 가장 높은 무공(한 우물)
 function pickFocus(d,t){
   const cur=t==='m'?d.focusM:d.focusS;
@@ -230,11 +231,11 @@ function devTab(){G.dev=G.dev||[];G.devDone=G.devDone||[];
   return `<p class="muted">은자와 시간을 들여 수입원과 시설을 늘린다. 동시에 둘까지 진행된다.</p>${run?`<div class="panel"><h3>진행 중</h3><div class="grid">${run}</div></div>`:''}<div class="panel"><h3>할 수 있는 일</h3><div class="grid">${list||'<span class="muted">남은 개발이 없다.</span>'}</div></div>${G.devDone.length?`<p class="muted">마친 일: ${G.devDone.map(id=>DEV.find(x=>x.id===id).n).join(', ')}</p>`:''}`}
 // 낙일방 소선 유진(원작 133장)
 function nakReturn(d){d.pos='rest';d.away=0;d.job=null;
-  for(const [a,v] of [['cheondan',3],['guban',3],['nakroe',3]]){if(d.arts[a]==null||d.arts[a]<v){d.arts[a]=v;d.xp[a]=0}}
+  for(const [a,v] of [['cheondan',5],['guban',6],['nakroe',6]]){if(d.arts[a]==null||d.arts[a]<v){d.arts[a]=v;d.xp[a]=0}}
   d.arts.janggwae=Math.min(10,(d.arts.janggwae||0)+1);d.arts.taeeul=Math.min(10,d.arts.taeeul+1);d.arts.guyang=Math.min(10,d.arts.guyang+1);d.arts.hyeoncheong=Math.min(10,d.arts.hyeoncheong+1);
   d.wis=(d.wis||0)+2;d.mukryeong=1;d.st.gwon=Math.min(100,d.st.gwon+5);G.flags.soseon=1;
   MODAL={title:'사년귀로',p:['협곡 정찰을 나갔던 낙일방이 반년 만에 산문으로 걸어 들어왔다. 검은 장갑을 끼고 있었다.','"절벽에서 떨어졌습니다. 동굴 안에 종남삼검의 첫째 낙일검 해조림 사백이 계셨습니다." 동굴에는 종남 12대 장문인 소선 우일기의 유해와 옥함이 있었고, 해조림은 마지막 공력을 낙일방에게 넘기고 눈을 감았다고 했다.','낙일방은 우일기가 남긴 칠종절학 가운데 구반장법과 낙뢰신권, 그리고 천단신공을 익혀 돌아왔다.'],
-    ch:[['살아 돌아와 다행이다.',()=>{log(`낙일방이 돌아왔다. 천단신공 3성, 구반장법·낙뢰신권 3성, 장괘장권구식 +1, 태을신공 +1, 깨달음 2, 묵령갑 (전력 ${power(d)})`)}]]}}
+    ch:[['살아 돌아와 다행이다.',()=>{log(`낙일방이 돌아왔다. 천단신공 5성, 구반장법·낙뢰신권 6성, 장괘장권구식 +1, 태을신공 +1, 깨달음 2, 묵령갑 (전력 ${power(d)})`)}]]}}
 // 종남혈사: 세 갈래 전선. 갈래마다 둘까지, 진산월도 한 갈래에 설 수 있다. 두 갈래를 이기면 승리
 const LANES=[{n:'소량산로',e:180,boss:{n:'초일산',pw:110}},{n:'태평곡로',e:150,boss:{n:'갈태독',pw:100}},{n:'협곡로',e:230,boss:{n:'곽태보',pw:135}}];
 function laneCands(){return G.ds.filter(d=>!d.elder&&d.pos!=='away'&&d.pos!=='hurt'&&!(d.id==='jin'&&(G.retreat||G.jinBusy)))}
