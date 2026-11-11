@@ -276,9 +276,10 @@ function gameOver(t){G.over=t;save();render()}
 function pt(d){return `<div class="pt">${d.img?`<img src="${d.img}" alt="">`:d.n[0]}</div>`}
 function artChips(d){return Object.keys(d.arts).sort((a,b)=>ARTS[a].t.localeCompare(ARTS[b].t)||d.arts[b]-d.arts[a]).map(a=>{
   const cap=capOf(d,a),f=a===pickFocus(d,ARTS[a].t);return `<span class="chip ${ARTS[a].t}" title="상한 ${cap}성">${f?'▸':''}${ARTS[a].n} ${d.arts[a]}${d.arts[a]>=cap?'(상한)':''}</span>`}).join('')}
+function taskRate(){return Math.round(G.ds.filter(d=>d.pos==='study').reduce((s,d)=>s+20*d.apt,0)*(1+.5*(G.fac.jang-1)))}
 function topBar(){return `<div class="top"><span class="serif" style="font-size:17px">終南</span>
 <span><b>${yr(G.m)}</b> (${G.m}/48)</span><span>행동 <b>${G.act}</b>/2</span><span>은자 <b>${G.eun}</b></span><span>명성 <b>${G.fame}</b></span><span>호감 <b>${G.fav}</b></span>
-<span>구파 자격 <span class="bar"><i style="width:${Math.min(100,G.qual)}%"></i></span> ${G.qual}</span></div>`}
+${G.task?`<span title="제자 탭에서 장경각 해독에 배치">《성심록》 <b>${Math.round(G.task.prog)}%</b> (+${taskRate()}%/월, ${yr(G.task.due)}까지)</span>`:''}<span>구파 자격 <span class="bar"><i style="width:${Math.min(100,G.qual)}%"></i></span> ${G.qual}</span></div>`}
 function mainTab(){
   const j=D('jin');
   return `<div class="panel"><h3>장문인의 행동 (이달 ${G.act}번 남음)</h3>
