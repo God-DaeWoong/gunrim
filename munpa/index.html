@@ -129,18 +129,18 @@ function pickFocus(d,t){
 }
 function gain(d){
   const half=d.teachHalf?.5:1;d.teachHalf=false;
-  if(d.id==='jin')return (G.retreat?3:G.jinBusy?0:G.jinFocus?1.5:.5)*(1+.1*G.fac.yeon)*half;
+  if(d.id==='jin')return (G.retreat?3:G.jinBusy?0:G.jinFocus?2:1)*(1+.1*G.fac.yeon)*half;
   if(d.coach){d.coach=false;return {train:1,guard:.35,study:.2,rest:0,away:.2,hurt:0}[d.pos]*(1+.1*G.fac.yeon)*half*2}
   const base={train:1,guard:.35,study:.2,rest:0,away:.2,hurt:0}[d.pos]||0;
   return base*(1+.1*G.fac.yeon)*half;
 }
-function monthPct(d,a){let g;if(d.id==='jin')g=(G.retreat?3:G.jinBusy?0:G.jinFocus?1.5:.5)*(1+.1*G.fac.yeon);else g=({train:1,guard:.35,study:.2,rest:0,away:.2,hurt:0}[d.pos]||0)*(1+.1*G.fac.yeon)*(d.coach?2:1);
-  return Math.round(100*g*growOf(d,a)*(a==='chileum'&&d.taeum?1.5:1)/costOf(d.arts[a]))}
+function monthPct(d,a){let g;if(d.id==='jin')g=(G.retreat?3:G.jinBusy?0:G.jinFocus?2:1)*(1+.1*G.fac.yeon);else g=({train:1,guard:.35,study:.2,rest:0,away:.2,hurt:0}[d.pos]||0)*(1+.1*G.fac.yeon)*(d.coach?2:1);
+  return Math.round(100*g*growOf(d,a)*(a==='chileum'&&d.taeum?1.2:1)/costOf(d.arts[a]))}
 function train(d){
   const g=gain(d)/2;if(!g)return;
   for(const t of['m','s']){
     const a=pickFocus(d,t);if(!a)continue;
-    d.xp[a]=(d.xp[a]||0)+g*growOf(d,a)*(a==='chileum'&&d.taeum?1.5:1);
+    d.xp[a]=(d.xp[a]||0)+g*growOf(d,a)*(a==='chileum'&&d.taeum?1.2:1);
     while(d.arts[a]<capOf(d,a)&&d.xp[a]>=costOf(d.arts[a])){const need=gateOf(d,a);if(need&&(d.wis||0)<need){if(!d.gateSaid)log(`${d.n}의 ${ARTS[a].n}이(가) ${d.arts[a]}성에서 막혔다. 깨달음 ${need}이(가) 필요하다.`);d.gateSaid=1;d.xp[a]=Math.min(d.xp[a],costOf(d.arts[a]));break}
       if(need){d.wis-=need;d.gateSaid=0;log(`${d.n}이(가) 깨달음을 얻어 ${ARTS[a].n}의 벽을 넘었다.`)}
       d.xp[a]-=costOf(d.arts[a]);d.arts[a]++;
