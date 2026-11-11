@@ -74,15 +74,15 @@ const SECRET={cheonha:70};
 const BASE_S=['taeeul','guyang','hyeoncheong'],SENIOR=['lim','mae','so','eung'];
 // 제자: apt = 수련 배율, ch = 충성
 const ROSTER=[
-  {id:'jin',n:'진산월',r:'장문인',img:'img/jin.png',apt:1,ch:100,arts:{yuun:5,cheonha:5,janggwae:3,hongdan:1,taeeul:3,guyang:1,hyeoncheong:1}},
-  {id:'lim',n:'임영옥',r:'사매',apt:1.1,ch:95,taeum:1,arts:{yuun:5,wolnyeo:3,taeeul:3}},
-  {id:'mae',n:'매상',r:'사제',apt:.9,ch:80,arts:{cheonha:3,taeeul:3}},
-  {id:'so',n:'소지산',r:'사제',apt:.9,ch:90,arts:{nakha:2,taeeul:2}},
-  {id:'eung',n:'응계성',r:'사제',apt:.8,ch:85,arts:{janggwae:3,taeeul:2}},
-  {id:'nak',n:'낙일방',r:'사제',apt:1.1,ch:85,arts:{janggwae:3,taeeul:1}},
-  {id:'du',n:'두기춘',r:'사제',img:'img/du.png',apt:1,ch:35,arts:{yuun:2,taeeul:2}},
-  {id:'jeong',n:'정해',r:'사제',apt:.8,ch:80,arts:{yuun:2,taeeul:2}},
-  {id:'bang',n:'방취아',r:'막내',apt:.9,ch:90,arts:{wolnyeo:1,taeeul:1}}
+  {id:'jin',n:'진산월',r:'장문인',img:'img/jin.png',apt:1,ch:100,arts:{yuun:6,cheonha:6,janggwae:4,hongdan:1,taeeul:3,guyang:1,hyeoncheong:1}},
+  {id:'lim',n:'임영옥',r:'사매',apt:1.1,ch:95,taeum:1,arts:{yuun:6,wolnyeo:5,taeeul:5}},
+  {id:'mae',n:'매상',r:'사제',apt:.9,ch:80,arts:{cheonha:6,taeeul:5}},
+  {id:'so',n:'소지산',r:'사제',apt:.9,ch:90,arts:{nakha:5,taeeul:4}},
+  {id:'eung',n:'응계성',r:'사제',apt:.8,ch:85,arts:{janggwae:6,taeeul:4}},
+  {id:'nak',n:'낙일방',r:'사제',apt:1.1,ch:85,arts:{janggwae:5,taeeul:3}},
+  {id:'du',n:'두기춘',r:'사제',img:'img/du.png',apt:1,ch:35,arts:{yuun:5,taeeul:4}},
+  {id:'jeong',n:'정해',r:'사제',apt:.8,ch:80,arts:{yuun:5,taeeul:4}},
+  {id:'bang',n:'방취아',r:'막내',apt:.9,ch:90,arts:{wolnyeo:4,taeeul:3}}
 ];
 const POS={train:'수련',guard:'수비',rest:'휴식',study:'장경각 해독',away:'파견 중',hurt:'요양'};
 const FAC={yeon:{n:'연무장',d:'수련치 +10%/단계'},jang:{n:'장경각',d:'해독 속도, 전수할 수 있는 무공 수'},yak:{n:'약방',d:'심마·부상 회복'},oe:{n:'외당',d:'본산 방어, 잠입 차단, 사건을 일찍 앎'}};
@@ -126,15 +126,17 @@ function pickFocus(d,t){
 function gain(d){
   const half=d.teachHalf?.5:1;d.teachHalf=false;
   if(d.id==='jin')return (G.retreat?3:G.jinBusy?0:G.jinFocus?1.5:.5)*(1+.1*G.fac.yeon)*half;
-  if(d.coach){d.coach=false;return {train:1.5,guard:.5,study:.3,rest:0,away:.3,hurt:0}[d.pos]*d.apt*(1+.1*G.fac.yeon)*half*2}
-  const base={train:1.5,guard:.5,study:.3,rest:0,away:.3,hurt:0}[d.pos]||0;
+  if(d.coach){d.coach=false;return {train:1,guard:.35,study:.2,rest:0,away:.2,hurt:0}[d.pos]*d.apt*(1+.1*G.fac.yeon)*half*2}
+  const base={train:1,guard:.35,study:.2,rest:0,away:.2,hurt:0}[d.pos]||0;
   return base*d.apt*(1+.1*G.fac.yeon)*half;
 }
+function monthPct(d,a){let g;if(d.id==='jin')g=(G.retreat?3:G.jinBusy?0:G.jinFocus?1.5:.5)*(1+.1*G.fac.yeon);else g=({train:1,guard:.35,study:.2,rest:0,away:.2,hurt:0}[d.pos]||0)*d.apt*(1+.1*G.fac.yeon)*(d.coach?2:1);
+  return Math.round(100*g*(a==='chileum'&&d.taeum?1.5:1)/costOf(d.arts[a]))}
 function train(d){
   const g=gain(d);if(!g)return;
   for(const t of['m','s']){
     const a=pickFocus(d,t);if(!a)continue;
-    d.xp[a]=(d.xp[a]||0)+g;
+    d.xp[a]=(d.xp[a]||0)+g*(a==='chileum'&&d.taeum?1.5:1);
     while(d.arts[a]<capOf(d,a)&&d.xp[a]>=costOf(d.arts[a])){const need=gateOf(d,a);if(need&&(d.wis||0)<need){if(!d.gateSaid)log(`${d.n}의 ${ARTS[a].n}이(가) ${d.arts[a]}성에서 막혔다. 깨달음 ${need}이(가) 필요하다.`);d.gateSaid=1;d.xp[a]=Math.min(d.xp[a],costOf(d.arts[a]));break}
       if(need){d.wis-=need;d.gateSaid=0;log(`${d.n}이(가) 깨달음을 얻어 ${ARTS[a].n}의 벽을 넘었다.`)}
       d.xp[a]-=costOf(d.arts[a]);d.arts[a]++;
@@ -193,18 +195,18 @@ function theft(){return{t:'event',id:'theft',title:'옥함',info:1,resolve:()=>{
   G.ds=G.ds.filter(d=>d.id!=='du');G.flags.samLost=1;G.flags.duEnemy=1;
   return'아침에 옥함을 열자 비어 있었다. 두기춘도 사라졌다. 사부가 목숨과 바꾼 영약이었다.'}}}
 function crisis(m){return{t:'crisis',id:'cho'+m,title:'초가보의 압박',due:m+1,text:'초가보 무사들이 두 곳에 동시에 나타났다. 한 곳만 막을 수 있다.',opts:[
-  {k:'sang',n:'서안 상권',need:35,loss:'서안 상권 수입 -15'},{k:'yak',n:'약초밭',need:30,loss:'약초밭 수입 -10'}]}}
+  {k:'sang',n:'서안 상권',need:80,loss:'서안 상권 수입 -15'},{k:'yak',n:'약초밭',need:70,loss:'약초밭 수입 -10'}]}}
 // 의뢰: [이름, 필요 전력, 은자, 명성, 호감, 달 수, 설명]. 같은 의뢰는 석 달 동안 다시 뜨지 않는다
 const JOBS=[
-  ['서안 표행 호위',50,30,0,0,1,'서안 표국의 짐을 호위한다.'],
-  ['위남 상단 호위',60,40,0,0,1,'위남으로 가는 상단을 호위한다.'],
-  ['조암령 산적 소탕',70,45,2,0,1,'조암령 고개에 산적이 들끓는다는 하소연이 들어왔다.'],
-  ['서안 객잔 난동 정리',45,20,1,0,1,'술 취한 낭인들이 객잔을 부수고 있다.'],
-  ['태백산 약초 채집 호위',40,15,0,0,1,'약초꾼들을 호위하고 약재를 나눠 받는다. 돌아오면 제자들 심마가 조금 가라앉는다.','herb'],
-  ['화산에 서신 전달',30,0,0,4,1,'이웃 문파에 예를 갖춘 서신을 전한다.'],
-  ['서안 상가 분쟁 중재',55,25,2,0,1,'두 상가가 칼부림 직전이다. 종남의 이름으로 말린다.'],
-  ['낙양 원행 호위',70,90,1,0,2,'낙양까지 가는 먼 길이다. 두 달 동안 자리를 비운다.'],
-  ['폐사 탐방',60,0,1,0,2,'종남산 뒤편 폐사에 옛 고수의 흔적이 있다는 소문. 장경각 해독에 도움이 될 기록이 나올지도 모른다.','clue']
+  ['서안 표행 호위',70,39,0,0,1,'서안 표국의 짐을 호위한다.'],
+  ['위남 상단 호위',80,52,0,0,1,'위남으로 가는 상단을 호위한다.'],
+  ['조암령 산적 소탕',90,59,2,0,1,'조암령 고개에 산적이 들끓는다는 하소연이 들어왔다.'],
+  ['서안 객잔 난동 정리',65,26,1,0,1,'술 취한 낭인들이 객잔을 부수고 있다.'],
+  ['태백산 약초 채집 호위',60,20,0,0,1,'약초꾼들을 호위하고 약재를 나눠 받는다. 돌아오면 제자들 심마가 조금 가라앉는다.','herb'],
+  ['화산에 서신 전달',50,0,0,4,1,'이웃 문파에 예를 갖춘 서신을 전한다.'],
+  ['서안 상가 분쟁 중재',75,33,2,0,1,'두 상가가 칼부림 직전이다. 종남의 이름으로 말린다.'],
+  ['낙양 원행 호위',90,117,1,0,2,'낙양까지 가는 먼 길이다. 두 달 동안 자리를 비운다.'],
+  ['폐사 탐방',80,0,1,0,2,'종남산 뒤편 폐사에 옛 고수의 흔적이 있다는 소문. 장경각 해독에 도움이 될 기록이 나올지도 모른다.','clue']
 ];
 function job(){
   G.jcool=G.jcool||{};const open=JOBS.filter(j=>!(G.jcool[j[0]]>G.m)&&!G.q.some(e=>e.title===j[0])&&(j[7]!=='clue'||G.task));
@@ -265,7 +267,7 @@ const A={
 // 가르칠 사람: 그 무공 5성 이상, 배우는 사람 말고. 요양·파견 중이면 못 가르친다
 function teacher(a,not){return G.ds.filter(x=>x.id!==not&&(x.arts[a]||0)>=5&&x.pos!=='away'&&x.pos!=='hurt').sort((x,y)=>y.arts[a]-x.arts[a])[0]}
 // 폐관 중 초가보 기습: 수비는 전력 그대로, 수련 중은 절반, 외당 단계마다 +25
-function raid(){const def=G.ds.filter(d=>d.id!=='jin'&&(d.pos==='guard'||d.pos==='train'||d.pos==='rest'||d.pos==='study')).reduce((s,d)=>s+power(d)*(d.pos==='guard'?1:.5),0)+25*G.fac.oe,atk=260;
+function raid(){const def=G.ds.filter(d=>d.id!=='jin'&&(d.pos==='guard'||d.pos==='train'||d.pos==='rest'||d.pos==='study')).reduce((s,d)=>s+power(d)*(d.pos==='guard'?1:.5),0)+25*G.fac.oe,atk=330;
   if(def>=atk){G.fame+=6;G.qual+=3;log(`장문인이 없는 틈에 초가보가 본산을 쳤다. 남은 제자들이 막아 냈다. (방어 ${Math.round(def)} : 공격 ${atk}) 명성 +6`)}
   else{G.income.sang=Math.max(0,G.income.sang-20);for(const d of G.ds.filter(d=>d.pos==='guard'))if(Math.random()<.5){d.pos='hurt';d.away=2}
     log(`장문인이 없는 틈에 초가보가 본산을 쳤다. 막지 못했다. (방어 ${Math.round(def)} : 공격 ${atk}) 서안 상권 수입 -20, 수비하던 제자 일부 부상`)}}
@@ -282,7 +284,7 @@ function endMonth(){
   for(const d of G.ds)train(d);
   // 파견 귀환
   for(const d of G.ds)if(d.pos==='away'&&--d.away<=0){const j=d.job;d.pos='rest';d.job=null;
-    if(Math.random()*100<chance(d,j.need)){G.eun+=j.pay||0;G.fame+=j.fame||0;G.fav+=j.fav||0;let x='';if(Math.random()<(j.need>=60?.4:.2))gainWis(d,1,j.title);
+    if(Math.random()*100<chance(d,j.need)){G.eun+=j.pay||0;G.fame+=j.fame||0;G.fav+=j.fav||0;let x='';if(Math.random()<(j.need>=80?.4:.2))gainWis(d,1,j.title);
       if(j.sp==='herb'){for(const o of G.ds)o.mind=Math.max(0,o.mind-10);x=' 약재로 제자들 심마 -10'}
       if(j.sp==='clue'&&G.task){G.task.prog=Math.min(100,G.task.prog+25);x=' 옛 기록을 찾아 성심록 해독 +25%'}
       log(`${d.n}이(가) ${j.title}을(를) 마치고 돌아왔다.${j.pay?` 은자 +${j.pay}`:''}${j.fame?` 명성 +${j.fame}`:''}${j.fav?` 호감 +${j.fav}`:''}${x}`)}
@@ -329,7 +331,7 @@ function gameOver(t){G.over=t;save();render()}
 /* ================= 화면 ================= */
 function pt(d){return `<div class="pt">${d.img?`<img src="${d.img}" alt="">`:d.n[0]}</div>`}
 function artChips(d){return Object.keys(d.arts).sort((a,b)=>ARTS[a].t.localeCompare(ARTS[b].t)||d.arts[b]-d.arts[a]).map(a=>{
-  const cap=capOf(d,a),f=a===pickFocus(d,ARTS[a].t),pc=d.arts[a]>=cap?0:Math.min(100,Math.floor(100*(d.xp[a]||0)/costOf(d.arts[a])));return `<span class="chip ${ARTS[a].t}" title="상한 ${cap}성">${f?'▸':''}${ARTS[a].n} ${d.arts[a]}성${d.arts[a]>=cap?'(상한)':gateOf(d,a)&&(d.wis||0)<gateOf(d,a)&&pc>=100?' <b style="color:var(--red)">깨달음 필요</b>':f?` <b>${pc}%</b>`:''}</span>`}).join('')}
+  const cap=capOf(d,a),f=a===pickFocus(d,ARTS[a].t),pc=d.arts[a]>=cap?0:Math.min(100,Math.floor(100*(d.xp[a]||0)/costOf(d.arts[a])));return `<span class="chip ${ARTS[a].t}" title="상한 ${cap}성">${f?'▸':''}${ARTS[a].n} ${d.arts[a]}성${d.arts[a]>=cap?'(상한)':gateOf(d,a)&&(d.wis||0)<gateOf(d,a)&&pc>=100?' <b style="color:var(--red)">깨달음 필요</b>':f?` <b>${pc}%</b> <small class="muted">+${monthPct(d,a)}%/월</small>`:''}</span>`}).join('')}
 function taskRate(){return Math.round(G.ds.filter(d=>d.pos==='study').reduce((s,d)=>s+20*d.apt,0)*(1+.5*(G.fac.jang-1)))}
 function topBar(){return `<div class="top"><span class="serif" style="font-size:17px">終南</span>
 <span><b>${yr(G.m)}</b> (${G.m}/48)</span><span>행동 <b>${G.act}</b>/2</span><span>은자 <b>${G.eun}</b></span><span>명성 <b>${G.fame}</b></span><span>호감 <b>${G.fav}</b></span>
@@ -374,7 +376,7 @@ ${jobs.length?`<select id="jin_sortie">${jobs.map(e=>`<option value="${e.id}">${
 <div class="panel"><h3>기록</h3><div class="log">${G.log.join('<br>')}</div></div>`;
 }
 function discTab(){
-  return `<p class="muted">배치는 행동을 쓰지 않는다. ▸ 표시가 지금 수련 중인 무공이다. 수련 방향을 정하지 않으면 가장 높은 무공을 알아서 올린다.</p><div class="grid">${G.ds.filter(d=>d.id!=='jin').map(d=>{
+  return `<p class="muted">배치는 행동을 쓰지 않는다. ▸ 표시가 지금 수련 중인 무공이다. 수련 방향을 정하지 않으면 가장 높은 무공을 알아서 올린다. 「60% +25%/월」은 다음 성까지 60% 찼고, 지금 배치대로면 한 달에 25%씩 찬다는 뜻이다. 4성부터는 한 단계에 수련치가 두 배, 7성부터 세 배 든다.</p><div class="grid">${G.ds.filter(d=>d.id!=='jin').map(d=>{
     const lock=d.pos==='away'||d.pos==='hurt';const lib=LIB.filter(a=>d.arts[a]==null).slice(0,2+G.fac.jang*2);const tOf=a=>teacher(a,d.id),okA=a=>tOf(a)&&!(SECRET[a]&&d.ch<SECRET[a]);
     const ms=Object.keys(d.arts).filter(a=>ARTS[a].t==='m'),ss=Object.keys(d.arts).filter(a=>ARTS[a].t==='s');
     return `<div class="d"><div class="hd">${pt(d)}<div><b>${d.n}</b> <span class="muted">${d.r}</span><br>전력 ${power(d)} · 충성 ${d.ch} · 깨달음 ${d.wis||0}</div></div>
