@@ -702,7 +702,7 @@ function botMonth(){
 }
 // 초상 점검(?gallery=1): 게임에 나오는 인물과 일기토 상대의 그림이 어디서 오는지 한눈에
 if(/[?&]gallery=1/.test(location.search)){const rows=[];
-  const add=(grp,n,src,note)=>rows.push(`<div class="d" style="text-align:center"><div class="pt" style="width:96px;height:96px;margin:0 auto;font-size:36px">${src?`<img src="${src}" alt="" onerror="this.parentNode.innerHTML='✕'">`:n[0]}</div><b>${n}</b><br><span class="muted" style="font-size:11px">${grp} · ${src?src.replace(/^.*//,''):'그림 없음(이름 첫 글자)'}${note?'<br>'+note:''}</span></div>`);
+  const add=(grp,n,src,note)=>rows.push(`<div class="d" style="text-align:center"><div class="pt" style="width:96px;height:96px;margin:0 auto;font-size:36px">${src?`<img src="${src}" alt="" onerror="this.parentNode.innerHTML='✕'">`:n[0]}</div><b>${n}</b><br><span class="muted" style="font-size:11px">${grp} · ${src?src.split('/').pop():'그림 없음(이름 첫 글자)'}${note?'<br>'+note:''}</span></div>`);
   for(const r of ROSTER)add('종남',r.n,r.rl?rlImg(r.rl):r.img,r.rl?'로그라이크 연동':'');
   add('종남','강일비',null,'그림요청 9·10번');add('종남','전풍개',null,'그림요청 11번');add('종남','전흠',null,'그림요청 12번');
   for(const L of LANES)add('종남혈사 장수',L.boss.n,RLEN[L.boss.n]?rlImg(RLEN[L.boss.n][0]):null,RLEN[L.boss.n]?'':'그림요청 13~15번');
