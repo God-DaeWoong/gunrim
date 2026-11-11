@@ -93,6 +93,8 @@ const ARTS={
   guban:{n:'구반장법',t:'m',w:'gwon',cap:10}, nakroe:{n:'낙뢰신권',t:'m',w:'gwon',cap:10}, chileum:{n:'칠음진기',t:'s',cap:2}
 };
 // 전수할 수 있는 초식. 가르칠 사람(5성 이상)이 있어야 하고, 천하삼십육검은 충성 70 이상만 배운다
+// 상위 무공을 익히면 그 하위 무공은 이미 아는 것으로 친다
+const SUPER={yuun:'yuungyeol'},knows=(d,a)=>d.arts[a]!=null||!!(SUPER[a]&&d.arts[SUPER[a]]!=null);
 const LIB=['yuun','cheonha','nakha','janggwae','hongdan','wolnyeo','yakryu','hoeseon','eoryong','janggwaebo','waseon','biyeon','muyeom','nanhwa','yeomhwa','cheondan','taejin'];
 const SECRET={cheonha:70,muyeom:70,nanhwa:70,yeomhwa:70,cheondan:70,taejin:70};
 // 종남 심법 셋은 모두가 익히고 있고 성취만 다르다. 사부가 후계 후보로 키운 넷은 구양·현청이 1성
@@ -171,10 +173,12 @@ function capOf(d,a){if(a==='chileum')return d.taeum?10:2;if(d.capUp&&d.capUp[a])
 function power(d){const ms=[],ss=[];for(const a in d.arts){if(ARTS[a].t==='b')continue;(ARTS[a].t==='m'?ms:ss).push(d.arts[a])}ms.sort((a,b)=>b-a);ss.sort((a,b)=>b-a);
   let p=(ms[0]||0)*10+(ms[1]||0)*3+(ss[0]||0)*5+(d.mukryeong?10:0)+(d.arts.muyeom?d.arts.muyeom*8:0);if(d.id==='jin'){if(G.flags.yongyeong)p+=15;if(G.flags.geomjeong)p+=20;if(d.capUp&&d.capUp.cheonha)p+=5}return p}
 // 수련 방향이 없으면 올릴 수 있는 것 중 가장 높은 무공(한 우물)
+const FEMALE={lim:1,bang:1,seomun:1};
+const fitOf=(d,a)=>{const A=ARTS[a];if(A.t==='s')return d.st.oseong;if(A.t==='b')return 60;const w=A.w==='sin'?(d.st.geom+d.st.gwon)/2:(d.st[A.w]||60);return w+(FEMALE[d.id]&&a==='wolnyeo'?25:0)};
 function pickFocus(d,t){
   const cur=t==='m'?d.focusM:d.focusS;
   if(cur&&d.arts[cur]!=null&&d.arts[cur]<capOf(d,cur))return cur;
-  let best=null;for(const a in d.arts){if(ARTS[a].t!==t||d.arts[a]>=capOf(d,a))continue;if(gateOf(d,a)&&(d.wis||0)<gateOf(d,a)&&(d.xp[a]||0)>=costOf(d.arts[a]))continue;if(!best||d.arts[a]>d.arts[best])best=a}
+  let best=null;for(const a in d.arts){if(ARTS[a].t!==t||d.arts[a]>=capOf(d,a))continue;if(gateOf(d,a)&&(d.wis||0)<gateOf(d,a)&&(d.xp[a]||0)>=costOf(d.arts[a]))continue;const sc=x=>t==='m'?fitOf(d,x)+d.arts[x]*4:d.arts[x];if(!best||sc(a)>sc(best))best=a}
   return best;
 }
 function gain(d){
@@ -209,8 +213,8 @@ function prologue(){return{title:'장례',art:'img/jin.png',p:[
   '조문객 사이에 삿갓을 깊이 눌러쓴 청삼 차림의 중년인이 있었다. 사내는 영전 앞에서 오래 절했다. 일어선 사내가 진산월을 보며 낮게 물었다.',
   '"태평검객이 목숨과 바꾼 만년삼정을, 그대는 어디에 쓸 생각인가?"'],
   ch:[
-    ['사부님 뜻대로 제가 먹겠습니다.',()=>{G.ilbi='late';G.flags.samUse='jin';log('삿갓 쓴 사내은 말없이 떠났다.')}],
-    ['문파를 위해 쓰겠습니다.',()=>{G.ilbi='late';G.flags.samUse='jin';log('삿갓 쓴 사내은 말없이 떠났다.')}],
+    ['사부님 뜻대로 제가 먹겠습니다.',()=>{G.ilbi='late';G.flags.samUse='jin';log('삿갓 쓴 사내는 말없이 떠났다.')}],
+    ['문파를 위해 쓰겠습니다.',()=>{G.ilbi='late';G.flags.samUse='jin';log('삿갓 쓴 사내는 말없이 떠났다.')}],
     ['사매의 몸이 요즘 이상합니다. 사매에게 쓸까 합니다.',()=>{G.ilbi='early';G.flags.samUse='lim';
       MODAL={title:'삿갓 쓴 사내',p:['사내가 임영옥의 증상을 하나하나 물었다. 손끝이 차고, 기침이 잦고, 한여름에도 얼굴이 희다는 말을 듣자 사내의 얼굴이 굳었다.','"그 영약으로는 그 병을 못 고친다. 태음신맥이다." 사내는 삿갓을 벗었다. "내 이름은 강일비다. 네 사부의 사형이지. 그 아이는 내가 맡으마. 다만 내가 돌아왔다는 것은 문 밖에 알리지 마라."'],ch:[['알겠습니다, 사백님.',()=>{addArt('lim','chileum');addIlbi(false);log('(제자 탭에서 임영옥의 심법을 칠음진기로 정해 두어야 한다) ');log('강일비가 본산에 머물며 임영옥에게 칠음진기를 가르치기 시작했다.')}]]};
       return true}]
@@ -220,7 +224,7 @@ function openTaeeul(){G.q.push({t:'quest',id:'taeeul',title:'태을선거',text:
 function goTaeeul(){const j=D('jin');
   if((j.arts.cheonha||0)<5){log('진산월이 열석대진 앞에서 며칠을 헤맸지만 길을 찾지 못하고 돌아왔다. (천하삼십육검 5성 필요)');return false}
   G.flags.taeeul=1;j.capUp=j.capUp||{};j.capUp.cheonha=1;j.arts.cheonha=Math.min(10,(j.arts.cheonha||0)+2);j.xp.cheonha=0;j.arts.taeeul=Math.min(10,j.arts.taeeul+2);j.xp.taeeul=0;gainWis(j,2,'태을선거의 열석대진');
-  G.q.push({t:'quest',id:'seokshil',title:'중봉 석실',text:'중봉의 돌무더기 아래에서 석실을 찾았다. 백골 하나가 검을 안고 있다. 이곳에 들어앉아 폐관하면 큰 성취를 얻을 것이다. 다만 석 달 동안 장문인이 자리를 비운다(그동안 장문인 행동은 상순에만 1번, 진산월은 출전 불가). 초가보가 그 틈을 노릴 수 있다.',btn:'폐관에 들어간다'});
+  G.q.push({t:'quest',id:'seokshil',title:'중봉 석실',text:'중봉의 돌무더기 아래에서 석실을 찾았다. 백골 하나가 검을 안고 있다. 이곳에 들어앉아 폐관하면 큰 성취를 얻을 것이다. 다만 석 달 동안 장문인이 자리를 비운다(그동안 장문인 행동은 상순에만 1번, 진산월은 출전 불가). '+(G.flags.choDone?'':'초가보가 그 틈을 노릴 수 있다.'),btn:'폐관에 들어간다'});
   MODAL={title:'태을선거',p:['안개 속 돌무더기는 아무렇게나 쌓인 것이 아니었다. 열두 방위로 아홉 번씩 바뀌는 배치가 천하삼십육검 마지막 초식의 모양 그대로였다. 진산월은 검을 뽑아 한 걸음씩 진을 따라 걸었다. 천하무궁을 깨달았다.','진 안쪽의 초가는 비어 있었다. 뒤뜰에 〈일대종사 매종도지묘〉라는 묘비가 서 있었다. 누군가 수십 년 전에 시신을 묻고 비학을 가져간 뒤였다.','돌아오는 길에 사부의 무덤에 들렀다. 중봉의 돌무더기 위에 "진리를 얻고 싶은 자, 파하라"고 적힌 양피지가 놓여 있었다.'],ch:[['돌무더기를 부순다.',()=>{log(`천하무궁을 깨달았다. 천하삼십육검 ${D('jin').arts.cheonha}성(+2)·상한 해제, 태을검선의 거처에서 태을신공 ${D('jin').arts.taeeul}성(+2). 중봉에서 석실을 찾았다.`)}]]};
   return true}
 // 폐관을 마치면: 용영검, 혈선비록(태진강기 2성), 유운검결(유운검법의 상한이 풀림), 검정중원(유운검결 7성)
@@ -228,9 +232,11 @@ function endRetreat(){const j=D('jin');G.flags.yongyeong=1;gainWis(j,3,'석실 �
   if(j.arts.taejin==null){j.arts.taejin=3;j.xp.taejin=0}j.arts.taeeul=Math.min(10,j.arts.taeeul+1);
   if(j.arts.yuun!=null){j.arts.yuungyeol=j.arts.yuun;j.xp.yuungyeol=j.xp.yuun||0;delete j.arts.yuun;delete j.xp.yuun;if(j.focusM==='yuun')j.focusM='yuungyeol'}j.arts.yuungyeol=Math.min(10,(j.arts.yuungyeol||0)+2);j.xp.yuungyeol=0;
   const gj=(j.arts.yuungyeol||0)>=7;if(gj)G.flags.geomjeong=1;
-  MODAL={title:'출관',p:['백골은 이백 년 전의 혈선 정립병이었다. 그가 안고 있던 용영검과 《혈선비록》, 그리고 돌침상 밑 석판에 새겨진 곽일산의 유운검결 도해 백이십여 개가 남아 있었다.','석 달 동안 진산월은 도해를 따라 유운검법을 처음부터 다시 익혔다.'+(gj?' 마지막 달, 열여덟 초가 하나로 꿰이는 초식이 손끝에서 나왔다. 진산월은 그것을 검정중원이라 불렀다.':' 아직 열여덟 초가 하나로 꿰이지는 않았다. 유운검결이 7성에 이르면 닿을 것이다.')],
+  // 출관 뒤 진산월이 도해와 열석대진에서 본 것을 풀어 가르친다: 유운검법·천하삼십육검을 익힌 제자 +1성(상한 안에서), 깨달음 +1
+  const up=[];for(const d of G.ds){if(d.id==='jin')continue;let hit=0;for(const a of ['yuun','cheonha'])if(d.arts[a]!=null&&d.arts[a]<capOf(d,a)){d.arts[a]++;d.xp[a]=0;hit=1}if(hit){d.wis=(d.wis||0)+1;up.push(d.n)}}
+  MODAL={title:'출관',p:['백골은 이백 년 전의 혈선 정립병이었다. 그가 안고 있던 용영검과 《혈선비록》, 그리고 돌침상 밑 석판에 새겨진 곽일산의 유운검결 도해 백이십여 개가 남아 있었다.','석 달 동안 진산월은 도해를 따라 유운검법을 처음부터 다시 익혔다.'+(gj?' 마지막 달, 열여덟 초가 하나로 꿰이는 초식이 손끝에서 나왔다. 진산월은 그것을 검정중원이라 불렀다.':' 아직 열여덟 초가 하나로 꿰이지는 않았다. 유운검결이 7성에 이르면 닿을 것이다.'),'산에 돌아온 진산월은 사흘 밤을 연무장에 나와 제자들 앞에서 도해의 검로를 하나하나 풀었다. 열석대진에서 본 천하무궁의 걸음도 함께 그려 보였다.'+(up.length?` (${up.join(', ')} — 유운검법·천하삼십육검 +1성, 깨달음 +1)`:'')],
     ch:[['산을 내려간다.',()=>{log(`진산월이 출관했다. 용영검, 태진강기 3성, 태을신공 +1, 유운검법 → 유운검결 ${D('jin').arts.yuungyeol}성(+2)`+(gj?', 검정중원':''))}]]}}
-// 강일비: 임장홍의 사형. 본산에 머물지만 싸움에는 나서지 않는다(파견·위기·기습 제외). 늦은 길이면 정체를 숨긴 떠돌이 사내으로 지낸다
+// 강일비: 임장홍의 사형. 본산에 머물지만 싸움에는 나서지 않는다(파견·위기·기습 제외). 늦은 길이면 정체를 숨긴 떠돌이 사내로 지낸다
 function ilbiMuyeom(){const j=D('jin');if(j&&j.arts.muyeom==null){j.arts.muyeom=1;log('<b>강일비가 진산월에게 무염십팔보를 일러 주었다.</b> (진산월 무염십팔보 익힘 · 받는 피해 감소)')}}
 function addIlbi(hidden){if(has('ilbi'))return;G.ds.push({id:'ilbi',n:hidden?'삿갓 쓴 사내':'강일비',r:hidden?'떠돌이 객':'사백(원로)',elder:1,img:hidden?'img/ilbi_hat.webp':'img/ilbi.webp',ch:90,
   st:{tong:60,ji:90,jeong:50,ma:55,geom:95,gwon:70,oseong:95},arts:{yuun:8,cheonha:8,taeeul:8,guyang:3,hyeoncheong:3,chileum:2,muyeom:2,hoeseon:2,nanhwa:7,yeomhwa:6},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null});if(!hidden)ilbiMuyeom()}
@@ -271,7 +277,7 @@ function nakReturn(d){d.pos='rest';d.away=0;d.job=null;
   for(const [a,v] of [['cheondan',5],['guban',6],['nakroe',6]]){if(d.arts[a]==null||d.arts[a]<v){d.arts[a]=v;d.xp[a]=0}}
   d.arts.janggwae=Math.min(10,(d.arts.janggwae||0)+1);d.arts.taeeul=Math.min(10,d.arts.taeeul+1);d.arts.guyang=Math.min(10,d.arts.guyang+1);d.arts.hyeoncheong=Math.min(10,d.arts.hyeoncheong+1);
   d.wis=(d.wis||0)+2;d.mukryeong=1;d.img='img/nak2.webp';d.st.gwon=Math.min(100,d.st.gwon+5);G.flags.soseon=1;
-  MODAL={title:'사년귀로',p:['협곡 정찰을 나갔던 낙일방이 반년 만에 산문으로 걸어 들어왔다. 검은 장갑을 끼고 있었다.','"절벽에서 떨어졌습니다. 동굴 안에 종남삼검의 첫째 낙일검 해조림 사백이 계셨습니다." 동굴에는 종남 12대 장문인 소선 우일기의 유해와 옥함이 있었고, 해조림은 마지막 공력을 낙일방에게 넘기고 눈을 감았다고 했다.','낙일방은 우일기가 남긴 칠종절학 가운데 구반장법과 낙뢰신권, 그리고 천단신공을 익혀 돌아왔다.'],
+  MODAL={title:'사년귀로',p:['협곡 정찰을 나갔던 낙일방이 반년 만에 산문으로 걸어 들어왔다. 검은 장갑을 끼고 있었다.','"절벽에서 떨어졌습니다. 동굴 안에 종남삼검의 첫째 낙일검 해조림 사백조님이 계셨습니다." 동굴에는 종남 12대 장문인 소선 우일기의 유해와 옥함이 있었고, 해조림은 마지막 공력을 낙일방에게 넘기고 눈을 감았다고 했다.','낙일방은 우일기가 남긴 칠종절학 가운데 구반장법과 낙뢰신권, 그리고 천단신공을 익혀 돌아왔다.'],
     ch:[['살아 돌아와 다행이다.',()=>{log(`낙일방이 돌아왔다. 천단신공 5성, 구반장법·낙뢰신권 6성, 장괘장권구식 +1, 태을신공 +1, 깨달음 2, 묵령갑 (전력 ${power(d)})`)}]]}}
 // 종남혈사: 세 갈래 전선. 갈래마다 둘까지, 진산월도 한 갈래에 설 수 있다. 두 갈래를 이기면 승리
 const LN=e=>(e&&e.lanes)||LANES;
@@ -296,7 +302,7 @@ function fight(eid,lanes,mods){const e=G.q.find(x=>x.id===eid);if(!e)return;cons
 // 늦은 길: 초가보 멸망으로 이름이 오르자 떠돌이 사내이 정체를 밝힌다
 function ilbiArrive(why){if(has('ilbi'))return;addIlbi(false);addArt('lim','chileum');addArt('jin','chileum');G.flags.ilbiFound=G.m;
   MODAL={title:'강일비',p:[why,'사내는 임영옥의 손목을 잡아 보고 얼굴이 굳었다. "태음신맥이다. 지금이라도 칠음진기를 익혀야 한다." 사내는 삿갓을 벗었다. "내 이름은 강일비다. 네 사부의 사형이지."'],ch:[['사백님을 뵙습니다.',()=>{log('강일비가 본산에 들어왔다. 임영옥이 칠음진기를 배우기 시작했다(제자 탭에서 심법을 칠음진기로 정해 두어야 한다). 진산월도 배울 수 있다.')}]]}}
-function revealIlbi(){if(G.ilbi==='late'&&!has('ilbi')){ilbiArrive('초가보가 무너졌다는 소문이 퍼진 지 며칠 뒤, 장례식 날의 삿갓 쓴 사내이 산문 앞에 나타났다. "종남의 이름이 다시 들리기에 왔다."');return}const i=D('ilbi');if(G.ilbi==='late'&&i&&i.n!=='강일비'){i.n='강일비';i.r='사백(원로)';ilbiMuyeom();i.img='img/ilbi.webp';
+function revealIlbi(){if(G.ilbi==='late'&&!has('ilbi')){ilbiArrive('초가보가 무너졌다는 소문이 퍼진 지 며칠 뒤, 장례식 날의 삿갓 쓴 사내가 산문 앞에 나타났다. "종남의 이름이 다시 들리기에 왔다."');return}const i=D('ilbi');if(G.ilbi==='late'&&i&&i.n!=='강일비'){i.n='강일비';i.r='사백(원로)';ilbiMuyeom();i.img='img/ilbi.webp';
   MODAL={title:'떠돌이 사내',p:['후산 초막의 사내가 처음으로 산문 앞까지 내려왔다. 사내는 삿갓을 벗었다.','"종남의 이름이 다시 들리는구나. 내 이름은 강일비다. 네 사부의 사형이지." 그동안 임영옥에게 가르친 것이 칠음진기였다고 했다.'],ch:[['사백님을 뵙습니다.',()=>{addArt('jin','chileum');log('삿갓 쓴 사내의 정체는 강일비였다. 진산월도 칠음진기를 배울 수 있다.')}]]}}}
 // 일기토: 강공·쾌검·수비. 강공은 쾌검을, 쾌검은 수비를, 수비는 강공을 이긴다. 체력 100, 여섯 합
 let DUEL=null;
@@ -364,7 +370,7 @@ function checkYukhap(){for(const d of G.ds){if(d.yukhap||d.elder)continue;if(Obj
 // 엔딩
 function endingOf(){const lim=has('lim');const f=G.flags;const tail=' — 그 무렵 서장의 야율척이 움직이기 시작했다. 매종도의 유산을 가로챈 자들이 그와 손을 잡았다는 소문이 돈다. (2부 「서장전」에서 이어진다)';
   if(G.qual<40)return{n:'몰락',p:['네 해가 지났지만 구대문파는 종남을 받아들이지 않았다. 종남의 이름은 다시 강호에서 흐려졌다.']};
-  if(G.qual<60)return{n:'연맹의 말석',p:['종남은 무림연맹에 이름을 올렸지만 구파의 자리는 되찾지 못했다.'+tail]};
+  if(G.qual<60)return{n:'연맹의 말석',p:[(f.league==='none'?'종남은 무림연맹에도 끼지 못했고, 구파의 자리도 되찾지 못했다.':'종남은 무림연맹에 이름을 올렸지만 구파의 자리는 되찾지 못했다.')+tail]};
   return{n:'구파 복귀',p:['구대문파가 종남을 다시 구파의 하나로 받아들였다.'+(f.league==='lead'?' 종남은 무림연맹의 한 축이 되었다.':'')+(f.geomjeong2?' 진산월의 검정중원은 이미 완성되어 있었다.':f.geomjeong?' 진산월의 검정중원은 아직 미완성이다.':'')+(lim?'':' 그 자리에 임영옥은 없었다.')+tail]}}
 function endingOld(){const lim=has('lim');const f=G.flags;
   if(!f.finalWin)return{n:'몰락',p:['야율척을 막지 못했다. 서장의 깃발이 검각을 넘었다. 종남의 이름은 다시 강호에서 흐려졌다.']};
@@ -392,38 +398,38 @@ function scheduled(m){
   if(m===1)E.push({t:'event',id:'sam',title:'만년삼정',due:2,text:'만년삼정을 복용하려면 길일을 골라 몸을 다스려야 한다. 3월 초하루로 날을 잡았다. 그때까지 영약은 장문인 거처의 옥함에 있다.',info:1});
   if(m===2)E.push(theft());
   if(m===2)E.push({t:'event',id:'sign',title:'임영옥의 징조',text:'임영옥이 차를 따르다 찻잔을 떨어뜨렸다. 손끝이 얼음처럼 차다.',info:1});
-  if(m===4&&G.ilbi==='late'&&!has('ilbi'))E.push({t:'quest',id:'limcold',title:'임영옥의 한기',btn:'사람을 풀어 그 사내를 찾게 한다',text:'임영옥의 손끝이 날로 차가워진다. 약방의 약으로는 듣지 않는다. 장례식 날 영전에 오래 절하던 삿갓 쓴 사내이 떠오른다. 그 사내는 무언가 아는 눈치였다.'});
+  if(m===4&&G.ilbi==='late'&&!has('ilbi'))E.push({t:'quest',id:'limcold',title:'임영옥의 한기',btn:'사람을 풀어 그 사내를 찾게 한다',text:'임영옥의 손끝이 날로 차가워진다. 약방의 약으로는 듣지 않는다. 장례식 날 영전에 오래 절하던 삿갓 쓴 사내가 떠오른다. 그 사내는 무언가 아는 눈치였다.'});
   // 7월까지 못 찾았으면 소문이 저절로 들어온다
   if(m===7&&G.ilbi==='late'&&!has('ilbi')&&!G.q.some(e=>e.id==='findilbi')&&!G.flags.ilbiComing)E.push({t:'quest',id:'findilbi',title:'삿갓 쓴 사내의 행방',text:'낙양 북쪽 객잔에 삿갓 쓴 사내가 오래 묵고 있다는 소문이다. 매력 높은 사람을 보내 정중히 모셔 온다(매력 60 이상이면 잘 된다). 한 달 동안 자리를 비운다.',btn:'보낸다'});
   if(m===3)E.push({t:'task',id:'seongsim',title:'《성심록》 해독',due:14,text:'장경각 깊은 곳에서 3대조 장하민의 《성심록》이 나왔다. 오래된 글자라 읽어 내려면 오성 높은 제자가 장경각에 붙어 있어야 한다. 화산에서 이 책을 노린다는 소문이 있다.'});
   if(m===5||m===9||m===13||m===16)E.push(crisis(m));
   if(G.flags.ilbiSearch===m&&!has('ilbi')&&!G.q.some(e=>e.id==='findilbi')){E.push({t:'quest',id:'findilbi',title:'삿갓 쓴 사내의 행방',text:'낙양 북쪽 객잔에 삿갓 쓴 사내가 오래 묵고 있다는 소문이다. 매력 높은 사람을 보내 정중히 모셔 온다(매력 60 이상이면 잘 된다). 한 달 동안 자리를 비운다.',btn:'보낸다'});G.flags.ilbiSearch=0}
-  if(G.flags.ilbiComing===m&&!has('ilbi'))ilbiArrive('낙양에 갔던 제자가 삿갓 쓴 사내을 모시고 돌아왔다.');
+  if(G.flags.ilbiComing===m&&!has('ilbi'))ilbiArrive('낙양에 갔던 제자가 삿갓 쓴 사내를 모시고 돌아왔다.');
   if(m===3&&has('ak'))E.push({t:'event',id:'akhint',info:1,title:'악자화',text:'악자화가 사형제들 앞에서 "장문인은 검으로 정해야 했다"고 말했다. 그의 마음은 종남에 있지 않은 것 같다. (본산 탭의 면담으로 마음을 붙잡을 수 있다)'});
   // 9월: 악자화가 남을지 떠날지(충성 50 이상이면 남는다)
   if(m===9&&has('ak')){const ak=D('ak');if(ak.ch<50){G.ds=G.ds.filter(d=>d.id!=='ak');G.flags.akLeft=1;E.push({t:'event',id:'akleave',info:1,title:'악자화',text:'악자화가 밤사이 산을 내려갔다. 탁자 위에 "누가 군림천하를 이룰 수 있느냐"는 한 줄만 남아 있었다. 신목령에 들어갔다는 소문이 뒤따랐다. (장문인 면담으로 충성을 올려 두었다면 남았을 것이다)'})}
-    else{ak.ch+=10;if(G.task)G.task.prog=Math.min(100,G.task.prog+20);E.push({t:'event',id:'akstay',info:1,title:'악자화',text:'악자화가 진산월을 찾아왔다. "태을검선의 본명은 매종도다. 그 비학은 실제로 있다. 찾아라. 다음에 볼 때 나아진 게 없으면 내가 직접 벤다." 그는 종남에 남았다.'+(G.task?' (《성심록》 해독 +20%)':'')})}}
+    else{ak.ch+=10;if(G.task)G.task.prog=Math.min(100,G.task.prog+20);E.push({t:'event',id:'akstay',info:1,title:'악자화',text:G.flags.taeeul?'악자화가 진산월을 찾아왔다. 태을선거에서 무엇을 얻었는지는 묻지 않고, 한참 진산월이 검을 쥔 손만 보았다. "……나아지긴 했군. 매종도의 것이 네 것이 되었다면, 종남이 다시 서는 꼴은 봐 주지." 그는 종남에 남았다.':G.flags.seongsim?'악자화가 진산월을 찾아왔다. "《성심록》을 다 풀었다면서 아직도 산에 앉아 있나. 태을선거로 가라. 매종도의 비학을 두고 미적거리면 내가 직접 벤다." 그는 종남에 남았다.':'악자화가 진산월을 찾아왔다. "태을검선의 본명은 매종도다. 그 비학은 실제로 있다. 찾아라. 다음에 볼 때 나아진 게 없으면 내가 직접 벤다." 그는 종남에 남았다.'+(G.task?' (《성심록》 해독 +20%)':'')})}}
   // 6월: 파문된 사숙 노해광이 서안의 눈과 귀를 들고 돌아온다(싸우지 않는다)
-  if(m===6&&!has('nohae')){G.ds.push({id:'nohae',n:'노해광',r:'사숙(첩보)',elder:1,ch:70,st:{tong:55,ji:90,jeong:85,ma:50,geom:50,gwon:55,oseong:60},arts:{taeeul:5,guyang:1,hyeoncheong:1},xp:{},pos:'rest',away:0,mind:0,focusM:null,focusS:null,job:null});G.flags.nohae=1;G.income.nohae=10;
+  if(m===6&&!has('nohae')){G.ds.push({id:'nohae',n:'노해광',img:'img/nohae.webp',r:'파문된 사숙',elder:1,ch:70,st:{tong:55,ji:90,jeong:85,ma:50,geom:50,gwon:55,oseong:60},arts:{taeeul:5,guyang:1,hyeoncheong:1},xp:{},pos:'rest',away:0,mind:0,focusM:null,focusS:null,job:null});G.flags.nohae=1;G.income.nohae=10;
     E.push({t:'event',id:'nohae',info:1,title:'노해광',text:'취임식 날 주루를 빼앗아 갔던 파문 사숙 노해광이 찾아왔다. "서안 바닥의 눈과 귀는 내가 쥐고 있다. 종남이 망하는 꼴은 보기 싫다." 서안의 소식이 들어오기 시작했다. (수입 +10, 큰 싸움에서 적 전력이 보인다)'})}
   // 전풍개가 온 지 여섯 달 뒤 둘째 제자 하동원이 돌아온다(원작 214장)
-  if(G.flags.jeonM&&m===G.flags.jeonM+6&&!has('hadong')){G.ds.push({id:'hadong',n:'하동원',r:'사제',st:{tong:55,ji:60,jeong:45,ma:50,geom:80,gwon:55,oseong:70},ch:80,arts:{yuun:6,nakha:5,taeeul:5,guyang:1,hyeoncheong:1},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null});
+  if(G.flags.jeonM&&m===G.flags.jeonM+6&&!has('hadong')){G.ds.push({id:'hadong',n:'하동원',img:'img/hadong.webp',r:'사숙',st:{tong:55,ji:60,jeong:45,ma:50,geom:80,gwon:55,oseong:70},ch:80,arts:{yuun:6,nakha:5,taeeul:5,guyang:1,hyeoncheong:1},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null});
     E.push({t:'event',id:'hadong',info:1,title:'하동원 귀환',text:'전풍개의 둘째 제자 하동원이 돌아왔다. 산문에 들어서자마자 소지산에게 대련을 청했다.'})}
-  const JOIN={8:{id:'dong',n:'동중산',r:'사제',st:{tong:50,ji:85,jeong:70,ma:75,geom:55,gwon:50,oseong:65},ch:75,arts:{nakha:3,taeeul:3,guyang:0,hyeoncheong:0},t:'비천호리 동중산이 종남의 문을 두드렸다. 쫓기던 몸을 거두어 준 데 대한 보답이라고 했다.'},
-    16:{id:'yuso',n:'유소응',r:'진산월의 제자',st:{tong:50,ji:70,jeong:40,ma:60,geom:85,gwon:60,oseong:85},ch:95,arts:{yuun:1,taeeul:1,guyang:0,hyeoncheong:0},t:'자각봉 아래에서 몽고 혼혈 소년 하나를 거두었다. 유소응이다. 진산월의 첫 제자가 되었다.'},
-    22:{id:'seomun',n:'서문연상',r:'사제',st:{tong:55,ji:65,jeong:55,ma:70,geom:80,gwon:50,oseong:70},ch:80,arts:{yuun:3,taeeul:3,guyang:0,hyeoncheong:0},t:'검보의 서문연상이 종남에 들어왔다.'},
-    28:{id:'seongrak',n:'성락중',r:'사제',st:{tong:70,ji:65,jeong:50,ma:55,geom:70,gwon:70,oseong:85},ch:85,arts:{nakha:5,hyeoncheong:5,taeeul:4,guyang:1},t:'현청건곤강기를 쓰는 성락중이 합류했다.'},
-    30:[{id:'danri',n:'단리상',r:'사제',st:{tong:40,ji:75,jeong:35,ma:55,geom:90,gwon:70,oseong:90},ch:85,arts:{yuun:2,janggwae:3,taeeul:2,guyang:0,hyeoncheong:0},t:'아홉 살 단리상이 입문했다. 가전무공을 펼쳐 보이자 전풍개가 "강일비 같은 놈이 또 있었군" 하고 중얼거렸다.'},
-        {id:'sonp',n:'손풍',r:'사제',st:{tong:45,ji:60,jeong:70,ma:60,geom:55,gwon:70,oseong:60},ch:80,arts:{janggwae:3,taeeul:2,guyang:0,hyeoncheong:0},t:'손가장의 손풍이 입문했다.'}]};
-  for(const r of [].concat(JOIN[m]||[]))if(!has(r.id)){G.ds.push({...r,xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null});E.push({t:'event',id:'join_'+r.id,info:1,title:r.n+' 합류',text:r.t})}
-  if(m===10)E.push({t:'quest',id:'gorge',title:'협곡 정찰',due:17,text:'초가보 패잔병이 종남산 뒤 절벽 쪽 협곡으로 숨어들었다는 소문이다. 한 사람을 보내 살핀다. 길이 험하다.',btn:'보낸다'});
+  const JOIN={8:{id:'dong',n:'동중산',r:'진산월의 제자',img:'img/dong.webp',st:{tong:50,ji:85,jeong:70,ma:75,geom:55,gwon:50,oseong:65},ch:75,arts:{nakha:3,taeeul:3,guyang:0,hyeoncheong:0},t:'비천호리 동중산이 종남의 문을 두드렸다. 쫓기던 몸을 거두어 준 데 대한 보답이라고 했다.'},
+    16:{id:'yuso',n:'유소응',img:'img/yuso.webp',r:'진산월의 제자',st:{tong:50,ji:70,jeong:40,ma:60,geom:85,gwon:60,oseong:85},ch:95,arts:{yuun:1,taeeul:1,guyang:0,hyeoncheong:0},t:'자각봉 아래에서 몽고 혼혈 소년 하나를 거두었다. 유소응이다. 진산월이 직접 거둔 제자가 하나 늘었다.'},
+    22:{id:'seomun',n:'서문연상',img:'img/seomun.webp',r:'빈객(검보)',st:{tong:55,ji:65,jeong:55,ma:70,geom:80,gwon:50,oseong:70},ch:80,arts:{yuun:3,taeeul:3,guyang:0,hyeoncheong:0},t:'검보의 서문연상이 종남에 들어왔다.'},
+    28:{id:'seongrak',n:'성락중',img:'img/seongrak.webp',r:'사숙',st:{tong:70,ji:65,jeong:50,ma:55,geom:85,gwon:55,oseong:85},ch:85,arts:{nakha:5,hyeoncheong:5,taeeul:4,guyang:1},t:'현청건곤강기를 쓰는 성락중이 합류했다.'},
+    30:[{id:'danri',n:'단리상',img:'img/danri.webp',r:'진산월의 제자',st:{tong:40,ji:75,jeong:35,ma:55,geom:90,gwon:70,oseong:90},ch:85,arts:{yuun:2,janggwae:3,taeeul:2,guyang:0,hyeoncheong:0},t:()=>'아홉 살 단리상이 입문했다. 가전무공을 펼쳐 보이자 '+(has('jeonp')?'전풍개가 "강일비 같은 놈이 또 있었군" 하고 중얼거렸다.':'진산월이 한참 말없이 그 검로를 지켜보았다.')},
+        {id:'sonp',n:'손풍',img:'img/sonp.webp',r:'진산월의 제자',st:{tong:45,ji:60,jeong:70,ma:60,geom:55,gwon:70,oseong:60},ch:80,arts:{janggwae:3,taeeul:2,guyang:0,hyeoncheong:0},t:'손가장의 손풍이 입문했다.'}]};
+  for(const r of [].concat(JOIN[m]||[]))if(!has(r.id)){G.ds.push({...r,xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null});E.push({t:'event',id:'join_'+r.id,info:1,title:r.n+' 합류',text:typeof r.t==='function'?r.t():r.t})}
+  if(m===10)E.push({t:'quest',id:'gorge',title:'협곡 정찰',due:17,text:'초가보 척후들이 종남산 뒤 절벽 쪽 협곡으로 숨어들었다는 소문이다. 한 사람을 보내 살핀다. 길이 험하다.',btn:'보낸다'});
   if(m===12&&G.ilbi==='early'){addArt('jin','chileum');E.push({t:'event',id:'ilbiteach',title:'사백의 가르침',info:1,text:'강일비가 진산월을 불렀다. "이제 너도 칠음진기의 첫머리를 알아 두어라. 태음신맥이 아니니 깊이 들어가지는 못할 것이다."'})}
-  if(m===18&&!G.flags.raided){raid();E.push({t:'event',id:'raid18',title:'초가보의 기습',info:1,text:'초가보가 본산을 쳤다. 결과는 기록에 남았다.'})}
+  if(m===18&&!G.flags.raided&&!G.flags.choDone){raid();E.push({t:'event',id:'raid18',title:'초가보의 기습',info:1,text:'초가보가 본산을 쳤다. 결과는 기록에 남았다.'})}
   if(m===20)E.push({t:'quest',id:'hyeolsa',title:'종남혈사',due:21,k:1,text:'초가보가 세 갈래로 종남산을 치려 한다. 갈래마다 제자를 둘까지 세운다. 진산월도 한 갈래에 설 수 있다. 두 갈래를 이기면 초가보를 무너뜨린다.'});
   if(G.flags.hyeolsaRetry===m)E.push({t:'quest',id:'hyeolsa2',title:'종남혈사 (두 번째)',due:m+1,k:.85,retry:1,text:'물러갔던 초가보가 다시 세 갈래로 온다. 지난번보다 지쳐 있다.'});
-  if(G.flags.jeonM===m){for(const r of [{id:'jeonp',n:'전풍개',r:'사숙(원로)',img:'img/jeonp.webp',st:{tong:70,ji:60,jeong:45,ma:55,geom:85,gwon:60,oseong:70},ch:90,arts:{yuun:8,cheonha:7,taeeul:7,guyang:3,hyeoncheong:3}},{id:'jeonh',n:'전흠',r:'사제',img:'img/jeonh.webp',st:{tong:45,ji:55,jeong:40,ma:55,geom:75,gwon:55,oseong:65},ch:85,arts:{yuun:5,nakha:5,taeeul:4,guyang:1,hyeoncheong:1}}])
+  if(G.flags.jeonM===m){for(const r of [{id:'jeonp',n:'전풍개',r:'사숙조(원로)',img:'img/jeonp.webp',st:{tong:70,ji:60,jeong:45,ma:55,geom:85,gwon:60,oseong:70},ch:90,arts:{yuun:8,cheonha:7,taeeul:7,guyang:3,hyeoncheong:3}},{id:'jeonh',n:'전흠',r:'사숙(전풍개의 아들)',img:'img/jeonh.webp',st:{tong:45,ji:55,jeong:40,ma:55,geom:75,gwon:55,oseong:65},ch:85,arts:{yuun:5,nakha:5,taeeul:4,guyang:1,hyeoncheong:1}}])
     if(!has(r.id))G.ds.push({...r,xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null});
-    E.push({t:'event',id:'jeon',title:'질풍검 전풍개',info:1,text:'종남삼검의 한 사람인 질풍검 전풍개가 제자 전흠을 데리고 산문에 들어섰다. 초가보가 무너졌다는 소문을 듣고 왔다고 했다. 종남에 처음으로 사문 어른이 돌아왔다.'})}
+    E.push({t:'event',id:'jeon',title:'질풍검 전풍개',info:1,text:'종남삼검의 한 사람인 질풍검 전풍개가 제자 전흠을 데리고 산문에 들어섰다. 초가보가 무너졌다는 소문을 듣고 왔다고 했다.'+(has('ilbi')||has('nohae')?' 종남에 사문 어른이 또 한 분 돌아왔다.':' 종남에 처음으로 사문 어른이 돌아왔다.')})}
   // 비무행: 초가보가 무너지고 석 달 뒤(늦어도 27월) 소림의 초청
   if(!G.flags.bimuStart&&((G.flags.choDone&&G.flags.choM&&m>=G.flags.choM+3)||m>=27)){G.flags.bimuStart=m;E.push({t:'event',id:'bimuinv',info:1,title:'소림의 초청',text:'소림의 대방 선사가 비무행을 권했다. 네 문파와 차례로 겨루어 종남의 이름을 세우라는 것이다. 세 곳 이상에서 이기면 무당 집회에서 발언할 자격이 생긴다.'});
     const B=[['bm_jeom','점창과의 비무 (낙양 석가장)','점창',[['백리장손',145],['점창 제자',110],['점창 제자',115]],2],['bm_so','소림 삼파비무','소림',[['정화',135],['곽희',125],['소림 무승',120]],2],['bm_cheong','청의방 비무 (여남)','청의방',[['장호',120],['최력',115],['곽존해',150]],2],['bm_nam','남궁세가 비무 (회남)','남궁세가',[['남궁기',135],['남궁선',140],['남궁연',145]],4]];
@@ -474,7 +480,7 @@ function useAct(){if(G.act<=0)return false;G.act--;return true}
 const A={
   tab(t){TAB=t;render()},
   build(k){const lv=G.fac[k];if(lv>=(G.facCap||3))return;const c=80*(lv+1);if(G.eun<c||G.act<=0)return;G.eun-=c;useAct();G.fac[k]++;log(`${FAC[k].n}을(를) ${G.fac[k]}단계로 올렸다.`);save();render()},
-  focus(){if(G.jinFocus||!useAct())return;G.jinFocus=true;log('진산월이 이달 수련에 전념한다.');save();render()},
+  focus(){if(G.jinFocus||!useAct())return;G.jinFocus=true;log('진산월이 이번 순 수련에 전념한다.');save();render()},
   diplo(){if(G.eun<30||!useAct())return;G.eun-=30;G.fav+=5;G.qual+=2;log('화산·소림에 서신과 예물을 보냈다. 문파 호감 +5');save();render()},
   talk(){const du=D('du');if(!du||!useAct())return;du.ch+=15;log(`두기춘과 오래 이야기를 나눴다. (충성 ${du.ch})`);save();render()},
   read(){if(!G.task||G.jinBusy||!useAct())return;G.jinBusy=true;G.task.prog=Math.min(100,G.task.prog+30);log(`진산월이 장경각에 들어앉아 《성심록》을 직접 읽었다. 해독 +30% (${Math.round(G.task.prog)}%)`);
@@ -487,7 +493,7 @@ const A={
   coach(){const sel=document.getElementById('jin_coach');const d=sel&&D(sel.value);if(!d||G.jinBusy||!useAct())return;G.jinBusy=true;d.coach=true;if(Math.random()<(G.flags.yeongong?.7:.5)+(G.flags.sulyeon?.1:0))gainWis(d,1,'장문인의 지도');log(`진산월이 이달 ${d.n}을(를) 직접 지도한다. (${d.n} 수련 2배)`);save();render()},
   meet(){const sel=document.getElementById('jin_meet');const d=sel&&D(sel.value);if(!d||!useAct())return;d.ch=Math.min(100,d.ch+10);d.mind=Math.max(0,d.mind-25);log(`진산월이 ${d.n}과(와) 마주 앉아 이야기했다. 충성 ${d.ch}, 심마 ${d.mind}`);save();render()},
   rumor(){if(G.eun<20||!useAct())return;G.eun-=20;const nx=[5,9].find(m=>m>G.m);
-    if(G.ilbi==='late'&&!has('ilbi')&&!G.q.some(e=>e.id==='findilbi')&&Math.random()<.3){G.q.push({t:'quest',id:'findilbi',title:'삿갓 쓴 사내의 행방',text:'낙양 북쪽 객잔에 삿갓 쓴 사내이 오래 묵고 있다는 소문이다. 매력 높은 사람을 보내 정중히 모셔 온다(매력 60 이상이면 잘 된다). 한 달 동안 자리를 비운다.',btn:'보낸다'});log('삿갓 쓴 사내이 낙양에 있다는 소문을 들었다.')}
+    if(G.ilbi==='late'&&!has('ilbi')&&!G.q.some(e=>e.id==='findilbi')&&Math.random()<.3){G.q.push({t:'quest',id:'findilbi',title:'삿갓 쓴 사내의 행방',text:'낙양 북쪽 객잔에 삿갓 쓴 사내가 오래 묵고 있다는 소문이다. 매력 높은 사람을 보내 정중히 모셔 온다(매력 60 이상이면 잘 된다). 한 달 동안 자리를 비운다.',btn:'보낸다'});log('삿갓 쓴 사내가 낙양에 있다는 소문을 들었다.')}
     else if(G.task&&Math.random()<.5){G.task.prog=Math.min(100,G.task.prog+15);log('객잔에서 옛 종남 고수의 이야기를 주워들었다. 《성심록》 해독 +15%')}else{G.fame+=1;log(nx?`초가보가 ${yr(nx)}쯤 다시 움직인다는 소문을 들었다.`:'강호의 소문을 모았다. 명성 +1')}save();render()},
   patrol(){if(G.patrol||!useAct())return;G.patrol=true;log('이달은 진산월이 서안 상권을 돌며 순찰한다.');save();render()},
   recruit(){if(G.eun<60||G.fame<15||!useAct())return;G.eun-=60;if(dsCount()>=capOfDs()){G.eun+=60;G.act++;alertMsg('정원이 찼다. 숙소를 늘려야 한다.');return}const sur='왕,유,하,장,조,한,서,오'.split(','),giv='진,명,호,성,연,우,평,기'.split(',');
@@ -520,7 +526,7 @@ const A={
     if(Math.random()*100<chanceK(d,60,'ma'))G.flags.ilbiComing=G.m+1;else{G.flags.ilbiSearch=G.m+2;log(`${d.n}이(가) 낙양까지 갔지만 사내는 이미 떠난 뒤였다. 두 달쯤 뒤 다시 소문이 들어올 것이다.`)}save();render()},
   gorge(eid){const sel=document.getElementById('gs_'+eid);const d=sel&&D(sel.value);if(!d)return;G.q=G.q.filter(x=>x.id!==eid);
     if(d.id==='nak'){d.pos='away';d.away=12;d.job={nak:1};log('낙일방이 협곡 정찰을 나갔다가 돌아오지 않았다. 절벽 아래로 떨어졌다는 말이 돈다.')}
-    else{d.pos='away';d.away=1;d.job=null;G.fame+=2;log(`${d.n}이(가) 협곡을 살피고 돌아왔다. 초가보 패잔병을 쫓아냈다. 명성 +2`)}save();render()},
+    else{d.pos='away';d.away=1;d.job=null;G.fame+=2;log(`${d.n}이(가) 협곡을 살피고 돌아왔다. 초가보 척후를 쫓아냈다. 명성 +2`)}save();render()},
   bsug(eid){const p=battleSuggest();for(let l=0;l<3;l++)for(let i=0;i<2;i++){const el=document.getElementById(`bl_${l}_${i}`);if(el)el.value=p[l][i]||''}},
   battle(eid){startDuels(eid,readLanes())},
   match(eid){startMatch(eid)},
@@ -529,6 +535,7 @@ const A={
     G.ds.push({id:'r'+G.m+Math.random().toString(36).slice(2,6),n:e.nm,r:'새 제자',st:e.st,ch:70,arts:{...e.arts},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null});log(`${e.nm}을(를) 제자로 받았다.`);save();render()},
   mapSel(k){MAPSEL=MAPSEL===k?null:k;render()},
   info(eid){G.q=G.q.filter(x=>x.id!==eid);save();render()},
+  infoAll(){G.q=G.q.filter(x=>!(x.t==='event'&&x.info));save();render()},
   choose(i){const c=MODAL.ch[i];MODAL=null;const keep=c[1]();if(!keep)MODAL=MODAL||null;save();render()},
   autoNext(v){G.autoNext=v;save()},
   next(){if(DUEL)return;if(G.autoNext&&!MODAL)A.auto();endHalf()},
@@ -538,9 +545,9 @@ const A={
 function teacher(a,not){return G.ds.filter(x=>x.id!==not&&x.n!=='삿갓 쓴 사내'&&(x.arts[a]||0)>=(ARTS[a].t==='b'?1:5)&&x.pos!=='away'&&x.pos!=='hurt').sort((x,y)=>y.arts[a]-x.arts[a])[0]}
 // 폐관 중 초가보 기습: 수비는 전력 그대로, 수련 중은 절반, 외당 단계마다 +25
 function raid(){G.flags.raided=1;const def=G.ds.filter(d=>d.id!=='jin'&&!d.elder&&(d.pos==='guard'||d.pos==='train'||d.pos==='rest'||d.pos==='study')).reduce((s,d)=>s+power(d)*(d.pos==='guard'?1:.5)*(.6+d.st.tong/250),0)+25*G.fac.oe+40*(G.wall||0),atk=Math.round(200+5*G.m);
-  if(def>=atk){G.fame+=6;G.qual+=3;log(`장문인이 없는 틈에 초가보가 본산을 쳤다. 남은 제자들이 막아 냈다. (방어 ${Math.round(def)} : 공격 ${atk}) 명성 +6`)}
+  if(def>=atk){G.fame+=6;G.qual+=3;log(`${G.retreat?'장문인이 없는 틈에 ':''}초가보가 본산을 쳤다. 남은 제자들이 막아 냈다. (방어 ${Math.round(def)} : 공격 ${atk}) 명성 +6`)}
   else{G.income.sang=Math.max(25,G.income.sang-10);for(const d of G.ds.filter(d=>d.pos==='guard'))if(Math.random()<.5){d.pos='hurt';d.away=4}
-    log(`장문인이 없는 틈에 초가보가 본산을 쳤다. 막지 못했다. (방어 ${Math.round(def)} : 공격 ${atk}) 서안 상권 수입 -10, 수비하던 제자 일부 부상`)}}
+    log(`${G.retreat?'장문인이 없는 틈에 ':''}초가보가 본산을 쳤다. 막지 못했다. (방어 ${Math.round(def)} : 공격 ${atk}) 서안 상권 수입 -10, 수비하던 제자 일부 부상`)}}
 function lose(o){G.income[o.k]=Math.max(o.k==='sang'?25:5,G.income[o.k]-(o.k==='sang'?8:5));log(`초가보에게 밀렸다: ${o.loss}`)}
 function chanceK(d,need,k){if(!k||k==='mu')return chance(d,need);return Math.max(5,Math.min(95,Math.round(50+(d.st[k]-need)*1.5+boV(d,'eoryong'))))}
 function chance(d,need){return Math.max(5,Math.min(95,Math.round(50+(power(d)-need)*1.2+boV(d,'eoryong'))))}
@@ -585,7 +592,7 @@ function endMonth(){
     else{const j=D('jin');j.arts.taeeul=Math.max(j.arts.taeeul,5);log('진산월이 만년삼정을 복용해 임독양맥을 뚫었다. 태을신공 5성')}}
   // 폐관
   if(G.retreat){G.retreat--;G.act=0;
-    if(G.retreat===1)raid();
+    if(G.retreat===1&&!G.flags.raided&&!G.flags.choDone)raid();
     if(G.retreat===0)endRetreat()}
   // 돈
   const up=G.ds.filter(d=>!d.elder&&d.id!=='jeonp').length*5+Object.values(G.fac).reduce((s,v)=>s+v*5,0);const inc=Object.values(G.income).reduce((s,v)=>s+v,0);
@@ -598,10 +605,10 @@ function endMonth(){
   else if(hsBite&&G.m>=2)log('형산이 종남의 구파 자격을 문제 삼는다. 구파 자격 -1');
   // 임영옥 점검
   if((G.m===36||G.m===44)&&has('lim')){const l=D('lim'),need=(G.m===36?9:10)-(G.flags.taeumSlow?1:0),v=l.arts.chileum||0;
-    if(v<need){if(G.m===44){G.ds=G.ds.filter(d=>d.id!=='lim');G.flags.limDead=1;MODAL={title:'임영옥',p:['겨울 초입, 임영옥의 숨이 얼음처럼 식었다. 태음신맥을 끝내 다스리지 못했다.'],ch:[['……',()=>log(`임영옥이 세상을 떠났다. (칠음진기 ${v}성, 기준 ${need}성)`)]]}}else{l.pos='hurt';l.away=12;log(`임영옥이 위독해졌다. 여섯 달 요양, 결전에 나설 수 없다. (칠음진기 ${v}성, 기준 ${need}성)`)}}else log(`임영옥의 칠음진기 ${v}성. 이번에도 넘겼다. (기준 ${need}성)`)}
+    if(v<need){if(G.m===44){G.ds=G.ds.filter(d=>d.id!=='lim');G.flags.limDead=1;MODAL={title:'임영옥',p:['가을 초입, 임영옥의 숨이 얼음처럼 식었다. 태음신맥을 끝내 다스리지 못했다.'],ch:[['……',()=>log(`임영옥이 세상을 떠났다. (칠음진기 ${v}성, 기준 ${need}성)`)]]}}else{l.pos='hurt';l.away=12;log(`임영옥이 위독해졌다. 여섯 달 요양, 결전에 나설 수 없다. (칠음진기 ${v}성, 기준 ${need}성)`)}}else log(`임영옥의 칠음진기 ${v}성. 이번에도 넘겼다. (기준 ${need}성)`)}
   if((G.m===12||G.m===24)&&has('lim')){const l=D('lim'),need=(G.m===12?4:7)-(G.flags.taeumSlow?1:0),v=l.arts.chileum||0;
     if(v<need&&has('ilbi')&&l.arts.chileum!=null&&l.focusS!=='chileum'){l.focusS='chileum';log('강일비가 크게 꾸짖고 임영옥의 수련을 칠음진기로 돌려 놓았다.')}
-    if(v<need){l.pos='hurt';l.away=G.m===12?2:6;log(`임영옥이 ${G.m===12?'발작을 일으켰다':'위독해졌다'}. 칠음진기 ${v}성 (기준 ${need}성). 한 달 요양`)}else log(`임영옥의 칠음진기 ${v}성. 이번 해는 넘겼다. (기준 ${need}성)`)}
+    if(v<need){l.pos='hurt';l.away=G.m===12?2:6;log(`임영옥이 ${G.m===12?'발작을 일으켰다':'위독해졌다'}. 칠음진기 ${v}성 (기준 ${need}성). ${G.m===12?'한':'석'} 달 요양`)}else log(`임영옥의 칠음진기 ${v}성. 이번 해는 넘겼다. (기준 ${need}성)`)}
   {const n=dsCount();if(n>=20&&!G.flags.size20){G.flags.size20=1;G.qual+=5;log('제자가 스무 명을 넘었다. 구파 자격 +5')}if(n>=30&&!G.flags.size30){G.flags.size30=1;G.qual+=5;log('제자가 서른 명을 넘었다. 구파 자격 +5')}}
   checkYukhap();
   if(G.m>=48){G.ending=endingOf();G.done=true;save();render();return}
@@ -618,13 +625,13 @@ function gameOver(t){G.over=t;save();render()}
 /* ================= 화면 ================= */
 function pt(d){const src=d.rl?rlImg(d.rl):d.img;return `<div class="pt">${src?`<img src="${src}" alt="" onerror="this.remove()">`:''}${src?'':d.n[0]}</div>`}
 function artChips(d){const order={m:0,s:1,b:2};return Object.keys(d.arts).sort((a,b)=>order[ARTS[a].t]-order[ARTS[b].t]||d.arts[b]-d.arts[a]).map(a=>{if(ARTS[a].t==='b'){const l=d.arts[a];return `<span class="chip b" title="${BO[a].d}${l<2?` · ${boTal(d)?'신법 재능 · ':''}통달까지 실전 ${boNeed(d)-((d.boxp||{})[a]||0)}번`:''}">${ARTS[a].n} ${l>=2?'통달':'익힘'}</span>`}
-  const cap=capOf(d,a),f=a===pickFocus(d,ARTS[a].t),pc=d.arts[a]>=cap?0:Math.min(100,Math.floor(100*(d.xp[a]||0)/costOf(d.arts[a])));return `<span class="chip ${ARTS[a].t}" title="상한 ${cap}성">${f?'▸':''}${ARTS[a].n} ${d.arts[a]}성${d.arts[a]>=cap?'(상한)':gateOf(d,a)&&(d.wis||0)<gateOf(d,a)&&pc>=100?' <b style="color:var(--red)">깨달음 필요</b>':f?` <b>${pc}%</b> <small class="muted">+${monthPct(d,a)}%/월</small>`:''}</span>`}).join('')}
+  const cap=capOf(d,a),f=a===pickFocus(d,ARTS[a].t),pc=d.arts[a]>=cap?0:Math.min(100,Math.floor(100*(d.xp[a]||0)/costOf(d.arts[a])));return `<span class="chip ${ARTS[a].t}" title="상한 ${cap}성">${f?'▸':''}${ARTS[a].n} ${d.arts[a]>=10?'<b>대성</b>':d.arts[a]+'성'}${d.arts[a]>=10?'':d.arts[a]>=cap?'(상한)':gateOf(d,a)&&(d.wis||0)<gateOf(d,a)&&pc>=100?' <b style="color:var(--red)">깨달음 필요</b>':f?` <b>${pc}%</b> <small class="muted">+${monthPct(d,a)}%/월</small>`:''}</span>`}).join('')}
 function taskRate(){return Math.round(G.ds.filter(d=>d.pos==='study').reduce((s,d)=>s+20*d.st.ji/70,0)*(1+.5*(G.fac.jang-1)))}
 function topBar(){return `<div class="top"><span class="serif" style="font-size:17px">終南</span>
 <span><b>${yr(G.m)} ${HALF[G.half]}</b> (${G.m}/48)</span><span>행동 <b>${G.act}</b>/1</span><span>은자 <b>${G.eun}</b></span><span>명성 <b>${G.fame}</b></span><span>제자 <b>${dsCount()}</b>/${capOfDs()}</span><span>호감 <b>${G.fav}</b></span>
 ${G.task?`<span title="제자 탭에서 장경각 해독에 배치">《성심록》 <b>${Math.round(G.task.prog)}%</b> (+${taskRate()}%/월, ${yr(G.task.due)}까지)</span>`:''}<span>구파 자격 <span class="bar"><i style="width:${Math.min(100,G.qual)}%"></i></span> ${G.qual}</span></div>`}
 function recs(){const r=[];
-  if(G.task&&G.task.due-G.m<=3&&G.task.prog<100)r.push(['read','《성심록》 기한이 ${G.task.due-G.m}달 남았다. 직접 읽으면 +30%']);
+  if(G.task&&G.task.due-G.m<=3&&G.task.prog<100)r.push(['read',`《성심록》 기한이 ${G.task.due-G.m}달 남았다. 직접 읽으면 +30%`]);
   const hard=G.q.find(e=>e.t==='crisis'&&!suggest()[e.id]);if(hard)r.push(['sortie','막을 만한 제자가 없는 위기가 있다. 직접 출전']);
   {const l=D('lim');if(l&&l.arts.chileum!=null&&l.arts.chileum<7&&pickFocus(l,'s')!=='chileum')r.unshift(['limfocus','임영옥이 칠음진기를 수련하지 않고 있다(제자 탭에서 심법을 칠음진기로)'])}
   {const ak=D('ak');if(ak&&G.m<9&&ak.ch<50)r.unshift(['meetak',`악자화의 마음이 떠 있다(충성 ${ak.ch}). 9월 전에 면담`])}
@@ -635,9 +642,13 @@ function recs(){const r=[];
   if(G.q.some(e=>e.id==='taeeul')&&!G.retreat)r.unshift(['tq',(D('jin').arts.cheonha||0)>=5?'태을선거로 떠날 수 있다(사건 탭)':'태을선거에 가려면 천하삼십육검 5성이 필요하다. 수련 전념']);
   if(G.q.some(e=>e.id==='seokshil'))r.push(['sq','석실 폐관은 수비를 갖춘 뒤에(사건 탭)']);
   if(!r.length)r.push(['focus','급한 일이 없다. 수련 전념']);return r.slice(0,2)}
+function evBar(){if(!G.q.length)return '';const n=Object.keys(suggest()).length,work=G.q.filter(e=>e.t==='job'||e.t==='crisis').length,news=G.q.filter(e=>e.t==='event'&&e.info).length,rest=G.q.length-work-news;
+  return `<div class="panel" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><b>사건 ${G.q.length}건</b><span class="muted" style="font-size:13px">의뢰·위기 ${work} · 소식 ${news}${rest?` · 직접 정할 일 ${rest}`:''}</span>
+    ${work?`<button class="main" onclick="A.auto()" ${n?'':'disabled'}>추천대로 보내기 (${n}건)</button>`:''}${news?`<button onclick="A.infoAll()">소식 모두 확인 (${news})</button>`:''}${rest?`<button onclick="A.tab('ev')">사건 탭에서 정하기 →</button>`:''}
+    ${work?`<label style="font-size:13px"><input type="checkbox" ${G.autoNext?'checked':''} onchange="A.autoNext(this.checked)"> 다음 달로 넘길 때 남은 일 자동</label>`:''}</div>`}
 function mainTab(){
   const j=D('jin');
-  return `${YARD_ON?`<div class="yard"><canvas id="yard"></canvas><div class="tip" id="yardtip"></div></div>`:''}<div class="panel"><h3>장문인의 행동 (${HALF[G.half]} ${G.act}번 남음)${G.retreat?` <span class="muted" style="font-size:14px">— 진산월 폐관 중, ${G.retreat}달 남음</span>`:''}</h3>
+  return `${YARD_ON?`<div class="yard"><canvas id="yard"></canvas><div class="tip" id="yardtip"></div></div>`:''}${evBar()}<div class="panel"><h3>장문인의 행동 (${HALF[G.half]} ${G.act}번 남음)${G.retreat?` <span class="muted" style="font-size:14px">— 진산월 폐관 중, ${G.retreat}달 남음</span>`:''}</h3>
 <p style="display:flex;flex-wrap:wrap;gap:6px">
 </p>${(()=>{const rc=recs(),no=G.act<=0,busy=G.jinBusy||!!G.retreat,fr=freeDs(),hot=k=>rc.some(x=>x[0]===k)?'class="main"':'';
   const jobs=G.q.filter(e=>e.t==='job'||e.t==='crisis');
@@ -649,26 +660,26 @@ ${G.task?`<button ${hot('read')} onclick="A.read()" ${no||busy?'disabled':''}>�
 <button ${hot('rumor')} onclick="A.rumor()" ${no||G.eun<20?'disabled':''}>소문 탐문 (20냥)</button>
 <button onclick="A.diplo()" ${no||G.eun<30?'disabled':''}>외교 (30냥)</button>
 <button ${hot('recruit')} onclick="A.recruit()" ${no||G.eun<60||G.fame<15?'disabled':''} title="명성 15 이상">제자 모집 (60냥)</button>
-${has('du')&&G.m<=2?`<button onclick="A.talk()" ${no?'disabled':''}>두기춘과 이야기</button>`:''}
+${has('du')&&G.m<2?`<button onclick="A.talk()" ${no?'disabled':''}>두기춘과 이야기</button>`:''}
 </div>
 <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px">
 ${jobs.length?`<select id="jin_sortie">${jobs.map(e=>`<option value="${e.id}">${e.title}</option>`).join('')}</select><button ${hot('sortie')} onclick="A.sortie()" ${no||busy?'disabled':''}>직접 출전</button>`:''}
 <select id="jin_coach">${fr.map(d=>`<option value="${d.id}">${d.n}</option>`).join('')}</select><button onclick="A.coach()" ${no||busy?'disabled':''}>직접 지도 (수련 2배)</button>
 <select id="jin_meet">${G.ds.filter(d=>d.id!=='jin').sort((a,b)=>b.mind-a.mind).map(d=>`<option value="${d.id}">${d.n} (심마 ${d.mind})</option>`).join('')}</select><button ${hot('meet')} onclick="A.meet()" ${no?'disabled':''}>면담</button>
 </div>
-<p class="muted" style="font-size:12px">직접 읽기·출전·지도를 한 달은 진산월 자신의 수련이 없다. 시설 짓기와 무공 전수도 행동을 쓴다. 제자 파견은 행동을 쓰지 않는다.</p>`})()}</div>
+<p class="muted" style="font-size:12px">직접 읽기·출전·지도를 한 순은 진산월 자신의 수련이 없다. 시설 짓기와 무공 전수도 행동을 쓴다. 제자 파견은 행동을 쓰지 않는다.</p>`})()}</div>
 <div class="panel"><h3>진산월</h3><div class="hd" style="display:flex;gap:10px;align-items:center">${pt(j)}<div>${artChips(j)}<div style="font-size:12px;margin-top:4px">${Object.keys(STN).map(k=>`${STN[k]} <b>${j.st[k]}</b>`).join(' · ')}</div></div></div>
-${(()=>{const lib=LIB.filter(a=>j.arts[a]==null&&teacher(a,'jin'));return lib.length?`<div style="margin-top:8px;font-size:13px">배우기 <select id="tc_jin">${lib.map(a=>`<option value="${a}">${ARTS[a].n} (스승 ${teacher(a,'jin').n})</option>`).join('')}</select> <button onclick="A.teach('jin')" ${G.act<=0?'disabled':''}>배운다 (행동 1)</button></div>`:''})()}
+${(()=>{const lib=LIB.filter(a=>!knows(j,a)&&teacher(a,'jin'));return lib.length?`<div style="margin-top:8px;font-size:13px">배우기 <select id="tc_jin">${lib.map(a=>`<option value="${a}">${ARTS[a].n} (스승 ${teacher(a,'jin').n})</option>`).join('')}</select> <button onclick="A.teach('jin')" ${G.act<=0?'disabled':''}>배운다 (행동 1)</button></div>`:''})()}
 <div style="margin-top:8px;font-size:13px">초식 <select onchange="A.jdir('m',this.value)"><option value="">자동</option>${Object.keys(j.arts).filter(a=>ARTS[a].t==='m').map(a=>`<option value="${a}" ${j.focusM===a?'selected':''}>${ARTS[a].n}</option>`).join('')}</select>
  심법 <select onchange="A.jdir('s',this.value)"><option value="">자동</option>${Object.keys(j.arts).filter(a=>ARTS[a].t==='s').map(a=>`<option value="${a}" ${j.focusS===a?'selected':''}>${ARTS[a].n}</option>`).join('')}</select></div></div>
 <div class="panel"><h3>시설</h3><div class="grid">${Object.keys(FAC).map(k=>{const lv=G.fac[k],c=80*(lv+1);return `<div class="d"><b>${FAC[k].n}</b> ${lv}단계<br><span class="muted">${FAC[k].d}</span><br>
 <button style="margin-top:6px" onclick="A.build('${k}')" ${lv>=(G.facCap||3)||G.eun<c||G.act<=0?'disabled':''}>${lv>=(G.facCap||3)?'최고 단계':`${lv?'올리기':'짓기'} (${c}냥)`}</button></div>`}).join('')}</div></div>
-<div class="panel"><h3>수입과 지출</h3><p>${Object.entries(G.income).map(([k,v])=>`${INCN[k]||k} ${v}`).join(' · ')} / 제자 유지비 ${G.ds.length*5} · 시설 유지비 ${Object.values(G.fac).reduce((s,v)=>s+v*5,0)}</p></div>
+<div class="panel"><h3>수입과 지출</h3><p>${Object.entries(G.income).map(([k,v])=>`${INCN[k]||k} ${v}`).join(' · ')} / 제자 유지비 ${G.ds.filter(d=>!d.elder&&d.id!=='jeonp').length*5} · 시설 유지비 ${Object.values(G.fac).reduce((s,v)=>s+v*5,0)}</p></div>
 <div class="panel"><h3>기록</h3><div class="log">${G.log.join('<br>')}</div></div>`;
 }
 function discTab(){
   return `<p class="muted">한 달은 상순·하순 두 차례다. 배치는 순마다 바꿀 수 있고 행동을 쓰지 않는다. 짧은 의뢰는 한 순만 자리를 비운다. ▸ 표시가 지금 수련 중인 무공이다. 수련 방향을 정하지 않으면 가장 높은 무공을 알아서 올린다. 「60% +25%/월」은 다음 성까지 60% 찼고, 지금 배치대로면 한 달에 25%씩 찬다는 뜻이다. 4성부터는 한 단계에 수련치가 두 배, 7성부터 세 배 든다.</p><div class="grid">${G.ds.filter(d=>d.id!=='jin').map(d=>{
-    const lock=d.pos==='away'||d.pos==='hurt';const lib=LIB.filter(a=>d.arts[a]==null).sort((x,y)=>(teacher(y,d.id)?1:0)-(teacher(x,d.id)?1:0));const tOf=a=>teacher(a,d.id),okA=a=>tOf(a)&&!(SECRET[a]&&d.ch<SECRET[a]);
+    const lock=d.pos==='away'||d.pos==='hurt';const lib=LIB.filter(a=>!knows(d,a)).sort((x,y)=>(teacher(y,d.id)?1:0)-(teacher(x,d.id)?1:0));const tOf=a=>teacher(a,d.id),okA=a=>tOf(a)&&!(SECRET[a]&&d.ch<SECRET[a]);
     const ms=Object.keys(d.arts).filter(a=>ARTS[a].t==='m'),ss=Object.keys(d.arts).filter(a=>ARTS[a].t==='s');
     return `<div class="d"><div class="hd">${pt(d)}<div><b>${d.n}</b> <span class="muted">${d.r}</span><br>전력 ${power(d)} · 충성 ${d.ch} · 깨달음 ${d.wis||0}</div></div>
 <div style="margin-top:4px;font-size:12px">${['tong','ji','jeong','ma'].map(k=>`${STN[k]} <b>${d.st[k]}</b>`).join(' · ')}<br>${['geom','gwon','oseong'].map(k=>`${STN[k]} <b>${d.st[k]}</b>`).join(' · ')} <span class="muted">(수련 속도: 검법·권장·심법)</span></div>
@@ -708,7 +719,9 @@ ${e.opts.map(o=>`<div style="margin-top:6px"><button onclick="A.defend('${e.id}'
     if(e.lanes||e.id==='hyeolsa'||e.id==='hyeolsa2'){const c=laneCands(),sg=battleSuggest(),see=G.fac.oe>=1||G.flags.nohae;
       return `<div class="panel ev crisis"><b>${e.title}</b> <span class="muted">· ${yr(e.due)}까지</span><p>${e.text} 갈래마다 첫째 자리에 선 사람이 적 장수와 일기토를 한다. 이기면 그 갈래의 적이 약해진다.</p>${LN(e).map((L,l)=>`<div style="margin:6px 0"><b>${L.n}</b> 장수 ${L.boss.n} · 적 전력 ${see?Math.round(L.e*(e.k||1)):'? (외당이 있으면 보인다)'} · ${[0,1].map(i=>`<select id="bl_${l}_${i}"><option value="">비움</option>${c.map(d=>`<option value="${d.id}" ${sg[l][i]===d.id?'selected':''}>${d.n} (${power(d)})</option>`).join('')}</select>`).join(' ')}</div>`).join('')}
 <button onclick="A.bsug('${e.id}')">추천 배치</button> <button class="main" onclick="A.battle('${e.id}')">싸운다</button></div>`}
-    if(e.t==='quest')return `<div class="panel ev task"><b>${e.title}</b><p>${e.text}</p><button class="main" onclick="A.quest('${e.id}')" ${(e.id==='taeeul'&&(G.half!==0||G.act<1||G.jinBusy))||G.retreat?'disabled':''}>${e.btn}</button></div>`;
+    if(e.t==='quest'){// 못 누르는 까닭을 버튼 옆에 적는다
+      const why=G.retreat?'진산월이 폐관 중이다':e.id==='taeeul'?(G.half!==0?'상순에만 떠날 수 있다. 다음 달 상순에':G.jinBusy?'진산월이 이번 순 다른 일을 맡았다':G.act<1?'이번 순 장문인 행동을 이미 썼다':''):'';
+      return `<div class="panel ev task"><b>${e.title}</b><p>${e.text}</p><button class="main" onclick="A.quest('${e.id}')" ${why?'disabled':''}>${e.btn}</button>${why?` <span class="muted" style="font-size:13px">${why}</span>`:''}</div>`}
     return `<div class="panel ev"><b>${e.title}</b><p>${e.text}</p><button onclick="A.info('${e.id}')">확인</button></div>`;
   }).join('');
   const n=Object.keys(sg).length;
@@ -721,7 +734,7 @@ function calTab(){
   const rows=[];
   if(G.task)rows.push([yr(G.task.due),'《성심록》 해독 기한',`${Math.round(G.task.prog)}%`]);
   for(const e of G.q)if(e.due&&e.t!=='task')rows.push([yr(e.due),e.title,{job:'의뢰',crisis:'위기'}[e.t]||'']);
-  {const l=D('lim'),y2=G.m>12;rows.push([y2?'2년 12월':'1년 12월','임영옥 칠음진기 점검',`지금 ${l.arts.chileum??0}성 / 기준 ${(y2?7:4)-(G.flags.taeumSlow?1:0)}성`])}if(!G.flags.choDone)rows.push(['2년 8월','종남혈사(초가보 결전)','']);rows.push(['3년','비무행(네 문파, 세 곳 이상 이기면 무당 발언권)',`${G.bimuWins||0}승 / ${G.bimuDone||0}곳`]);rows.push(['4년 2월','무당 집회(형산 5대5)',G.flags.league||'']);rows.push(['4년 12월','1부 끝 — 구파 복귀(구파 자격 60 이상)',`지금 ${G.qual}`]);
+  {const l=D('lim'),nm=[12,24,36,44].find(x=>x>=G.m);if(l&&nm)rows.push([`${Math.ceil(nm/12)}년 ${(nm-1)%12+1}월`,'임영옥 칠음진기 점검',`지금 ${l.arts.chileum??0}성 / 기준 ${({12:4,24:7,36:9,44:10})[nm]-(G.flags.taeumSlow?1:0)}성`])}if(!G.flags.choDone)rows.push(['2년 8월','종남혈사(초가보 결전)','']);rows.push(['3년','비무행(네 문파, 세 곳 이상 이기면 무당 발언권)',`${G.bimuWins||0}승 / ${G.bimuDone||0}곳`]);rows.push(['4년 2월','무당 집회(형산 5대5)',G.flags.league||'']);rows.push(['4년 12월','1부 끝 — 구파 복귀(구파 자격 60 이상)',`지금 ${G.qual}`]);
   rows.push(['4년 12월','구파 자격 시한',`${G.qual}`]);
   return `<table class="cal"><tr><th>기한</th><th>일</th><th>상태</th></tr>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</table>`;
 }
@@ -776,7 +789,7 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
   YARD.hit=[];const s=3,f=(YARD.t>>2)%2,home=G.ds.filter(d=>d.pos!=='away'&&d.pos!=='hurt');
   const srcOf=d=>d.img||(d.rl?rlImg(d.rl):null);YARD.imgs=YARD.imgs||{};
   // SD 도트(왼쪽을 보는 그림). 받은 사람만
-  const SDONLY_ON=true;const SDS={jin:'img/sd_jin.png',lim:'img/sd_lim.png',mae:'img/sd_mae.png',so:'img/sd_so.png',eung:'img/sd_eung.png',nak:'img/sd_nak.png',jeong:'img/sd_jeong.png',bang:'img/sd_bang.png',du:'img/sd_du.png',jeonp:'img/sd_jeonp.png',ilbi:'img/sd_ilbi.png',jeonh:'img/sd_jeonh.png',dong:'img/sd_dong.png',ak:'img/sd_ak.png'};const SDONLY_OFF=false;const sdOf=d=>d.id==='nak'&&d.mukryeong&&SDS.nak2?SDS.nak2:SDS[d.id];
+  const SDONLY_ON=true;const SDS={jin:'img/sd_jin.png',lim:'img/sd_lim.png',mae:'img/sd_mae.png',so:'img/sd_so.png',eung:'img/sd_eung.png',nak:'img/sd_nak.png',jeong:'img/sd_jeong.png',bang:'img/sd_bang.png',du:'img/sd_du.png',jeonp:'img/sd_jeonp.png',ilbi:'img/sd_ilbi.png',jeonh:'img/sd_jeonh.png',dong:'img/sd_dong.png',ak:'img/sd_ak.png',yuso:'img/sd_yuso.png',danri:'img/sd_danri.png',seomun:'img/sd_seomun.png',seongrak:'img/sd_seongrak.png',sonp:'img/sd_sonp.png',hadong:'img/sd_hadong.png',nohae:'img/sd_nohae.png'};const SDONLY_OFF=false;const sdOf=d=>d.id==='nak'&&d.mukryeong&&SDS.nak2?SDS.nak2:SDS[d.id];
   const getIm=src=>{let im=YARD.imgs[src];if(!im){im=YARD.imgs[src]=new Image();im.src=src}return im.complete&&im.naturalWidth?im:null};
   const groups={train:[],guard:[],rest:[],study:[]};let jinD=null;const tid=TID();for(const d of home){if(d.id==='jin'){jinD=d;continue}if(d.backT===tid)continue;if(SDONLY_ON&&!sdOf(d))continue;(groups[d.pos]||groups.train).push(d)}
   const putSD=(d,x,y,pose,im)=>{const H2=64,W2=Math.round(im.naturalWidth*H2/im.naturalHeight),t=YARD.t,k=t*.35+x*.07;let dx=0,dy=0,flip=false,bub='';
@@ -923,12 +936,12 @@ function botMonth(){
 if(/[?&]gallery=1/.test(location.search)){const rows=[];
   const add=(grp,n,src,note)=>rows.push(`<div class="d" style="text-align:center"><div class="pt" style="width:96px;height:96px;margin:0 auto;font-size:36px">${src?`<img src="${src}" alt="" onerror="this.parentNode.innerHTML='✕'">`:n[0]}</div><b>${n}</b><br><span class="muted" style="font-size:11px">${grp} · ${src?src.split('/').pop():'그림 없음(이름 첫 글자)'}${note?'<br>'+note:''}</span></div>`);
   for(const r of ROSTER)add('종남',r.n,r.rl?rlImg(r.rl):r.img,r.rl?'로그라이크 연동':'');
-  add('종남','강일비(숨긴 모습)','img/ilbi_hat.webp','');add('종남','강일비','img/ilbi.webp','');add('종남','전풍개','img/jeonp.webp','');add('종남','전흠','img/jeonh.webp','');add('종남','악자화','img/ak.webp','');[['노해광',27],['하동원',26],['동중산',19],['유소응',20],['서문연상',21],['성락중',22],['단리상',23],['손풍',24]].forEach(([n,k])=>add('종남(합류)',n,null,`그림요청 ${k}번`));
+  add('종남','강일비(숨긴 모습)','img/ilbi_hat.webp','');add('종남','강일비','img/ilbi.webp','');add('종남','전풍개','img/jeonp.webp','');add('종남','전흠','img/jeonh.webp','');add('종남','악자화','img/ak.webp','');add('종남','동중산','img/dong.webp','');add('종남','노해광','img/nohae.webp','');add('종남','하동원','img/hadong.webp','');add('종남','성락중','img/seongrak.webp','');add('종남','서문연상','img/seomun.webp','');add('종남','단리상','img/danri.webp','');add('종남','유소응','img/yuso.webp','');[['손풍',24]].forEach(([n,k])=>add('종남(합류)',n,null,`그림요청 ${k}번`));
   for(const L of LANES)add('종남혈사 장수',L.boss.n,enemyImg(L.boss.n),enemyImg(L.boss.n)?'':'그림요청 14~15번');
   for(const n in RLEN)add('로그라이크 적',n,rlImg(RLEN[n][0]),RLEN[n][1]?RLEN[n][1].join('·'):'');
   document.getElementById('app').innerHTML=`<div class="wrap"><h2>초상 점검</h2><p class="muted">✕는 파일이 있어야 하는데 안 열린 것, 글자는 아직 그림이 없는 것이다.</p><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${rows.join('')}</div></div>`}
 else if(BOT){save=()=>{};newGame();TAB="main";setInterval(botMonth,1500)}
-else if(load()){boMigrate();for(const d of G.ds){if(d.id==='ak')d.img='img/ak.webp';if(d.id==='lim')d.img='img/lim.webp';if(d.id==='mae')d.img='img/mae.webp';if(d.id==='so')d.img='img/so.webp';if(d.id==='eung')d.img='img/eung.webp';if(d.id==='jeong')d.img='img/jeong.webp';if(d.id==='bang')d.img='img/bang.webp';if(d.id==='jeonp')d.img='img/jeonp.webp';if(d.id==='jeonh')d.img='img/jeonh.webp';if(d.id==='ilbi')d.img=d.n==='강일비'?'img/ilbi.webp':'img/ilbi_hat.webp';if(d.id==='nak')d.img=d.mukryeong?'img/nak2.webp':'img/nak.webp';if(d.id==='ilbi'){d.arts.muyeom=d.arts.muyeom||8;d.arts.nanhwa=d.arts.nanhwa||7;d.arts.yeomhwa=d.arts.yeomhwa||6}if(d.id==='jin'){d.rl='player';delete d.img;if(d.arts.nakha==null){d.arts.nakha=5;d.xp.nakha=0}if(d.arts.yakryu==null){d.arts.yakryu=3;d.xp.yakryu=0}}if(d.id==='du'){delete d.rl;d.img='img/du.webp'}}for(const d of G.ds){if(d.st&&d.st.mugol!=null&&d.st.geom==null){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{...d.st,geom:d.st.mugol,gwon:d.st.mugol}}}for(const d of G.ds)if(!d.st){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{tong:50,ji:50,jeong:50,ma:50,geom:60,gwon:60,oseong:60}}if(G.ilbi==='early')addIlbi(false);if(G.half==null){G.half=0;G.act=Math.min(G.act,1)}if(!G.ilbi)MODAL=prologue();if(G.flags.seongsim&&!G.flags.taeeul&&!G.q.some(e=>e.id==='taeeul'))openTaeeul();render()}else newGame();
+else if(load()){boMigrate();const RN={jeonp:'사숙조(원로)',jeonh:'사숙(전풍개의 아들)',seongrak:'사숙',hadong:'사숙',dong:'진산월의 제자',danri:'진산월의 제자',sonp:'진산월의 제자',seomun:'빈객(검보)',nohae:'파문된 사숙'};for(const d of G.ds){if(RN[d.id])d.r=RN[d.id];if(d.id==='nohae')d.img='img/nohae.webp';if(d.id==='hadong')d.img='img/hadong.webp';if(d.id==='sonp')d.img='img/sonp.webp';if(d.id==='seongrak')d.img='img/seongrak.webp';if(d.id==='seomun')d.img='img/seomun.webp';if(d.id==='danri')d.img='img/danri.webp';if(d.id==='yuso')d.img='img/yuso.webp';if(d.id==='ak')d.img='img/ak.webp';if(d.id==='dong')d.img='img/dong.webp';if(d.id==='lim')d.img='img/lim.webp';if(d.id==='mae')d.img='img/mae.webp';if(d.id==='so')d.img='img/so.webp';if(d.id==='eung')d.img='img/eung.webp';if(d.id==='jeong')d.img='img/jeong.webp';if(d.id==='bang')d.img='img/bang.webp';if(d.id==='jeonp')d.img='img/jeonp.webp';if(d.id==='jeonh')d.img='img/jeonh.webp';if(d.id==='ilbi')d.img=d.n==='강일비'?'img/ilbi.webp':'img/ilbi_hat.webp';if(d.id==='nak')d.img=d.mukryeong?'img/nak2.webp':'img/nak.webp';if(d.id==='ilbi'){d.arts.muyeom=d.arts.muyeom||8;d.arts.nanhwa=d.arts.nanhwa||7;d.arts.yeomhwa=d.arts.yeomhwa||6}if(d.id==='jin'){d.rl='player';delete d.img;if(d.arts.nakha==null){d.arts.nakha=5;d.xp.nakha=0}if(d.arts.yakryu==null){d.arts.yakryu=3;d.xp.yakryu=0}}if(d.id==='du'){delete d.rl;d.img='img/du.webp'}}for(const d of G.ds){if(d.st&&d.st.mugol!=null&&d.st.geom==null){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{...d.st,geom:d.st.mugol,gwon:d.st.mugol}}}for(const d of G.ds)if(!d.st){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{tong:50,ji:50,jeong:50,ma:50,geom:60,gwon:60,oseong:60}}if(G.ilbi==='early')addIlbi(false);if(G.half==null){G.half=0;G.act=Math.min(G.act,1)}if(!G.ilbi)MODAL=prologue();if(G.flags.seongsim&&!G.flags.taeeul&&!G.q.some(e=>e.id==='taeeul'))openTaeeul();render()}else newGame();
 </script>
 </body>
 </html>
