@@ -67,8 +67,11 @@ const ARTS={
   taeeul:{n:'태을신공',t:'s',cap:10}, guyang:{n:'구양신공',t:'s',cap:10},
   hyeoncheong:{n:'현청건곤강기',t:'s',cap:10}, chileum:{n:'칠음진기',t:'s',cap:2}
 };
-// 장경각에서 처음부터 가르칠 수 있는 무공(칠음진기는 강일비 이후)
-const LIB=['yuun','cheonha','nakha','janggwae','hongdan','wolnyeo','yakryu','taeeul','guyang','hyeoncheong'];
+// 전수할 수 있는 초식. 가르칠 사람(5성 이상)이 있어야 하고, 천하삼십육검은 충성 70 이상만 배운다
+const LIB=['yuun','cheonha','nakha','janggwae','hongdan','wolnyeo','yakryu'];
+const SECRET={cheonha:70};
+// 종남 심법 셋은 모두가 익히고 있고 성취만 다르다. 사부가 후계 후보로 키운 넷은 구양·현청이 1성
+const BASE_S=['taeeul','guyang','hyeoncheong'],SENIOR=['lim','mae','so','eung'];
 // 제자: apt = 수련 배율, ch = 충성
 const ROSTER=[
   {id:'jin',n:'진산월',r:'장문인',img:'img/jin.png',apt:1,ch:100,arts:{yuun:4,cheonha:4,janggwae:3,hongdan:1,taeeul:3,guyang:1,hyeoncheong:1}},
@@ -83,14 +86,14 @@ const ROSTER=[
 ];
 const POS={train:'수련',guard:'수비',rest:'휴식',study:'장경각 해독',away:'파견 중',hurt:'요양'};
 const FAC={yeon:{n:'연무장',d:'수련치 +10%/단계'},jang:{n:'장경각',d:'해독 속도, 전수할 수 있는 무공 수'},yak:{n:'약방',d:'심마·부상 회복'},oe:{n:'외당',d:'본산 방어, 잠입 차단, 사건을 일찍 앎'}};
-const SAVE='munpa-v0';
+const SAVE='munpa-v1';
 
 /* ================= 상태 ================= */
 let G=null, TAB='main', MODAL=null;
 function newGame(){
   G={m:1,act:2,eun:150,fame:5,fav:0,qual:30,broke:0,
      fac:{yeon:1,jang:1,yak:0,oe:0},
-     ds:ROSTER.map(r=>({...r,arts:{...r.arts},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null})),
+     ds:ROSTER.map(r=>{const arts={...r.arts};for(const s of BASE_S)if(arts[s]==null)arts[s]=SENIOR.includes(r.id)&&s!=='taeeul'?1:0;return{...r,arts,xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null}}),
      q:[],log:[],flags:{},ilbi:null,jinFocus:false,income:{sang:40,yak:20},task:null,done:false};
   // 진산월은 장문인이라 배치 대신 행동으로 수련한다
   G.ds[0].pos='guard';
@@ -118,9 +121,10 @@ function pickFocus(d,t){
   return best;
 }
 function gain(d){
-  if(d.id==='jin')return (G.jinFocus?1.5:.5)*(1+.1*G.fac.yeon);
+  const half=d.teachHalf?.5:1;d.teachHalf=false;
+  if(d.id==='jin')return (G.jinFocus?1.5:.5)*(1+.1*G.fac.yeon)*half;
   const base={train:1.5,guard:.5,study:.3,rest:0,away:.3,hurt:0}[d.pos]||0;
-  return base*d.apt*(1+.1*G.fac.yeon);
+  return base*d.apt*(1+.1*G.fac.yeon)*half;
 }
 function train(d){
   const g=gain(d);if(!g)return;
@@ -181,7 +185,9 @@ const A={
   diplo(){if(G.eun<30||!useAct())return;G.eun-=30;G.fav+=5;G.qual+=2;log('화산·소림에 서신과 예물을 보냈다. 문파 호감 +5');save();render()},
   talk(){const du=D('du');if(!du||!useAct())return;du.ch+=15;log(`두기춘과 오래 이야기를 나눴다. (충성 ${du.ch})`);save();render()},
   pos(id,v){const d=D(id);if(!d||d.pos==='away'||d.pos==='hurt')return;d.pos=v;save();render()},
-  teach(id){const sel=document.getElementById('tc_'+id);if(!sel||!sel.value||!useAct()){render();return}addArt(id,sel.value);log(`${D(id).n}에게 ${ARTS[sel.value].n}을(를) 전수했다.`);save();render()},
+  teach(id){const sel=document.getElementById('tc_'+id);const a=sel&&sel.value,d=D(id),t=a&&teacher(a,id);if(!a||!t||(SECRET[a]&&d.ch<SECRET[a])||!useAct()){render();return}
+    d.arts[a]=1;d.xp[a]=0;d.focusM=a;t.teachHalf=true;log(`${t.n}이(가) ${d.n}에게 ${ARTS[a].n}을(를) 가르쳤다. (${t.n}은 이달 수련이 절반)`);save();render()},
+  jdir(t,v){const j=D('jin');if(t==='m')j.focusM=v||null;else j.focusS=v||null;save();render()},
   dir(id,t,v){const d=D(id);if(t==='m')d.focusM=v||null;else d.focusS=v||null;save();render()},
   sendJob(eid){const e=G.q.find(x=>x.id===eid);const sel=document.getElementById('js_'+eid);const d=sel&&D(sel.value);if(!e||!d||G.act<=0)return;useAct();
     d.pos='away';d.away=1;d.job={need:e.need,pay:e.pay,title:e.title};G.q=G.q.filter(x=>x!==e);log(`${d.n}을(를) ${e.title}에 보냈다. (승률 ${chance(d,e.need)}%)`);save();render()},
@@ -195,6 +201,8 @@ const A={
   next(){endMonth()},
   restart(){if(confirm('처음부터 다시 할까요?')){localStorage.removeItem(SAVE);newGame()}}
 };
+// 가르칠 사람: 그 무공 5성 이상, 배우는 사람 말고. 요양·파견 중이면 못 가르친다
+function teacher(a,not){return G.ds.filter(x=>x.id!==not&&(x.arts[a]||0)>=5&&x.pos!=='away'&&x.pos!=='hurt').sort((x,y)=>y.arts[a]-x.arts[a])[0]}
 function lose(o){G.income[o.k]=Math.max(0,G.income[o.k]-(o.k==='sang'?15:10));log(`초가보에게 밀렸다: ${o.loss}`)}
 function chance(d,need){return Math.max(5,Math.min(95,Math.round(50+(power(d)-need)*1.2)))}
 
@@ -259,7 +267,9 @@ function mainTab(){
 <button onclick="A.diplo()" ${G.act<=0||G.eun<30?'disabled':''}>외교 (30냥)</button>
 ${has('du')&&G.m<=2?`<button onclick="A.talk()" ${G.act<=0?'disabled':''}>두기춘과 이야기</button>`:''}
 </p><p class="muted" style="font-size:13px">시설 짓기, 무공 전수, 의뢰·위기 대응도 행동을 하나씩 쓴다.</p></div>
-<div class="panel"><h3>진산월</h3><div class="hd" style="display:flex;gap:10px;align-items:center">${pt(j)}<div>${artChips(j)}</div></div></div>
+<div class="panel"><h3>진산월</h3><div class="hd" style="display:flex;gap:10px;align-items:center">${pt(j)}<div>${artChips(j)}</div></div>
+<div style="margin-top:8px;font-size:13px">초식 <select onchange="A.jdir('m',this.value)"><option value="">자동</option>${Object.keys(j.arts).filter(a=>ARTS[a].t==='m').map(a=>`<option value="${a}" ${j.focusM===a?'selected':''}>${ARTS[a].n}</option>`).join('')}</select>
+ 심법 <select onchange="A.jdir('s',this.value)"><option value="">자동</option>${Object.keys(j.arts).filter(a=>ARTS[a].t==='s').map(a=>`<option value="${a}" ${j.focusS===a?'selected':''}>${ARTS[a].n}</option>`).join('')}</select></div></div>
 <div class="panel"><h3>시설</h3><div class="grid">${Object.keys(FAC).map(k=>{const lv=G.fac[k],c=80*(lv+1);return `<div class="d"><b>${FAC[k].n}</b> ${lv}단계<br><span class="muted">${FAC[k].d}</span><br>
 <button style="margin-top:6px" onclick="A.build('${k}')" ${lv>=3||G.eun<c||G.act<=0?'disabled':''}>${lv>=3?'최고 단계':`${lv?'올리기':'짓기'} (${c}냥)`}</button></div>`}).join('')}</div></div>
 <div class="panel"><h3>수입과 지출</h3><p>서안 상권 ${G.income.sang} · 약초밭 ${G.income.yak} / 제자 유지비 ${G.ds.length*5} · 시설 유지비 ${Object.values(G.fac).reduce((s,v)=>s+v*5,0)}</p></div>
@@ -267,7 +277,7 @@ ${has('du')&&G.m<=2?`<button onclick="A.talk()" ${G.act<=0?'disabled':''}>두기
 }
 function discTab(){
   return `<p class="muted">배치는 행동을 쓰지 않는다. ▸ 표시가 지금 수련 중인 무공이다. 수련 방향을 정하지 않으면 가장 높은 무공을 알아서 올린다.</p><div class="grid">${G.ds.filter(d=>d.id!=='jin').map(d=>{
-    const lock=d.pos==='away'||d.pos==='hurt';const lib=LIB.filter(a=>d.arts[a]==null).slice(0,2+G.fac.jang*2);
+    const lock=d.pos==='away'||d.pos==='hurt';const lib=LIB.filter(a=>d.arts[a]==null).slice(0,2+G.fac.jang*2);const tOf=a=>teacher(a,d.id),okA=a=>tOf(a)&&!(SECRET[a]&&d.ch<SECRET[a]);
     const ms=Object.keys(d.arts).filter(a=>ARTS[a].t==='m'),ss=Object.keys(d.arts).filter(a=>ARTS[a].t==='s');
     return `<div class="d"><div class="hd">${pt(d)}<div><b>${d.n}</b> <span class="muted">${d.r}</span><br>전력 ${power(d)} · 충성 ${d.ch}</div></div>
 <div style="margin-top:6px">${artChips(d)}</div>
@@ -275,7 +285,7 @@ function discTab(){
 <div style="margin-top:6px">${lock?`<b>${POS[d.pos]}</b> (${d.away}달 남음)`:`<select onchange="A.pos('${d.id}',this.value)">${['train','guard','rest',...(G.task?['study']:[])].map(p=>`<option value="${p}" ${d.pos===p?'selected':''}>${POS[p]}</option>`).join('')}</select>`}</div>
 <div style="margin-top:6px;font-size:12px">초식 <select onchange="A.dir('${d.id}','m',this.value)"><option value="">자동</option>${ms.map(a=>`<option value="${a}" ${d.focusM===a?'selected':''}>${ARTS[a].n}</option>`).join('')}</select>
  심법 <select onchange="A.dir('${d.id}','s',this.value)"><option value="">자동</option>${ss.map(a=>`<option value="${a}" ${d.focusS===a?'selected':''}>${ARTS[a].n}</option>`).join('')}</select></div>
-${lib.length?`<div style="margin-top:6px;font-size:12px"><select id="tc_${d.id}"><option value="">전수할 무공</option>${lib.map(a=>`<option value="${a}">${ARTS[a].n}</option>`).join('')}</select> <button onclick="A.teach('${d.id}')" ${G.act<=0?'disabled':''}>전수</button></div>`:''}
+${lib.length?`<div style="margin-top:6px;font-size:12px"><select id="tc_${d.id}"><option value="">전수할 무공</option>${lib.map(a=>`<option value="${a}" ${okA(a)?'':'disabled'}>${ARTS[a].n}${tOf(a)?` (스승 ${tOf(a).n})`:' (가르칠 사람 없음)'}${SECRET[a]&&d.ch<SECRET[a]?' (충성 부족)':''}</option>`).join('')}</select> <button onclick="A.teach('${d.id}')" ${G.act<=0?'disabled':''}>전수</button></div>`:''}
 </div>`}).join('')}</div>`;
 }
 function freeDs(){return G.ds.filter(d=>d.id!=='jin'&&d.pos!=='away'&&d.pos!=='hurt')}
