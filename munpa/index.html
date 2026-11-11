@@ -215,7 +215,8 @@ const A={
     G.q=G.q.filter(x=>x!==e);save();render()},
   info(eid){G.q=G.q.filter(x=>x.id!==eid);save();render()},
   choose(i){const c=MODAL.ch[i];MODAL=null;const keep=c[1]();if(!keep)MODAL=MODAL||null;save();render()},
-  next(){endMonth()},
+  autoNext(v){G.autoNext=v;save()},
+  next(){if(G.autoNext&&!MODAL)A.auto();endMonth()},
   restart(){if(confirm('처음부터 다시 할까요?')){localStorage.removeItem(SAVE);newGame()}}
 };
 // 가르칠 사람: 그 무공 5성 이상, 배우는 사람 말고. 요양·파견 중이면 못 가르친다
@@ -332,7 +333,10 @@ ${e.opts.map(o=>`<div style="margin-top:6px"><button onclick="A.defend('${e.id}'
     return `<div class="panel ev"><b>${e.title}</b><p>${e.text}</p><button onclick="A.info('${e.id}')">확인</button></div>`;
   }).join('');
   const n=Object.keys(sg).length;
-  return (n?`<div class="panel"><button class="main" onclick="A.auto()">추천대로 한 번에 보내기 (${n}건)</button> <span class="muted" style="font-size:13px">임영옥·해독 중·심마 70 이상은 빼고, 이길 만한 사람 중 가장 약한 사람을 고른다.</span></div>`:'')+(body||'<p class="muted">이달에 들어온 일이 없다.</p>');
+  const hasWork=G.q.some(e=>e.t==='job'||e.t==='crisis');
+  return (hasWork?`<div class="panel"><button class="main" onclick="A.auto()" ${n?'':'disabled'}>추천대로 한 번에 보내기 (${n}건)</button>
+<label style="margin-left:10px;font-size:13px"><input type="checkbox" ${G.autoNext?'checked':''} onchange="A.autoNext(this.checked)"> 다음 달로 넘길 때 남은 일을 자동으로 보내기</label>
+<div class="muted" style="font-size:12px;margin-top:4px">${n?'임영옥·해독 중·심마 70 이상은 빼고, 이길 만한 사람 중 가장 약한 사람을 고른다.':'보낼 만한 사람이 없다(임영옥·해독 중·심마 70 이상 제외, 승률 50% 미만 제외).'}</div></div>`:'')+(body||'<p class="muted">이달에 들어온 일이 없다.</p>');
 }
 function calTab(){
   const rows=[];
