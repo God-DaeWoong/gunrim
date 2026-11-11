@@ -660,7 +660,7 @@ ${(()=>{const lib=LIB.filter(a=>j.arts[a]==null&&teacher(a,'jin'));return lib.le
 }
 function discTab(){
   return `<p class="muted">한 달은 상순·하순 두 차례다. 배치는 순마다 바꿀 수 있고 행동을 쓰지 않는다. 짧은 의뢰는 한 순만 자리를 비운다. ▸ 표시가 지금 수련 중인 무공이다. 수련 방향을 정하지 않으면 가장 높은 무공을 알아서 올린다. 「60% +25%/월」은 다음 성까지 60% 찼고, 지금 배치대로면 한 달에 25%씩 찬다는 뜻이다. 4성부터는 한 단계에 수련치가 두 배, 7성부터 세 배 든다.</p><div class="grid">${G.ds.filter(d=>d.id!=='jin').map(d=>{
-    const lock=d.pos==='away'||d.pos==='hurt';const lib=LIB.filter(a=>d.arts[a]==null).slice(0,2+G.fac.jang*2);const tOf=a=>teacher(a,d.id),okA=a=>tOf(a)&&!(SECRET[a]&&d.ch<SECRET[a]);
+    const lock=d.pos==='away'||d.pos==='hurt';const lib=LIB.filter(a=>d.arts[a]==null).sort((x,y)=>(teacher(y,d.id)?1:0)-(teacher(x,d.id)?1:0));const tOf=a=>teacher(a,d.id),okA=a=>tOf(a)&&!(SECRET[a]&&d.ch<SECRET[a]);
     const ms=Object.keys(d.arts).filter(a=>ARTS[a].t==='m'),ss=Object.keys(d.arts).filter(a=>ARTS[a].t==='s');
     return `<div class="d"><div class="hd">${pt(d)}<div><b>${d.n}</b> <span class="muted">${d.r}</span><br>전력 ${power(d)} · 충성 ${d.ch} · 깨달음 ${d.wis||0}</div></div>
 <div style="margin-top:4px;font-size:12px">${['tong','ji','jeong','ma'].map(k=>`${STN[k]} <b>${d.st[k]}</b>`).join(' · ')}<br>${['geom','gwon','oseong'].map(k=>`${STN[k]} <b>${d.st[k]}</b>`).join(' · ')} <span class="muted">(수련 속도: 검법·권장·심법)</span></div>
