@@ -754,7 +754,7 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
   YARD.hit=[];const s=3,f=(YARD.t>>2)%2,home=G.ds.filter(d=>d.pos!=='away'&&d.pos!=='hurt');
   const srcOf=d=>d.img||(d.rl?rlImg(d.rl):null);YARD.imgs=YARD.imgs||{};
   // SD 도트(왼쪽을 보는 그림). 받은 사람만
-  const SDONLY_ON=true;const SDS={jin:'img/sd_jin.png',lim:'img/sd_lim.png',mae:'img/sd_mae.png',so:'img/sd_so.png'};const SDONLY_OFF=false;const sdOf=d=>d.id==='nak'&&d.mukryeong&&SDS.nak2?SDS.nak2:SDS[d.id];
+  const SDONLY_ON=true;const SDS={jin:'img/sd_jin.png',lim:'img/sd_lim.png',mae:'img/sd_mae.png',so:'img/sd_so.png',eung:'img/sd_eung.png'};const SDONLY_OFF=false;const sdOf=d=>d.id==='nak'&&d.mukryeong&&SDS.nak2?SDS.nak2:SDS[d.id];
   const getIm=src=>{let im=YARD.imgs[src];if(!im){im=YARD.imgs[src]=new Image();im.src=src}return im.complete&&im.naturalWidth?im:null};
   const groups={train:[],guard:[],rest:[],study:[]};let jinD=null;for(const d of home){if(d.id==='jin'){jinD=d;continue}if(SDONLY_ON&&!sdOf(d))continue;(groups[d.pos]||groups.train).push(d)}
   const putSD=(d,x,y,pose,im)=>{const H2=64,W2=Math.round(im.naturalWidth*H2/im.naturalHeight),t=YARD.t,k=t*.35+x*.07;let dx=0,dy=0,flip=false,bub='';
