@@ -824,7 +824,7 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
   groups.train.forEach((d,i)=>{const row=Math.floor(i/cols),x=(YARD.gx0?YARD.gx0+30:W*.18)+(i%cols)*gapX+(row%2?gapX/2:0),y=118+row*42;const m=Object.keys(d.arts).filter(a=>ARTS[a].t==='m').sort((a,b)=>d.arts[b]-d.arts[a])[0];put(d,x,Math.min(y,H-56),m&&ARTS[m].w==='gwon'?'punch':'swing',(f+i)%2)});
   groups.study.forEach((d,i)=>put(d,W-150+i*44,H-68,'read',0));
   groups.rest.forEach((d,i)=>put(d,W-300+i*44,H-56,'sit',0));
-  c.restore();for(const h of YARD.hit)h.x+=PW;if(!PW)return;
+  c.restore();for(const h of YARD.hit)h.x+=PW;if(!PW)return;c.save();c.beginPath();c.rect(0,0,PW-3,H);c.clip();
   // 산문 밖: 하늘·먼 산·흙길, 가운데 산문, 계단 양옆에 수비
   if(!getIm('img/sd_gate_bg.webp')){const sky=c.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#bcd6e8');sky.addColorStop(.55,'#e6eee0');sky.addColorStop(.56,'#a9b98a');sky.addColorStop(1,'#8f9c6e');c.fillStyle=sky;c.fillRect(0,0,PW,H);
   c.fillStyle='#8aa0a8';c.beginPath();c.moveTo(0,120);c.lineTo(PW*.3,70);c.lineTo(PW*.55,105);c.lineTo(PW*.8,60);c.lineTo(PW,95);c.lineTo(PW,140);c.lineTo(0,140);c.fill();
@@ -834,13 +834,13 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
   if(gIm){const gh=oBg?H*.62:Math.min(H*.86,PW*1.02*gIm.naturalHeight/gIm.naturalWidth),gw=gh*gIm.naturalWidth/gIm.naturalHeight,gx=oBg?(PW-gw)/2+PW*.06:(PW-gw)/2,gy=oBg?H*.8-gh:H-gh-18;
     c.imageSmoothingEnabled=true;c.drawImage(gIm,gx,gy,gw,gh);c.imageSmoothingEnabled=false;
     // 수비 자리(발밑): 계단 오른쪽 → 산문 왼쪽 공터 → 공터 오른쪽 끝 → 계단 앞. 드나드는 길(왼쪽 아래 계단)은 비운다
-    const base=gy+gh,SP=oBg?[[gx+gw*.9,base+2],[gx-6,base-46],[PW-14,base-52],[gx+gw*.66,base+24]]:[[gx+gw*.2,gy+gh*.97+6],[gx+gw*.8,gy+gh*.97+6],[gx+gw*.06,gy+gh*.97-2],[gx+gw*.94,gy+gh*.97-2]];
+    const base=gy+gh,SP=oBg?[[gx+gw*.9,base+2],[gx-6,base-46],[PW-38,base-52],[gx+gw*.66,base+24]]:[[gx+gw*.2,gy+gh*.97+6],[gx+gw*.8,gy+gh*.97+6],[gx+gw*.06,gy+gh*.97-2],[gx+gw*.94,gy+gh*.97-2]];
     gdOut.map((d,i)=>[d,SP[i]]).sort((u,v)=>u[1][1]-v[1][1]).forEach(([d,[x,y]])=>put(d,x-22,y-56,'stand0',0));
     YARD.door=oBg?{ax:gx+gw*.5,ay:gy+gh*.8,bx:PW*.04,by:H+24,fadeA:1,ph:.5}:{ax:gx+gw*.5,ay:gy+gh*.8,bx:gx+gw*.05,by:H+30,fadeA:1,ph:.5};
     G.ds.filter(d=>d.pos==='away'&&d.leftT===tid).forEach((d,i)=>put(d,i*25,0,'out',0));
     G.ds.filter(d=>d.backT===tid&&d.pos!=='away').forEach((d,i)=>put(d,-50-i*25,0,d.backHurt?'limp':'in',0));
     YARD.door=null}
-  c.fillStyle='rgba(29,26,22,.72)';c.fillRect(6,6,58,20);c.fillStyle='#f1e9d8';c.font='bold 12px sans-serif';c.fillText('산문 밖',13,20);
+  c.fillStyle='rgba(29,26,22,.72)';c.fillRect(6,6,58,20);c.fillStyle='#f1e9d8';c.font='bold 12px sans-serif';c.fillText('산문 밖',13,20);c.restore();
   c.fillStyle='#5b4636';c.fillRect(PW-3,0,3,H)}
 function initYard(){const cv=document.getElementById('yard');if(!cv||!cv.getContext)return;
   const want='img/sd_yard.webp';
