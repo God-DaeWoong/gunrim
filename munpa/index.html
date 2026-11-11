@@ -556,7 +556,8 @@ function chance(d,need){return Math.max(5,Math.min(95,Math.round(50+(power(d)-ne
 
 /* ================= 월말 ================= */
 function endHalf(){
-  if(MODAL)return;
+  if(MODAL||DUEL)return;
+  if(G.half===1){const due=G.q.find(x=>(x.lanes||x.id==='hyeolsa'||x.id==='hyeolsa2')&&x.due<=G.m);if(due){log(`${due.title}: 기한이 되어 추천 배치로 출진한다.`);startDuels(due.id,battleSuggest());return}}
   // 태음신맥 한기
   {const l=D('lim');if(l&&l.pos!=='away'&&l.pos!=='hurt'){const v=l.arts.chileum;const p=v==null?.35:v<4?.25:v<7?.12:0;if(Math.random()<p){l.cold=1;log(`임영옥에게 한기가 올라 이번 순은 몸을 녹이며 쉬었다.${v==null?' (칠음진기를 모른다)':` (칠음진기 ${v}성, 7성부터는 한기가 잡힌다)`}`)}}}
   // 수련(순)
