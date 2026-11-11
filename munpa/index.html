@@ -87,7 +87,7 @@ const ARTS={
   yuun:{n:'유운검법',t:'m',w:'geom',cap:7}, yuungyeol:{n:'유운검결',t:'m',w:'geom',cap:10},
   cheonha:{n:'천하삼십육검',t:'m',w:'geom',cap:7}, nakha:{n:'낙하구구검',t:'m',w:'geom',cap:10},
   janggwae:{n:'장괘장권구식',t:'m',w:'gwon',cap:10}, hongdan:{n:'홍단서천',t:'m',w:'geom',cap:10},
-  wolnyeo:{n:'월녀검법',t:'m',w:'geom',cap:10}, yakryu:{n:'약류장',t:'m',w:'gwon',cap:10},
+  wolnyeo:{n:'월녀검법',t:'m',w:'geom',cap:10}, punghan:{n:'풍한팔식',t:'m',w:'geom',cap:10}, pungroe:{n:'풍뢰도법',t:'m',w:'geom',cap:10}, geombo:{n:'검보 가전검법',t:'m',w:'geom',cap:10}, yakryu:{n:'약류장',t:'m',w:'gwon',cap:10},
   taeeul:{n:'태을신공',t:'s',cap:10}, guyang:{n:'구양신공',t:'s',cap:10},
   hyeoncheong:{n:'현청건곤강기',t:'s',cap:10}, taejin:{n:'태진강기',t:'s',cap:10}, cheondan:{n:'천단신공',t:'s',cap:10},
   muyeom:{n:'무염십팔보',t:'b',cap:2}, janggwaebo:{n:'장괘보',t:'b',cap:2}, eoryong:{n:'이어룡',t:'b',cap:2}, hoeseon:{n:'회선표',t:'b',cap:2}, waseon:{n:'와선보',t:'b',cap:2}, biyeon:{n:'비연신법',t:'b',cap:2}, nanhwa:{n:'난화지',t:'m',w:'gwon',cap:10}, yeomhwa:{n:'염화옥수',t:'m',w:'gwon',cap:10},
@@ -130,6 +130,7 @@ const MOVES={
   yuungyeol:[['유운단악','danak'],['운해승기','seunggi'],['운무중첩','unmu']],
   cheonha:[['천하성산','seongsan'],['천하밀밀','milmil'],['천하수조','suzo']],
   nakha:[['반천흥염','bancheon'],['채흥서천','nakha'],['천강은홍','cheongang']],
+  punghan:[['풍한참','suzo'],['풍한연환','seongjin'],['풍한회선','milmil']],pungroe:[['풍뢰벽','danbong'],['풍뢰질주','jetan'],['풍뢰회도','geumgang']],geombo:[['검보 직자','danak'],['검보 연자','unmu'],['검보 봉자','chulgok']],
   janggwae:[['천전만권','cheonjeon'],['조운육환','jounyuk'],['단봉조양','danbong']],
   hongdan:[['홍단서천','hongdan'],['홍단서천','hongdan'],['홍단서천','hongdan']],
   yakryu:[['약류장','yakryu'],['약류장','yakryu'],['약류장','yakryu']],
@@ -199,6 +200,8 @@ function train(d){
   // 돈오: 수련에 든 순(진산월은 전념·폐관)에 오성에 따라 2~4%로 수련 중인 무공이 한 단계 오른다(관문도 넘는다)
   if((d.id==='jin'?(G.jinFocus||G.retreat):d.pos==='train')&&Math.random()<.025*d.st.oseong/80){const t=Math.random()<.5?'m':'s',a=pickFocus(d,t)||pickFocus(d,t==='m'?'s':'m');
     if(a&&d.arts[a]<capOf(d,a)){const big=gateOf(d,a)>0;d.arts[a]++;d.xp[a]=0;log(big?`<b>${d.n}이(가) ${ARTS[a].n}에 대해 크게 깨달았다.</b> (${d.arts[a]}성)`:`${d.n}의 ${ARTS[a].n}에 대한 조예가 깊어졌다. (${d.arts[a]}성)`)}}
+  if(d.pos==='train'||(d.id==='jin'&&(G.jinFocus||G.retreat))){const stuck=Object.keys(d.arts).some(a=>gateOf(d,a)&&(d.wis||0)<gateOf(d,a)&&(d.xp[a]||0)>=costOf(d.arts[a]));
+    if(Math.random()<(stuck?.06:.012)*d.st.oseong/80*(G.flags.yeongong?1.4:1)*(G.flags.sulyeon?1.2:1))gainWis(d,1,stuck?'벽 앞에서 버틴 수련':'수련')}
   for(const t of['m','s']){
     const a=pickFocus(d,t);if(!a)continue;
     d.xp[a]=(d.xp[a]||0)+g*growOf(d,a)*(a==='chileum'&&d.taeum?1.2:1);
@@ -418,12 +421,12 @@ function scheduled(m){
   // 전풍개가 온 지 여섯 달 뒤 둘째 제자 하동원이 돌아온다(원작 214장)
   if(G.flags.jeonM&&m===G.flags.jeonM+6&&!has('hadong')){G.ds.push({id:'hadong',n:'하동원',img:'img/hadong.webp',r:'사숙',st:{tong:55,ji:60,jeong:45,ma:50,geom:80,gwon:55,oseong:70},ch:80,arts:{yuun:6,nakha:5,taeeul:5,guyang:1,hyeoncheong:1},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null});
     E.push({t:'event',id:'hadong',info:1,title:'하동원 귀환',text:'전풍개의 둘째 제자 하동원이 돌아왔다. 산문에 들어서자마자 소지산에게 대련을 청했다.'})}
-  const JOIN={8:{id:'dong',n:'동중산',r:'진산월의 제자',img:'img/dong.webp',st:{tong:50,ji:85,jeong:70,ma:75,geom:55,gwon:50,oseong:65},ch:75,arts:{nakha:3,taeeul:3,guyang:0,hyeoncheong:0},t:'비천호리 동중산이 종남의 문을 두드렸다. 쫓기던 몸을 거두어 준 데 대한 보답이라고 했다.'},
-    16:{id:'yuso',n:'유소응',img:'img/yuso.webp',r:'진산월의 제자',st:{tong:50,ji:70,jeong:40,ma:60,geom:85,gwon:60,oseong:85},ch:95,arts:{yuun:1,taeeul:1,guyang:0,hyeoncheong:0},t:'자각봉 아래에서 몽고 혼혈 소년 하나를 거두었다. 유소응이다. 진산월이 직접 거둔 제자가 하나 늘었다.'},
-    22:{id:'seomun',n:'서문연상',img:'img/seomun.webp',r:'빈객(검보)',st:{tong:55,ji:65,jeong:55,ma:70,geom:80,gwon:50,oseong:70},ch:80,arts:{yuun:3,taeeul:3,guyang:0,hyeoncheong:0},t:'검보의 서문연상이 종남에 들어왔다.'},
+  const JOIN={8:{id:'dong',n:'동중산',r:'진산월의 제자',img:'img/dong.webp',st:{tong:50,ji:85,jeong:70,ma:75,geom:55,gwon:50,oseong:65},ch:75,arts:{taeeul:0,guyang:0,hyeoncheong:0},t:'비천호리 동중산이 종남의 문을 두드렸다. 쫓기던 몸을 거두어 준 데 대한 보답이라고 했다.'},
+    16:{id:'yuso',n:'유소응',img:'img/yuso.webp',r:'진산월의 제자',st:{tong:50,ji:70,jeong:40,ma:60,geom:85,gwon:60,oseong:85},ch:95,arts:{taeeul:0,guyang:0,hyeoncheong:0},t:'자각봉 아래에서 몽고 혼혈 소년 하나를 거두었다. 유소응이다. 진산월이 직접 거둔 제자가 하나 늘었다.'},
+    22:{id:'seomun',n:'서문연상',img:'img/seomun.webp',r:'빈객(검보)',st:{tong:55,ji:65,jeong:55,ma:70,geom:80,gwon:50,oseong:70},ch:80,arts:{geombo:4,taeeul:0,guyang:0,hyeoncheong:0},t:'검보의 서문연상이 종남에 들어왔다.'},
     28:{id:'seongrak',n:'성락중',img:'img/seongrak.webp',r:'사숙',st:{tong:70,ji:65,jeong:50,ma:55,geom:85,gwon:55,oseong:85},ch:85,arts:{nakha:5,hyeoncheong:5,taeeul:4,guyang:1},t:'현청건곤강기를 쓰는 성락중이 합류했다.'},
-    30:[{id:'danri',n:'단리상',img:'img/danri.webp',r:'진산월의 제자',st:{tong:40,ji:75,jeong:35,ma:55,geom:90,gwon:70,oseong:90},ch:85,arts:{yuun:2,janggwae:3,taeeul:2,guyang:0,hyeoncheong:0},t:()=>'아홉 살 단리상이 입문했다. 가전무공을 펼쳐 보이자 '+(has('jeonp')?'전풍개가 "강일비 같은 놈이 또 있었군" 하고 중얼거렸다.':'진산월이 한참 말없이 그 검로를 지켜보았다.')},
-        {id:'sonp',n:'손풍',img:'img/sonp.webp',r:'진산월의 제자',st:{tong:45,ji:60,jeong:70,ma:60,geom:55,gwon:70,oseong:60},ch:80,arts:{janggwae:3,taeeul:2,guyang:0,hyeoncheong:0},t:'손가장의 손풍이 입문했다.'}]};
+    30:[{id:'danri',n:'단리상',img:'img/danri.webp',r:'진산월의 제자',st:{tong:40,ji:75,jeong:35,ma:55,geom:90,gwon:70,oseong:90},ch:85,arts:{punghan:3,pungroe:2,taeeul:0,guyang:0,hyeoncheong:0},t:()=>'아홉 살 단리상이 입문했다. 가전무공을 펼쳐 보이자 '+(has('jeonp')?'전풍개가 "강일비 같은 놈이 또 있었군" 하고 중얼거렸다.':'진산월이 한참 말없이 그 검로를 지켜보았다.')},
+        {id:'sonp',n:'손풍',img:'img/sonp.webp',r:'진산월의 제자',st:{tong:45,ji:60,jeong:70,ma:60,geom:55,gwon:70,oseong:60},ch:80,arts:{taeeul:0,guyang:0,hyeoncheong:0},t:'손가장의 손풍이 입문했다.'}]};
   for(const r of [].concat(JOIN[m]||[]))if(!has(r.id)){G.ds.push({...r,xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null});E.push({t:'event',id:'join_'+r.id,info:1,title:r.n+' 합류',text:typeof r.t==='function'?r.t():r.t})}
   if(m===10)E.push({t:'quest',id:'gorge',title:'협곡 정찰',due:17,text:'초가보 척후들이 종남산 뒤 절벽 쪽 협곡으로 숨어들었다는 소문이다. 한 사람을 보내 살핀다. 길이 험하다.',btn:'보낸다'});
   if(m===12&&G.ilbi==='early'){addArt('jin','chileum');E.push({t:'event',id:'ilbiteach',title:'사백의 가르침',info:1,text:'강일비가 진산월을 불렀다. "이제 너도 칠음진기의 첫머리를 알아 두어라. 태음신맥이 아니니 깊이 들어가지는 못할 것이다."'})}
