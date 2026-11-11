@@ -122,6 +122,8 @@ const MOVES={
   nakroe:[['뇌정만균',null],['낙뢰신권',null],['낙뢰신권',null]]};
 // 로그라이크 적: 이름 → [초상 파일, 강공·쾌검·수비 때 쓰는 초식 이름]
 const RLEN={'감종간':['gamjong',['대라섬요','색탈혼','허무보']],'두기춘':['dugichun',['검세','연검','운기']],'고진':['gojin',null],'유중악':['yujung',['뇌신파황','낙뢰구검','신뢰하격']],'백모란':['baekmo',['구주홍염화','월녀검법','음양화벽']],'조익현':['joik',['대라장천','대라섬요','현음진기']],'야율척':['yayul',null],'백대행':['baekdae',['천룡번공','천개유룡','백원적과']],'복양수':['bokyang',null],'당각':['danggak',null],'매장원':['maejang',null],'운자추':['unjachu',null]};
+const ENIMG={'초일산':'img/choil.webp'};
+const enemyImg=bn=>ENIMG[bn]||(RLEN[bn]?rlImg(RLEN[bn][0]):null);
 const emvName=(bn,em)=>{const r=RLEN[bn];return r&&r[1]?r[1][['kang','kwae','su'].indexOf(em)]:MV[em]};
 const ENEMY_FX=['b_noesin','b_biryong','b_baekhwa','b_hyeolhwa','b_paewang','b_samji'];
 const RLFX=[...new Set([...Object.values(MOVES).flat().map(x=>x[1]).filter(Boolean),...ENEMY_FX,'cheonha_mugung'])];
@@ -314,7 +316,7 @@ function duelHTML(){if(!DUEL||!DUEL.cur)return'';const c=DUEL.cur,d=D(c.d),bar=v
   return `<div class="modal"><div class="box duel"><h2>일기토 · ${c.t}</h2>
 <div class="duelrow"><div class="duelside ${c.hit==='p'||c.hit==='both'?'hit':''}">${c.fx&&c.fx.side==='p'&&c.fx.n?`<div class="fx" data-fx="${c.fx.n}"></div>`:''}${pt(d)}<b>${d.n}</b><span class="muted">전력 ${power(d)}</span>${bar(c.hp[0])}<span>${c.hp[0]}</span></div>
 <div class="vs serif">對</div>
-<div class="duelside ${c.hit==='e'||c.hit==='both'?'hit':''}">${c.fx&&c.fx.side==='e'&&c.fx.n?`<div class="fx" data-fx="${c.fx.n}"></div>`:''}<div class="pt">${RLEN[c.bn]?`<img src="${rlImg(RLEN[c.bn][0])}" alt="" onerror="this.remove()">`:c.bn[0]}</div><b>${c.bn}</b><span class="muted">전력 ${c.bpw}</span>${bar(c.hp[1])}<span>${c.hp[1]}</span></div></div>
+<div class="duelside ${c.hit==='e'||c.hit==='both'?'hit':''}">${c.fx&&c.fx.side==='e'&&c.fx.n?`<div class="fx" data-fx="${c.fx.n}"></div>`:''}<div class="pt">${enemyImg(c.bn)?`<img src="${enemyImg(c.bn)}" alt="" onerror="this.remove()">`:c.bn[0]}</div><b>${c.bn}</b><span class="muted">전력 ${c.bpw}</span>${bar(c.hp[1])}<span>${c.hp[1]}</span></div></div>
 <div class="log" style="max-height:150px;margin:10px 0">${c.msg.slice().reverse().join('<br>')}</div>
 ${c.over?`<button class="main" onclick="A.duelNext()">${DUEL.i+1<DUEL.list.length?(DUEL.kind==='match'?'다음 판으로':'다음 갈래로'):'결과 보기'}</button>`:
 `<p class="serif"><b>${tellOf(c)}</b></p><div class="ch" style="flex-direction:row;flex-wrap:wrap">${Object.keys(MV).map(k=>`<button onclick="A.duelMove('${k}')"><b>${MV[k]}</b> <span class="muted">${mvName(d,k)}</span></button>`).join('')}<button onclick="A.duelAuto()">맡긴다</button></div>
@@ -811,7 +813,7 @@ if(/[?&]gallery=1/.test(location.search)){const rows=[];
   const add=(grp,n,src,note)=>rows.push(`<div class="d" style="text-align:center"><div class="pt" style="width:96px;height:96px;margin:0 auto;font-size:36px">${src?`<img src="${src}" alt="" onerror="this.parentNode.innerHTML='✕'">`:n[0]}</div><b>${n}</b><br><span class="muted" style="font-size:11px">${grp} · ${src?src.split('/').pop():'그림 없음(이름 첫 글자)'}${note?'<br>'+note:''}</span></div>`);
   for(const r of ROSTER)add('종남',r.n,r.rl?rlImg(r.rl):r.img,r.rl?'로그라이크 연동':'');
   add('종남','강일비(숨긴 모습)','img/ilbi_hat.webp','');add('종남','강일비','img/ilbi.webp','');add('종남','전풍개','img/jeonp.webp','');add('종남','전흠','img/jeonh.webp','');[['악자화',25],['노해광',27],['하동원',26],['동중산',19],['유소응',20],['서문연상',21],['성락중',22],['단리상',23],['손풍',24]].forEach(([n,k])=>add('종남(합류)',n,null,`그림요청 ${k}번`));
-  for(const L of LANES)add('종남혈사 장수',L.boss.n,RLEN[L.boss.n]?rlImg(RLEN[L.boss.n][0]):null,RLEN[L.boss.n]?'':'그림요청 13~15번');
+  for(const L of LANES)add('종남혈사 장수',L.boss.n,enemyImg(L.boss.n),enemyImg(L.boss.n)?'':'그림요청 14~15번');
   for(const n in RLEN)add('로그라이크 적',n,rlImg(RLEN[n][0]),RLEN[n][1]?RLEN[n][1].join('·'):'');
   document.getElementById('app').innerHTML=`<div class="wrap"><h2>초상 점검</h2><p class="muted">✕는 파일이 있어야 하는데 안 열린 것, 글자는 아직 그림이 없는 것이다.</p><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${rows.join('')}</div></div>`}
 else if(BOT){save=()=>{};newGame();TAB="main";setInterval(botMonth,1500)}
