@@ -370,7 +370,7 @@ const A={
     G.ds.push({id:'r'+G.m+Math.random().toString(36).slice(2,5),n,r:'새 제자',st,ch:70,arts:{taeeul:0,guyang:0,hyeoncheong:0},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null});
     log(`${n}을(를) 새 제자로 받았다. (검재 ${st.geom}, 권재 ${st.gwon}, 오성 ${st.oseong})`);save();render()},
   pos(id,v){const d=D(id);if(!d||d.pos==='away'||d.pos==='hurt')return;d.pos=v;save();render()},
-  teach(id){const sel=document.getElementById('tc_'+id);const a=sel&&sel.value,d=D(id),t=a&&teacher(a,id);if(!a||!t||(SECRET[a]&&d.ch<SECRET[a])||!useAct()){render();return}
+  teach(id){const sel=document.getElementById('tc_'+id);const a=sel&&sel.value,d=D(id),t=a&&teacher(a,id);if(!a||!t||(id!=='jin'&&SECRET[a]&&d.ch<SECRET[a])||!useAct()){render();return}
     d.arts[a]=1;d.xp[a]=0;d.focusM=a;t.teachHalf=true;log(`${t.n}이(가) ${d.n}에게 ${ARTS[a].n}을(를) 가르쳤다. (${t.n}은 이달 수련이 절반)`);save();render()},
   jdir(t,v){const j=D('jin');if(t==='m')j.focusM=v||null;else j.focusS=v||null;save();render()},
   dir(id,t,v){const d=D(id);if(t==='m')d.focusM=v||null;else d.focusS=v||null;save();render()},
@@ -514,6 +514,7 @@ ${jobs.length?`<select id="jin_sortie">${jobs.map(e=>`<option value="${e.id}">${
 </div>
 <p class="muted" style="font-size:12px">직접 읽기·출전·지도를 한 달은 진산월 자신의 수련이 없다. 시설 짓기와 무공 전수도 행동을 쓴다. 제자 파견은 행동을 쓰지 않는다.</p>`})()}</div>
 <div class="panel"><h3>진산월</h3><div class="hd" style="display:flex;gap:10px;align-items:center">${pt(j)}<div>${artChips(j)}<div style="font-size:12px;margin-top:4px">${Object.keys(STN).map(k=>`${STN[k]} <b>${j.st[k]}</b>`).join(' · ')}</div></div></div>
+${(()=>{const lib=LIB.filter(a=>j.arts[a]==null&&teacher(a,'jin'));return lib.length?`<div style="margin-top:8px;font-size:13px">배우기 <select id="tc_jin">${lib.map(a=>`<option value="${a}">${ARTS[a].n} (스승 ${teacher(a,'jin').n})</option>`).join('')}</select> <button onclick="A.teach('jin')" ${G.act<=0?'disabled':''}>배운다 (행동 1)</button></div>`:''})()}
 <div style="margin-top:8px;font-size:13px">초식 <select onchange="A.jdir('m',this.value)"><option value="">자동</option>${Object.keys(j.arts).filter(a=>ARTS[a].t==='m').map(a=>`<option value="${a}" ${j.focusM===a?'selected':''}>${ARTS[a].n}</option>`).join('')}</select>
  심법 <select onchange="A.jdir('s',this.value)"><option value="">자동</option>${Object.keys(j.arts).filter(a=>ARTS[a].t==='s').map(a=>`<option value="${a}" ${j.focusS===a?'selected':''}>${ARTS[a].n}</option>`).join('')}</select></div></div>
 <div class="panel"><h3>시설</h3><div class="grid">${Object.keys(FAC).map(k=>{const lv=G.fac[k],c=80*(lv+1);return `<div class="d"><b>${FAC[k].n}</b> ${lv}단계<br><span class="muted">${FAC[k].d}</span><br>
