@@ -56,7 +56,7 @@ select{font-family:inherit;font-size:13px;padding:3px}
 .hpb{width:130px;height:8px;background:var(--paper2);border-radius:4px;overflow:hidden}.hpb i{display:block;height:100%;background:var(--red)}
 .duelside.hit .pt{animation:hit .35s}@keyframes hit{0%{transform:translateX(0);filter:none}25%{transform:translateX(-8px);filter:brightness(2) sepia(1) hue-rotate(-30deg)}50%{transform:translateX(7px)}100%{transform:translateX(0);filter:none}}
 .yard{position:relative;margin:12px 0 4px;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#cdbf9f}
-.yard canvas{display:block;width:100%;height:210px;image-rendering:pixelated}
+.yard canvas{display:block;width:100%;height:210px}
 .yard .tip{position:absolute;pointer-events:none;background:rgba(29,26,22,.85);color:#f1e9d8;font-size:12px;padding:2px 6px;border-radius:4px;display:none}
 .next{position:fixed;right:16px;bottom:16px;z-index:6;font-size:16px;padding:12px 20px}
 table.cal{border-collapse:collapse;font-size:13px;width:100%}
@@ -750,18 +750,26 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
     hall(10,70,40);hall(W-150,110,55);hall(W-290,80,45);c.fillStyle='#7a2a20';c.fillRect(110,40,6,55);c.fillRect(150,40,6,55);c.fillRect(104,36,58,8);
     c.fillStyle='#1d1a16';c.font='bold 11px serif';c.fillText('山門',117,58);c.fillText('藏經閣',W-140,30);c.fillText('演武場',W*.42,112)}
   // 사람들: 배치에 따라 자리와 몸짓
-  YARD.hit=[];const s=3,f=(YARD.t>>1)%2,home=G.ds.filter(d=>d.pos!=='away'&&d.pos!=='hurt');
+  YARD.hit=[];const s=3,f=(YARD.t>>2)%2,home=G.ds.filter(d=>d.pos!=='away'&&d.pos!=='hurt');
   const groups={train:[],guard:[],rest:[],study:[]};for(const d of home){if(d.id==='jin'){groups.train.unshift(d);continue}(groups[d.pos]||groups.train).push(d)}
-  const put=(d,x,y,pose,ff)=>{sprite(c,x,y,s,palOf(d),pose,ff);YARD.hit.push({x,y,w:12*s,h:18*s,n:d.n+' · '+(d.id==='jin'?'장문인':POS[d.pos]||'')})};
-  groups.guard.forEach((d,i)=>put(d,96+i*30,H-62-(i%2)*14,'stand',0));
-  groups.train.forEach((d,i)=>{const cols=Math.max(4,Math.floor((W*.42)/46)),x=W*.25+(i%cols)*46,y=118+Math.floor(i/cols)*34;const m=Object.keys(d.arts).filter(a=>ARTS[a].t==='m').sort((a,b)=>d.arts[b]-d.arts[a])[0];put(d,x,Math.min(y,H-56),m&&ARTS[m].w==='gwon'?'punch':'swing',(f+i)%2)});
-  groups.study.forEach((d,i)=>put(d,W-140+i*34,H-70,'read',0));
-  groups.rest.forEach((d,i)=>put(d,W-290+i*30,H-52,'sit',0))}
+  const srcOf=d=>d.img||(d.rl?rlImg(d.rl):null);YARD.imgs=YARD.imgs||{};
+  const put=(d,x,y,pose,ff)=>{const src=srcOf(d),hh=74,ww=49,bx=x-6,by=y+54-hh;
+    c.fillStyle='rgba(40,30,20,.25)';c.beginPath();c.ellipse(bx+ww/2,y+55,ww*.42,5,0,0,7);c.fill();
+    let im=src&&YARD.imgs[src];if(src&&!im){im=YARD.imgs[src]=new Image();im.src=src}
+    if(im&&im.complete&&im.naturalWidth){c.save();const k=YARD.t/2+x*.13;let dx=0,dy=0,rot=0;
+      if(pose==='swing'||pose==='punch'){dx=Math.sin(k)*3;rot=Math.sin(k)*.06;dy=-Math.abs(Math.sin(k))*3}else if(pose==='sit'){dy=8}else if(pose==='read'){dy=Math.sin(k*.5)}
+      c.translate(bx+ww/2+dx,by+hh+dy);c.rotate(rot);c.drawImage(im,-ww/2,-hh,ww,pose==='sit'?hh*.88:hh);c.restore()}
+    else sprite(c,x,y,s,palOf(d),pose,ff);
+    YARD.hit.push({x:bx,y:by,w:ww,h:hh,n:d.n+' · '+(d.id==='jin'?'장문인':POS[d.pos]||'')})};
+  groups.guard.forEach((d,i)=>put(d,90+i*44,H-64-(i%2)*12,'stand',0));
+  groups.train.forEach((d,i)=>{const cols=Math.max(4,Math.floor((W*.46)/54)),x=W*.24+(i%cols)*54,y=112+Math.floor(i/cols)*40;const m=Object.keys(d.arts).filter(a=>ARTS[a].t==='m').sort((a,b)=>d.arts[b]-d.arts[a])[0];put(d,x,Math.min(y,H-56),m&&ARTS[m].w==='gwon'?'punch':'swing',(f+i)%2)});
+  groups.study.forEach((d,i)=>put(d,W-150+i*44,H-68,'read',0));
+  groups.rest.forEach((d,i)=>put(d,W-300+i*44,H-56,'sit',0))}
 function initYard(){const cv=document.getElementById('yard');if(!cv||!cv.getContext)return;
   const want=(G.devDone||[]).includes('sanmun')&&(G.devDone||[]).includes('josa')?'img/bonsan2.webp':'img/bonsan1.webp';
   if(!YARD.bg||YARD.bgSrc!==want){YARD.bgSrc=want;YARD.bg=new Image();YARD.bg.src=want}
   const tip=document.getElementById('yardtip');cv.onmousemove=e=>{const r=cv.getBoundingClientRect(),k=cv.width/r.width,mx=(e.clientX-r.left)*k,my=(e.clientY-r.top)*k;const h=YARD.hit.find(o=>mx>=o.x&&mx<=o.x+o.w&&my>=o.y&&my<=o.y+o.h);if(h&&tip){tip.style.display='block';tip.textContent=h.n;tip.style.left=(e.clientX-r.left+10)+'px';tip.style.top=(e.clientY-r.top-24)+'px'}else if(tip)tip.style.display='none'};cv.onmouseleave=()=>{if(tip)tip.style.display='none'};
-  drawYard();if(!YARD.timer&&typeof setInterval!=='undefined')YARD.timer=setInterval(drawYard,280)}
+  drawYard();if(!YARD.timer&&typeof setInterval!=='undefined')YARD.timer=setInterval(drawYard,120)}
 function render(){
   const app=document.getElementById('app');
   if(G.over||G.done){app.innerHTML=topBar()+`<div class="wrap"><div class="panel"><h2>${G.over?'몰락':(G.ending?G.ending.n:'끝')}</h2><p>${G.over||(G.ending?G.ending.p.join(' '):'')}${G.flags.choDone?' 초가보를 무너뜨렸다.':''}${G.flags.geomjeong?' 검정중원을 얻었다.':''}${G.flags.soseon?' 낙일방이 소선의 유진을 얻었다.':''}</p>
