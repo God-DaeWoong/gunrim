@@ -159,7 +159,7 @@ function prologue(){return{title:'장례',art:'img/jin.png',p:[
 function openTaeeul(){G.q.push({t:'quest',id:'taeeul',title:'태을선거',text:'《성심록》에 따르면 매종도가 말년을 보낸 태을선거는 화산 깊은 곳에 있다. 안개 낀 돌무더기 진이 길을 막는다고 한다. 장문인이 직접 가야 한다. (그달 행동 2번을 모두 쓴다. 천하삼십육검 5성 이상 필요)',btn:'진산월이 떠난다'})}
 function goTaeeul(){const j=D('jin');
   if((j.arts.cheonha||0)<5){log('진산월이 열석대진 앞에서 며칠을 헤맸지만 길을 찾지 못하고 돌아왔다. (천하삼십육검 5성 필요)');return false}
-  j.capUp=j.capUp||{};j.capUp.cheonha=1;gainWis(j,2,'태을선거의 열석대진');
+  G.flags.taeeul=1;j.capUp=j.capUp||{};j.capUp.cheonha=1;gainWis(j,2,'태을선거의 열석대진');
   G.q.push({t:'quest',id:'seokshil',title:'중봉 석실',text:'중봉의 돌무더기 아래에서 석실을 찾았다. 백골 하나가 검을 안고 있다. 이곳에 들어앉아 폐관하면 큰 성취를 얻을 것이다. 다만 석 달 동안 장문인이 자리를 비운다(그동안 한 달 행동 1번, 진산월은 출전 불가). 초가보가 그 틈을 노릴 수 있다.',btn:'폐관에 들어간다'});
   MODAL={title:'태을선거',p:['안개 속 돌무더기는 아무렇게나 쌓인 것이 아니었다. 열두 방위로 아홉 번씩 바뀌는 배치가 천하삼십육검 마지막 초식의 모양 그대로였다. 진산월은 검을 뽑아 한 걸음씩 진을 따라 걸었다. 천하무궁을 깨달았다.','진 안쪽의 초가는 비어 있었다. 뒤뜰에 〈일대종사 매종도지묘〉라는 묘비가 서 있었다. 누군가 수십 년 전에 시신을 묻고 비학을 가져간 뒤였다.','돌아오는 길에 사부의 무덤에 들렀다. 중봉의 돌무더기 위에 "진리를 얻고 싶은 자, 파하라"고 적힌 양피지가 놓여 있었다.'],ch:[['돌무더기를 부순다.',()=>{log('천하무궁을 깨달았다. 천하삼십육검의 상한이 풀렸다. 중봉에서 석실을 찾았다.')}]]};
   return true}
@@ -461,7 +461,7 @@ function botMonth(){
   A.next();
 }
 if(BOT){save=()=>{};newGame();TAB="main";setInterval(botMonth,1500)}
-else if(load()){if(!G.ilbi)MODAL=prologue();render()}else newGame();
+else if(load()){if(!G.ilbi)MODAL=prologue();if(G.flags.seongsim&&!G.flags.taeeul&&!G.q.some(e=>e.id==='taeeul'))openTaeeul();render()}else newGame();
 </script>
 </body>
 </html>
