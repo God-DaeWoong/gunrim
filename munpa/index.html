@@ -126,8 +126,9 @@ const ROSTER=[
 const STN={tong:'통솔',ji:'지력',jeong:'정치',ma:'매력',geom:'검재',gwon:'권재',oseong:'오성'};
 const growOf=(d,a)=>(ARTS[a].t==='s'?d.st.oseong:ARTS[a].w==='sin'?(d.st.geom+d.st.gwon)/2:d.st[ARTS[a].w]||60)/80;
 const POS={train:'수련',guard:'수비',rest:'휴식',study:'장경각 해독',shop:'주루 관리',away:'파견 중',hurt:'요양'};
-// 주루 관리: 정치가 높을수록 많이 번다. 여섯까지 센다(넷째부터는 절반, 달마다)
-const shopEarn=()=>G.ds.filter(d=>d.pos==='shop').map(d=>Math.round(d.st.jeong/6+d.st.ji/20)).sort((a,b)=>b-a).slice(0,6).reduce((s,v,i)=>s+(i<3?v:Math.round(v/2)),0);
+// 주루 관리: 정치가 높을수록 많이 번다(달마다). 자리는 대왕령 주루 3, 조암령 주루 +4, 초가보가 쥐던 주루 +2, 서안 객잔 +1(최대 10)
+const shopSlots=()=>{const dd=G.devDone||[];return 3+(dd.includes('ju')?4:0)+(dd.includes('land')?2:0)+(dd.includes('sang')?1:0)};
+const shopEarn=()=>G.ds.filter(d=>d.pos==='shop').map(d=>Math.round(d.st.jeong/6+d.st.ji/20)).sort((a,b)=>b-a).slice(0,shopSlots()).reduce((s,v)=>s+v,0);
 const FAC={yeon:{n:'연무장',d:'수련치 +10%/단계'},jang:{n:'장경각',d:'해독 속도, 전수할 수 있는 무공 수'},yak:{n:'약방',d:'심마·부상 회복'},oe:{n:'외당',d:'본산 방어, 잠입 차단, 사건을 일찍 앎'}};
 // 로그라이크 그림을 같은 사이트에서 불러 쓴다. 사이트: /gunrim/munpa/ → /gunrim/img/, 내 컴퓨터: 로그라이크 폴더
 const RL_LOCAL=location.protocol==='file:';
@@ -258,12 +259,12 @@ function addIlbi(hidden){if(has('ilbi'))return;G.ds.push({id:'ilbi',n:hidden?'�
 // 문파 개발: 장문인 행동 1번과 은자로 시작하고, 순마다 진행된다. 동시에 둘까지
 const INCN={nohae:'노해광 첩보망',gyeong:'경요궁',sang:'서안 상권',yak:'약초밭',ju:'조암령 주루',pyo:'표국',land:'초가보 옛 땅'};
 const DEV=[
-  {id:'sang',n:'서안 상권 확장',c:120,t:4,d:'서안 상권 수입 +15'},
+  {id:'sang',n:'서안 상권 확장',c:120,t:4,d:'서안 상권 수입 +15, 서안 객잔 하나(주루 관리 자리 +1)'},
   {id:'yak',n:'약초밭 개간',c:80,t:4,d:'약초밭 수입 +10'},
-  {id:'ju',n:'조암령 주루 되찾기',c:150,t:4,d:'노해광에게 넘긴 주루를 되사 온다. 수입 +25',req:()=>G.fame>=20,rq:'명성 20'},
+  {id:'ju',n:'조암령 주루 되찾기',c:150,t:4,d:'노해광에게 넘긴 주루 네 곳을 되사 온다. 수입 +25, 주루 관리 자리 +4',req:()=>G.fame>=20,rq:'명성 20'},
   {id:'pyo',n:'표국 설립',c:200,t:6,d:'의뢰 보수 +20%, 수입 +10',req:()=>G.fame>=15,rq:'명성 15'},
   {id:'yeon',n:'연공실',c:180,t:6,d:'폐관 수련 1.3배, 직접 지도의 깨달음 확률 +20%'},
-  {id:'land',n:'초가보 옛 땅 흡수',c:50,t:2,d:'초가보가 쥐던 관중 상권. 수입 +30',req:()=>G.flags.choDone,rq:'초가보 멸망'},
+  {id:'land',n:'초가보 옛 땅 흡수',c:50,t:2,d:'초가보가 쥐던 관중 상권과 주루. 수입 +30, 주루 관리 자리 +2',req:()=>G.flags.choDone,rq:'초가보 멸망'},
   {id:'sukso1',n:'숙소 증축 1',c:150,t:4,d:'제자 정원 12 → 18',big:1},
   {id:'sukso2',n:'숙소 증축 2',c:250,t:6,d:'제자 정원 18 → 25',req:()=>(G.devDone||[]).includes('sukso1'),rq:'숙소 증축 1',big:1},
   {id:'sukso3',n:'숙소 증축 3',c:500,t:8,d:'제자 정원 25 → 35',req:()=>(G.devDone||[]).includes('sukso2'),rq:'숙소 증축 2',big:1},
@@ -789,7 +790,7 @@ function discTab(){
 <div style="margin-top:4px;font-size:12px">${['tong','ji','jeong','ma'].map(k=>`${STN[k]} <b>${d.st[k]}</b>`).join(' · ')}<br>${['geom','gwon','oseong'].map(k=>`${STN[k]} <b>${d.st[k]}</b>`).join(' · ')} <span class="muted">(수련 속도: 검법·권장·심법)</span></div>
 <div style="margin-top:6px">${artChips(d)}</div>${(()=>{const own=Object.keys(d.arts).filter(a=>ARTS[a].t==='m'&&d.arts[a]>=1&&cardsOf(a).length);if(own.length<2)return '';const cur=deckArts(d);return `<div style="margin-top:4px;font-size:12px">일기토 덱(셋): ${own.map(a=>`<label style="margin-right:6px"><input type="checkbox" ${cur.includes(a)?'checked':''} onchange="A.setDeck('${d.id}','${a}',this.checked)">${ARTS[a].n}</label>`).join('')}</div>`})()}
 <div class="mind" title="심마 ${d.mind}"><i style="width:${Math.min(100,d.mind)}%"></i></div><span class="muted" style="font-size:11px">심마 ${d.mind}</span>
-<div style="margin-top:6px">${lock?`<b>${POS[d.pos]}</b> (${d.away}달 남음)`:`<select onchange="A.pos('${d.id}',this.value)">${['train','guard','rest','shop',...(G.task?['study']:[])].map(p=>`<option value="${p}" ${d.pos===p?'selected':''}>${POS[p]}</option>`).join('')}</select>`}</div>
+<div style="margin-top:6px">${lock?`<b>${POS[d.pos]}</b> (${d.away}달 남음)`:`<select onchange="A.pos('${d.id}',this.value)">${['train','guard','rest','shop',...(G.task?['study']:[])].map(p=>`<option value="${p}" ${d.pos===p?'selected':''}>${POS[p]}${p==='shop'?` (${G.ds.filter(x=>x.pos==='shop').length}/${shopSlots()})`:''}</option>`).join('')}</select>`}</div>
 <div style="margin-top:6px;font-size:12px">초식 <select onchange="A.dir('${d.id}','m',this.value)"><option value="">자동</option>${ms.map(a=>`<option value="${a}" ${d.focusM===a?'selected':''} ${d.arts[a]>=capOf(d,a)?'disabled':''}>${ARTS[a].n}${d.arts[a]>=capOf(d,a)?(d.arts[a]>=10?' (대성)':' (상한)'):''}</option>`).join('')}</select>
  심법 <select onchange="A.dir('${d.id}','s',this.value)"><option value="">자동</option>${ss.map(a=>`<option value="${a}" ${d.focusS===a?'selected':''} ${d.arts[a]>=capOf(d,a)?'disabled':''}>${ARTS[a].n}${d.arts[a]>=capOf(d,a)?(d.arts[a]>=10?' (대성)':' (상한)'):''}</option>`).join('')}</select></div>
 ${lib.length?`<div style="margin-top:6px;font-size:12px"><select id="tc_${d.id}"><option value="">전수할 무공</option>${lib.map(a=>`<option value="${a}" ${okA(a)?'':'disabled'}>${ARTS[a].n}${tOf(a)?` (스승 ${tOf(a).n})`:' (가르칠 사람 없음)'}${SECRET[a]&&d.ch<SECRET[a]?' (충성 부족)':''}</option>`).join('')}</select> <button onclick="A.teach('${d.id}')" ${G.act<=0?'disabled':''}>전수</button></div>`:''}
@@ -936,7 +937,7 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
   G.ds.filter(d=>d.pos==='away'&&d.leftT===tid).forEach((d,i,L)=>put((YARD.wi[d.id]=i/L.length,d),YARD.gx+i*25,H-74-(i%2)*10,'out',0));
   G.ds.filter(d=>d.backT===tid&&d.pos!=='away').forEach((d,i,L)=>put((YARD.wi[d.id]=i/L.length,d),-50-i*25,H-70-(i%2)*10,d.backHurt?'limp':'in',0));
   const outL=G.ds.filter(d=>d.pos==='away'&&d.leftT!==tid);
-  const gdLab=gdRest;if(gdLab.length||outL.length||G.ds.some(d=>d.pos==='shop')){const gd=gdLab,few=(a,f)=>a.length>3?a.slice(0,3).map(f).join(', ')+` 외 ${a.length-3}명`:a.map(f).join(', ');const rows=[];    if(gd.length)rows.push([`산문 수비 · ${few(gd,d=>d.n)}`,gd.map(d=>d.n).join(', ')+' · 산문 수비']);    {const sp=G.ds.filter(d=>d.pos==='shop');if(sp.length)rows.push([`주루 관리 · ${few(sp,d=>d.n)}`,sp.map(d=>`${d.n}(정치 ${d.st.jeong})`).join(', ')+` · 달마다 은자 +${shopEarn()}`])}
+  const gdLab=gdRest;if(gdLab.length||outL.length||G.ds.some(d=>d.pos==='shop')){const gd=gdLab,few=(a,f)=>a.length>3?a.slice(0,3).map(f).join(', ')+` 외 ${a.length-3}명`:a.map(f).join(', ');const rows=[];    if(gd.length)rows.push([`산문 수비 · ${few(gd,d=>d.n)}`,gd.map(d=>d.n).join(', ')+' · 산문 수비']);    {const sp=G.ds.filter(d=>d.pos==='shop');if(sp.length)rows.push([`주루 관리 ${sp.length}/${shopSlots()} · ${few(sp,d=>d.n)}`,sp.map(d=>`${d.n}(정치 ${d.st.jeong})`).join(', ')+` · 달마다 은자 +${shopEarn()}`])}
     if(outL.length)rows.push([`출타 중 · ${few(outL,d=>d.n)}`,outL.map(d=>`${d.n}(${d.job&&d.job.title?d.job.title:'원행'}, ${d.away}순 남음)`).join(', ')]);    c.font='bold 12px sans-serif';rows.forEach(([tx,tip],i)=>{const tw=c.measureText(tx).width+14,y=8+i*26;c.fillStyle='rgba(29,26,22,.72)';c.fillRect(8,y,tw,22);c.fillStyle='#f1e9d8';c.fillText(tx,15,y+15);YARD.hit.push({x:8,y,w:tw,h:22,n:tip})})}
   // 허수아비: 수련하는 사람 왼쪽(치는 쪽)에. 칠 때(박자 5~9) 밑동을 축으로 흔들린다
   const dIm=getIm('img/sd_dummy.png');const dummy=(x,y)=>{if(!dIm)return;const dh=56,dw=dIm.naturalWidth*dh/dIm.naturalHeight,ph=(YARD.t+Math.round(x))%24,ang=ph>=5&&ph<=9?Math.sin((ph-5)/4*Math.PI)*.12:0,bx=x-16,by=y+56;
