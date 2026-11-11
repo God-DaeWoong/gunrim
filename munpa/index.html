@@ -761,10 +761,11 @@ function sprite(c,x,y,s,P,pose,f){const px=(i,j,col)=>{c.fillStyle=col;c.fillRec
   else if(pose==='read'){px(4,8+by,SK);px(7,8+by,SK);for(let i=4;i<8;i++){px(i,9+by,'#8a5a3a');px(i,10+by,'#f1e9d8')}}
   else if(pose==='stand'){px(2,8,robe);px(9,8,robe);px(9,9,SK);for(let k=0;k<12;k++)px(10,k+3,'#6a5a4a');px(10,2,'#d8dde3')}
   else{px(2,8+by,robe);px(9,8+by,robe)}}
-function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getContext)return;const W=cv.clientWidth||900,H=250;if(cv.width!==W){cv.width=W;cv.height=H}
+function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getContext)return;const FW=cv.clientWidth||900,H=250;if(cv.width!==FW){cv.width=FW;cv.height=H}
   const c=cv.getContext('2d');c.imageSmoothingEnabled=false;YARD.t++;
+  const PW=FW<560?0:Math.round(Math.min(240,FW*.24)),W=FW-PW;c.save();c.translate(PW,0);c.beginPath();c.rect(0,0,W,H);c.clip();
   // 배경: 받은 본산 그림이 있으면 그것(17-1/17-2), 없으면 단순한 산문·전각·연무장
-  const bg=YARD.bg;if(bg&&bg.complete&&bg.naturalWidth){const r=Math.max(W/bg.naturalWidth,H/bg.naturalHeight);c.drawImage(bg,(W-bg.naturalWidth*r)/2,(H-bg.naturalHeight*r)*.62,bg.naturalWidth*r,bg.naturalHeight*r)}
+  const bg=YARD.bg;YARD.bgT=null;if(bg&&bg.complete&&bg.naturalWidth){const r=Math.max(W/bg.naturalWidth,H/bg.naturalHeight),ox=(W-bg.naturalWidth*r)/2,oy=(H-bg.naturalHeight*r)*.62;c.drawImage(bg,ox,oy,bg.naturalWidth*r,bg.naturalHeight*r);YARD.bgT={r:r*bg.naturalWidth/1536,ox,oy}}
   else{const sky=c.createLinearGradient(0,0,0,90);sky.addColorStop(0,'#d9d2c0');sky.addColorStop(1,'#e8dfc8');c.fillStyle=sky;c.fillRect(0,0,W,H);
     c.fillStyle='#9a9a8a';c.beginPath();c.moveTo(0,90);c.lineTo(W*.2,30);c.lineTo(W*.38,75);c.lineTo(W*.55,20);c.lineTo(W*.75,70);c.lineTo(W,35);c.lineTo(W,95);c.lineTo(0,95);c.fill();
     c.fillStyle='#b9ab8a';c.fillRect(0,95,W,H-95);c.strokeStyle='rgba(90,70,50,.15)';for(let x=0;x<W;x+=24){c.beginPath();c.moveTo(x,95);c.lineTo(x,H);c.stroke()}for(let y=95;y<H;y+=18){c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke()}
@@ -785,8 +786,8 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
     else if(pose==='stand'){const w=Math.sin(t*.06+x);dx=w*16;flip=Math.cos(t*.06+x)>0;dy=-Math.abs(Math.sin(t*.5))*2}
     else if(pose==='sit'){const cyc=(t+Math.round(x))%40;dy=6+Math.sin(t*.12)*1;var nod=cyc<30?cyc/30*.22:(cyc<32?.22-(cyc-30)*.11:0);var doze=1}
     else if(pose==='read'){if(Math.floor(t/15+x)%4===0)bub='?'}
-    else if((pose==='out'||pose==='in'||pose==='limp')&&YARD.door){const Dd=YARD.door,seed=(d.n.charCodeAt(0)%7)/7,q=(t*(pose==='limp'?.006:.012)+seed)%1,pp=pose==='out'?q:1-q;
-      const X=Dd.ax+(Dd.bx-Dd.ax)*pp-W2/2,Y=Dd.ay+(Dd.by-Dd.ay)*pp;dx=X-x;dy=Y-(y+56);flip=pose!=='out';var fade=pp>.8?(1-pp)/.2:1;
+    else if((pose==='out'||pose==='in'||pose==='limp')&&YARD.door){const Dd=YARD.door,seed=(d.n.charCodeAt(0)%7)/7+(Dd.ph||0),q=(t*(pose==='limp'?.006:.012)+seed)%1,pp=pose==='out'?q:1-q;
+      const X=Dd.ax+(Dd.bx-Dd.ax)*pp-W2/2,Y=Dd.ay+(Dd.by-Dd.ay)*pp;dx=X-x;dy=Y-(y+56);flip=pose!=='out';var fade=Math.min(pp>.8?(1-pp)/.2:1,Dd.fadeA&&pp<.2?pp/.2:1);
       dy+=pose==='limp'?-Math.abs(Math.sin(t*.25))*4+(Math.floor(t/3)%2?2:0):-Math.abs(Math.sin(t*.6))*3}
     else if(pose==='out'||pose==='in'||pose==='limp'){const L=(YARD.gx||120)+90,ph=(t*(pose==='limp'?1:2)+Math.abs(x)*3)%L;dx=pose==='out'?-ph:ph;flip=pose!=='out';dy=pose==='limp'?-Math.abs(Math.sin(t*.25))*4+(Math.floor(t/3)%2?2:0):-Math.abs(Math.sin(t*.6))*3}
     c.fillStyle=`rgba(40,30,20,${.25*(fade!=null?Math.max(0,fade):1)})`;c.beginPath();c.ellipse(x+dx+W2/2,y+56+(fade!=null?dy:0),W2*.32,4,0,0,7);c.fill();
@@ -806,22 +807,37 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
     else sprite(c,x,y,s,palOf(d),pose,ff);
     YARD.hit.push({x:bx,y:by,w:ww,h:hh,n:d.n+' · '+(d.id==='jin'?'장문인':POS[d.pos]||'')})};
   // 수비는 산문을 지키러 나가 있으니 연무장에 그리지 않고, 왼쪽 위에 표지만
-  const gd=home.filter(d=>d.pos==='guard'&&d.id!=='jin');const gate=getIm('img/sd_gate.png');
+  const gd=home.filter(d=>d.pos==='guard'&&d.id!=='jin');
   // 산문: 문 안쪽 바닥(그림 높이의 78%)이 드나드는 끝점, 연무장 쪽 끝점은 산문 오른쪽 아래
-  YARD.door=null;YARD.gx0=0;
-  if(gate){const gh=H*.92,gw=gate.naturalWidth*gh/gate.naturalHeight;c.drawImage(gate,0,H-gh,gw,gh);YARD.gx0=gw;YARD.door={bx:gw*.5,by:H-gh*.22,ax:gw+60,ay:H-8};
-    const sd=gd.filter(d=>sdOf(d)&&getIm(sdOf(d)));const SPOT=[[.06,0],[.70,0],[-.04,-14],[.80,-14]];
-    sd.slice(0,4).forEach((d,i)=>put(d,gw*SPOT[i][0],H-62+SPOT[i][1],'stand0',0));var gdRest=gd.filter(d=>!sd.slice(0,4).includes(d))}
-  YARD.gx=gate?YARD.gx0*.8:120;
+  // 배경 산문: 문 안 바닥 (290,418), 계단 아래 연무장 쪽 (400,600). 수비는 계단 양옆 돌사자 앞
+  YARD.door=null;YARD.gx0=0;const T=YARD.bgT,BP=(x,y)=>[T.ox+x*T.r,T.oy+y*T.r];
+  if(T){const [bx,by]=BP(290,418),[ax,ay]=BP(400,600);YARD.door={bx,by,ax,ay,fadeA:1};
+    }
+  const gIm=PW?getIm('img/sd_gate.png'):null,gdOut=gIm?gd.filter(d=>sdOf(d)&&getIm(sdOf(d))).slice(0,4):[],gdRest=gd.filter(d=>!gdOut.includes(d));
+  YARD.gx=120;
   G.ds.filter(d=>d.pos==='away'&&d.leftT===tid).forEach((d,i)=>put(d,YARD.gx+i*25,H-74-(i%2)*10,'out',0));
   G.ds.filter(d=>d.backT===tid&&d.pos!=='away').forEach((d,i)=>put(d,-50-i*25,H-70-(i%2)*10,d.backHurt?'limp':'in',0));
   const outL=G.ds.filter(d=>d.pos==='away'&&d.leftT!==tid);
-  const gdLab=gate?gdRest:gd;if(gdLab.length||outL.length){const gd=gdLab,few=(a,f)=>a.length>3?a.slice(0,3).map(f).join(', ')+` 외 ${a.length-3}명`:a.map(f).join(', ');const rows=[];    if(gd.length)rows.push([`산문 수비 · ${few(gd,d=>d.n)}`,gd.map(d=>d.n).join(', ')+' · 산문 수비']);    if(outL.length)rows.push([`출타 중 · ${few(outL,d=>d.n)}`,outL.map(d=>`${d.n}(${d.job&&d.job.title?d.job.title:'원행'}, ${d.away}순 남음)`).join(', ')]);    c.font='bold 12px sans-serif';rows.forEach(([tx,tip],i)=>{const tw=c.measureText(tx).width+14,y=8+i*26;c.fillStyle='rgba(29,26,22,.72)';c.fillRect(8,y,tw,22);c.fillStyle='#f1e9d8';c.fillText(tx,15,y+15);YARD.hit.push({x:8,y,w:tw,h:22,n:tip})})}
+  const gdLab=gdRest;if(gdLab.length||outL.length){const gd=gdLab,few=(a,f)=>a.length>3?a.slice(0,3).map(f).join(', ')+` 외 ${a.length-3}명`:a.map(f).join(', ');const rows=[];    if(gd.length)rows.push([`산문 수비 · ${few(gd,d=>d.n)}`,gd.map(d=>d.n).join(', ')+' · 산문 수비']);    if(outL.length)rows.push([`출타 중 · ${few(outL,d=>d.n)}`,outL.map(d=>`${d.n}(${d.job&&d.job.title?d.job.title:'원행'}, ${d.away}순 남음)`).join(', ')]);    c.font='bold 12px sans-serif';rows.forEach(([tx,tip],i)=>{const tw=c.measureText(tx).width+14,y=8+i*26;c.fillStyle='rgba(29,26,22,.72)';c.fillRect(8,y,tw,22);c.fillStyle='#f1e9d8';c.fillText(tx,15,y+15);YARD.hit.push({x:8,y,w:tw,h:22,n:tip})})}
   const nT=groups.train.length,cols=Math.max(5,Math.min(9,Math.ceil(nT/2))),gapX=(YARD.gx0?W*.86-YARD.gx0-30:W*.62)/cols;
   if(jinD)put(jinD,W*.5-24,G.retreat?-999:62,G.jinFocus||G.retreat?'swing':'stand0',f);
   groups.train.forEach((d,i)=>{const row=Math.floor(i/cols),x=(YARD.gx0?YARD.gx0+30:W*.18)+(i%cols)*gapX+(row%2?gapX/2:0),y=118+row*42;const m=Object.keys(d.arts).filter(a=>ARTS[a].t==='m').sort((a,b)=>d.arts[b]-d.arts[a])[0];put(d,x,Math.min(y,H-56),m&&ARTS[m].w==='gwon'?'punch':'swing',(f+i)%2)});
   groups.study.forEach((d,i)=>put(d,W-150+i*44,H-68,'read',0));
-  groups.rest.forEach((d,i)=>put(d,W-300+i*44,H-56,'sit',0))}
+  groups.rest.forEach((d,i)=>put(d,W-300+i*44,H-56,'sit',0));
+  c.restore();for(const h of YARD.hit)h.x+=PW;if(!PW)return;
+  // 산문 밖: 하늘·먼 산·흙길, 가운데 산문, 계단 양옆에 수비
+  const sky=c.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#bcd6e8');sky.addColorStop(.55,'#e6eee0');sky.addColorStop(.56,'#a9b98a');sky.addColorStop(1,'#8f9c6e');c.fillStyle=sky;c.fillRect(0,0,PW,H);
+  c.fillStyle='#8aa0a8';c.beginPath();c.moveTo(0,120);c.lineTo(PW*.3,70);c.lineTo(PW*.55,105);c.lineTo(PW*.8,60);c.lineTo(PW,95);c.lineTo(PW,140);c.lineTo(0,140);c.fill();
+  c.fillStyle='#c2ad86';c.beginPath();c.moveTo(PW*.36,H-30);c.lineTo(PW*.64,H-30);c.lineTo(PW*.75,H);c.lineTo(PW*.1,H);c.fill();
+  if(gIm){const gh=Math.min(H*.86,PW*1.02*gIm.naturalHeight/gIm.naturalWidth),gw=gh*gIm.naturalWidth/gIm.naturalHeight,gx=(PW-gw)/2,gy=H-gh-18;
+    c.imageSmoothingEnabled=true;c.drawImage(gIm,gx,gy,gw,gh);c.imageSmoothingEnabled=false;
+    const SP=[[.2,0],[.8,0],[.06,-8],[.94,-8]];gdOut.forEach((d,i)=>put(d,gx+gw*SP[i][0]-20,gy+gh*.97-56+SP[i][1]+6,'stand0',0));
+    YARD.door={ax:gx+gw*.5,ay:gy+gh*.8,bx:gx+gw*.05,by:H+30,fadeA:1,ph:.5};
+    G.ds.filter(d=>d.pos==='away'&&d.leftT===tid).forEach((d,i)=>put(d,i*25,0,'out',0));
+    G.ds.filter(d=>d.backT===tid&&d.pos!=='away').forEach((d,i)=>put(d,-50-i*25,0,d.backHurt?'limp':'in',0));
+    YARD.door=null}
+  c.fillStyle='rgba(29,26,22,.72)';c.fillRect(6,6,58,20);c.fillStyle='#f1e9d8';c.font='bold 12px sans-serif';c.fillText('산문 밖',13,20);
+  c.fillStyle='#5b4636';c.fillRect(PW-3,0,3,H)}
 function initYard(){const cv=document.getElementById('yard');if(!cv||!cv.getContext)return;
   const want='img/sd_yard.webp';
   if(!YARD.bg||YARD.bgSrc!==want){YARD.bgSrc=want;YARD.bg=new Image();YARD.bg.src=want}
