@@ -58,6 +58,15 @@ select{font-family:inherit;font-size:13px;padding:3px}
 .yard{position:relative;margin:12px 0 4px;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#cdbf9f}
 .yard canvas{display:block;width:100%;height:250px}
 .yard .tip{position:absolute;pointer-events:none;background:rgba(29,26,22,.85);color:#f1e9d8;font-size:12px;padding:2px 6px;border-radius:4px;display:none}
+.map{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line)}.map>img{display:block;width:100%}
+.pin{position:absolute;transform:translate(-50%,-50%);cursor:pointer;display:flex;flex-direction:column;align-items:center;z-index:1}
+.pin i{width:10px;height:10px;border-radius:50%;background:#5b4636;border:2px solid #f1e9d8;box-shadow:0 0 0 1px #1d1a16}
+.pin span{margin-top:2px;font-size:12px;font-weight:700;color:#1d1a16;background:rgba(241,233,216,.82);padding:0 5px;border-radius:4px;white-space:nowrap}
+.pin.hot i{background:var(--red);animation:pinpulse 1.2s infinite}.pin.hot span{background:#fff8e6;border:1px solid var(--red)}
+.pin.sel span{background:#1d1a16;color:#f1e9d8}
+@keyframes pinpulse{0%{box-shadow:0 0 0 1px #1d1a16,0 0 0 0 rgba(163,49,42,.6)}100%{box-shadow:0 0 0 1px #1d1a16,0 0 0 10px rgba(163,49,42,0)}}
+.pds{display:flex;gap:1px;margin-top:2px}.pds img{height:30px;image-rendering:pixelated}.pds em{font-style:normal;font-size:11px;background:#f1e9d8;border:1px solid #1d1a16;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center}
+@media (max-width:600px){.pin span{font-size:10px}}
 .next{position:fixed;right:16px;bottom:16px;z-index:6;font-size:16px;padding:12px 20px}
 table.cal{border-collapse:collapse;font-size:13px;width:100%}
 table.cal td,table.cal th{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left}
@@ -507,6 +516,7 @@ const A={
   duelMove(k){duelMove(k)},duelAuto(){duelAuto()},duelNext(){DUEL.i++;nextDuel()},
   accept(eid){const e=G.q.find(x=>x.id===eid);if(!e)return;if(dsCount()>=capOfDs()){alertMsg('정원이 찼다. 숙소를 늘려야 한다.');return}G.q=G.q.filter(x=>x!==e);
     G.ds.push({id:'r'+G.m+Math.random().toString(36).slice(2,6),n:e.nm,r:'새 제자',st:e.st,ch:70,arts:{...e.arts},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null});log(`${e.nm}을(를) 제자로 받았다.`);save();render()},
+  mapSel(k){MAPSEL=MAPSEL===k?null:k;render()},
   info(eid){G.q=G.q.filter(x=>x.id!==eid);save();render()},
   choose(i){const c=MODAL.ch[i];MODAL=null;const keep=c[1]();if(!keep)MODAL=MODAL||null;save();render()},
   autoNext(v){G.autoNext=v;save()},
@@ -670,10 +680,10 @@ function suggest(){
   for(const e of G.q.filter(x=>x.t==='job').sort((a,b)=>(b.pay||0)-(a.pay||0))){const d=best(e.need,e.k);if(d){used.add(d.id);pick[e.id]={d:d.id}}}
   return pick;
 }
-function evTab(){
+function evTab(only){
   const fr=freeDs(),sg=suggest();
   const opt=(need,eid,k)=>fr.map(d=>`<option value="${d.id}" ${sg[eid]&&sg[eid].d===d.id?'selected':''}>${d.n} (${!k||k==='mu'?`전력 ${power(d)}`:`${STN[k]} ${d.st[k]}`}, 승률 ${chanceK(d,need,k)}%${d.mind>=70?', 심마':''})</option>`).join('');
-  const body=G.q.map(e=>{
+  const body=G.q.filter(e=>!only||only(e)).map(e=>{
     if(e.t==='job')return `<div class="panel ev job"><b>${e.title}</b> <span class="muted">· ${yr(e.due)}까지</span><p>${e.text} 필요 ${!e.k||e.k==='mu'?'전력':STN[e.k]} ${e.need}</p>
 <select id="js_${e.id}">${opt(e.need,e.id,e.k)}</select> <button onclick="A.sendJob('${e.id}')" ${!fr.length?'disabled':''}>보내기</button> <button onclick="A.decline('${e.id}')">거절</button></div>`;
     if(e.t==='crisis')return `<div class="panel ev crisis"><b>${e.title}</b> <span class="muted">· ${yr(e.due)}까지, 미루면 둘 다 잃는다</span><p>${e.text}</p>
@@ -791,14 +801,35 @@ function initYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
   if(!YARD.bg||YARD.bgSrc!==want){YARD.bgSrc=want;YARD.bg=new Image();YARD.bg.src=want}
   const tip=document.getElementById('yardtip');cv.onmousemove=e=>{const r=cv.getBoundingClientRect(),k=cv.width/r.width,mx=(e.clientX-r.left)*k,my=(e.clientY-r.top)*k;const h=YARD.hit.find(o=>mx>=o.x&&mx<=o.x+o.w&&my>=o.y&&my<=o.y+o.h);if(h&&tip){tip.style.display='block';tip.textContent=h.n;tip.style.left=(e.clientX-r.left+10)+'px';tip.style.top=(e.clientY-r.top-24)+'px'}else if(tip)tip.style.display='none'};cv.onmouseleave=()=>{if(tip)tip.style.display='none'};
   drawYard();if(!YARD.timer&&typeof setInterval!=='undefined')YARD.timer=setInterval(drawYard,120)}
+/* ================= 강호 지도 ================= */
+// 장소: [이름, 가로 %, 세로 %] — 받은 지도 그림(img/map.webp)의 산·강·평야 자리에 맞춘 값
+const PLACES={seojang:['서장',8,22],geomgak:['검각',20,56],sacheon:['사천',24,74],taebaek:['태백산',30,37],jongnam:['종남산',36,43],hyeopgok:['고관담 협곡',33,51],joam:['조암령',41,52],
+  seoan:['서안',45,35],winam:['위남',51,38],hwasan:['화산',57,44],nakyang:['낙양',63,33],sorim:['숭산 소림',66,21],gongga:['공가장',69,40],yeonam:['여남',74,47],
+  mudang:['무당산',60,73],hyeongsan:['형산',52,88],hoenam:['회남 남궁세가',80,54],soho:['소호',82,65],gugung:['구궁보',87,77]};
+const JOBPLACE={'서안 표행 호위':'seoan','위남 상단 호위':'winam','조암령 산적 소탕':'joam','서안 객잔 난동 정리':'seoan','태백산 약초 채집 호위':'taebaek','화산에 서신 전달':'hwasan','서안 상가 분쟁 중재':'seoan','낙양 원행 호위':'nakyang','폐사 탐방':'jongnam'};
+const QPLACE={taeeul:'hwasan',seokshil:'jongnam',gorge:'hyeopgok',hyeolsa:'hyeopgok',hyeolsa2:'hyeopgok',findilbi:'nakyang',limcold:'jongnam',bm_jeom:'nakyang',bm_so:'sorim',bm_cheong:'yeonam',bm_nam:'hoenam',hs1:'yeonam',hoeram:'hwasan',hyeongsan:'mudang',hwasanraid:'jongnam',gamjong:'gongga'};
+function placeOf(e){if(e.t==='job')return JOBPLACE[e.title]||'seoan';if(e.t==='crisis')return 'seoan';return QPLACE[e.id]||'jongnam'}
+function jobPlace(d){const j=d.job;if(!j)return null;if(j.nak)return 'hyeopgok';return JOBPLACE[j.title]||null}
+const ICON={job:'📦',crisis:'⚔️',match:'🚩',quest:'⭐',task:'📜',event:'💬',appl:'🙇'};
+let MAPSEL=null;
+function mapTab(){const here={};for(const e of G.q){const k=placeOf(e);(here[k]=here[k]||[]).push(e)}
+  const away={};for(const d of G.ds)if(d.pos==='away'){const k=jobPlace(d);if(k)(away[k]=away[k]||[]).push(d)}
+  const SDS2={jin:1,lim:1,mae:1,so:1,eung:1,nak:1,jeong:1,bang:1,du:1,jeonp:1,ilbi:1,jeonh:1};
+  const pins=Object.entries(PLACES).map(([k,[n,x,y]])=>{const es=here[k]||[],ds=away[k]||[],hot=es.length>0;
+    const ic=[...new Set(es.map(e=>ICON[e.t]||'•'))].join('');
+    return `<div class="pin${hot?' hot':''}${MAPSEL===k?' sel':''}" style="left:${x}%;top:${y}%" onclick="A.mapSel('${k}')"><i></i><span>${n}${hot?` <b>${ic}${es.length>1?es.length:''}</b>`:''}</span>${ds.length?`<div class="pds">${ds.map(d=>SDS2[d.id]?`<img src="img/sd_${d.id}.png" title="${d.n}">`:`<em title="${d.n}">${d.n[0]}</em>`).join('')}</div>`:''}</div>`}).join('');
+  const sel=MAPSEL&&PLACES[MAPSEL];
+  return `<p class="muted" style="font-size:13px">장소를 누르면 그곳의 일이 아래에 뜬다. 📦 의뢰 · ⚔️ 위기 · 🚩 비무 · ⭐ 기연 · 💬 소식. 파견 간 제자는 그 장소 옆에 작게 보인다.</p>
+<div class="map"><img src="img/map.webp" alt="강호 지도">${pins}</div>
+${sel?`<h3 style="margin-top:12px">${sel[0]}</h3>${(here[MAPSEL]||[]).length?evTab(e=>placeOf(e)===MAPSEL):'<p class="muted">지금 이곳에는 할 일이 없다.</p>'}`:''}`}
 function render(){
   const app=document.getElementById('app');
   if(G.over||G.done){app.innerHTML=topBar()+`<div class="wrap"><div class="panel"><h2>${G.over?'몰락':(G.ending?G.ending.n:'끝')}</h2><p>${G.over||(G.ending?G.ending.p.join(' '):'')}${G.flags.choDone?' 초가보를 무너뜨렸다.':''}${G.flags.geomjeong?' 검정중원을 얻었다.':''}${G.flags.soseon?' 낙일방이 소선의 유진을 얻었다.':''}</p>
 <p>은자 ${G.eun} · 명성 ${G.fame} · 호감 ${G.fav} · 구파 자격 ${G.qual} · 제자 ${G.ds.length}명</p><button class="main" onclick="A.restart()">처음부터</button></div><div class="panel"><div class="log">${G.log.join('<br>')}</div></div></div>`;return}
   const qn=G.q.length;
-  app.innerHTML=topBar()+`<div class="wrap"><div class="tabs">${[['main','본산'],['disc','제자'],['dev','개발'],['ev',`사건${qn?` (${qn})`:''}`],['cal','일정']].map(([k,n])=>`<button class="${TAB===k?'on':''}" onclick="A.tab('${k}')">${n}</button>`).join('')}
+  app.innerHTML=topBar()+`<div class="wrap"><div class="tabs">${[['main','본산'],['map','지도'],['disc','제자'],['dev','개발'],['ev',`사건${qn?` (${qn})`:''}`],['cal','일정']].map(([k,n])=>`<button class="${TAB===k?'on':''}" onclick="A.tab('${k}')">${n}</button>`).join('')}
 <button style="margin-left:auto" onclick="A.restart()">새로</button></div>
-${{main:mainTab,disc:discTab,dev:devTab,ev:evTab,cal:calTab}[TAB]()}</div>
+${{main:mainTab,map:mapTab,disc:discTab,dev:devTab,ev:()=>evTab(),cal:calTab}[TAB]()}</div>
 <button class="main next" onclick="A.next()" ${MODAL||DUEL?'disabled':''}>${G.half===0?'하순으로 ▶':'다음 달 ▶'}</button>`+modalHTML()+duelHTML();
   if(typeof requestAnimationFrame!=='undefined')requestAnimationFrame(playFx);
   if(TAB==='main')initYard();
