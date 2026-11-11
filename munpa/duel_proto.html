@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>일기토 시제품</title>
+<style>
+:root{--ink:#f4ead8;--muted:#cbb99c;--red:#c4513f;--blue:#5d8fc9;--gold:#d9b25a;--card:#f1e9d8;--line:#3a2f27}
+*{box-sizing:border-box}body{margin:0;background:#15110e;color:var(--ink);font-family:'Noto Sans KR',system-ui,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:0 0 4px}.muted{color:var(--muted);font-size:13px}
+.stage{position:relative;border-radius:12px;overflow:hidden;background:linear-gradient(rgba(16,14,20,.5),rgba(16,12,10,.85)),url(img/sd_gate_bg.webp) center/cover;padding:16px;min-height:300px}
+.sides{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.side{width:44%;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
+.pt{width:120px;height:150px;border-radius:10px;background:rgba(241,233,216,.12) center/cover;border:1px solid rgba(255,255,255,.15)}
+.bar{width:100%;height:12px;background:rgba(0,0,0,.45);border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--red);transition:width .3s}
+.blk{color:var(--blue);font-weight:700}.st{font-size:12px;color:var(--gold)}
+.intent{padding:3px 10px;border-radius:12px;background:rgba(0,0,0,.5);font-size:14px}
+.side.hit .pt{animation:hit .35s}@keyframes hit{25%{transform:translateX(-8px);filter:brightness(2) sepia(1) hue-rotate(-30deg)}75%{transform:translateX(6px)}}
+.fx{position:absolute;width:320px;height:213px;top:-10px;left:50%;margin-left:-160px;background-size:300% 200%;pointer-events:none;mix-blend-mode:screen;filter:brightness(1.35) saturate(1.3);z-index:3}
+.pop{position:absolute;top:40px;font-weight:800;font-size:26px;color:#ffdf8a;text-shadow:0 0 6px #000;animation:pop .9s forwards;z-index:4}@keyframes pop{to{transform:translateY(-40px);opacity:0}}
+.hand{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+.card{width:150px;min-height:120px;background:var(--card);color:#1d1a16;border-radius:10px;padding:8px;border:2px solid #8a6a3a;cursor:pointer;position:relative;transition:transform .12s}
+.card:hover{transform:translateY(-6px)}.card.off{opacity:.45;cursor:not-allowed;transform:none}
+.card .cost{position:absolute;top:-8px;left:-8px;width:26px;height:26px;border-radius:50%;background:#2d4f7c;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #f1e9d8}
+.card b{display:block;font-size:15px}.card .art{font-size:11px;color:#7a5a2a}.card .tx{font-size:12px;margin-top:4px}
+.card.def{border-color:#3d6ea0}.card.skill{border-color:#3d8a5a}
+.bottom{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:8px;flex-wrap:wrap}
+.nae{font-size:16px}.nae b{color:#7fb3ff;font-size:20px}
+button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid #8a6a3a;background:#f1e9d8;color:#1d1a16;cursor:pointer}button.main{background:#1d1a16;color:#f1e9d8;border-color:#d9b25a}
+.log{margin-top:10px;background:rgba(0,0,0,.35);border-radius:8px;padding:8px 10px;font-size:13px;max-height:120px;overflow:auto}
+.pick{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.pick label{background:rgba(255,255,255,.08);padding:8px 10px;border-radius:8px;cursor:pointer}
+.pick input{margin-right:6px}.panel{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px}
+</style></head><body><div class="wrap">
+<h1>일기토 시제품 — 카드 전투</h1>
+<p class="muted">로그라이크 초식 카드를 그대로 가져왔다. 가진 초식 무공 중 셋을 골라 덱을 만든다. 심법·보법은 전투 시작 때 붙는 효과다. 턴마다 내력 3, 다섯 장을 뽑는다. 성이 높을수록 초식이 세다. 6턴 안에 상대를 쓰러뜨리거나, 끝날 때 체력 비율이 높으면 이긴다.</p>
+<div id="app"></div></div>
+<script>
+const RL_LOCAL=location.protocol==='file:';
+const rlFx=n=>RL_LOCAL?`../../군림천하_로그라이크/img/fx/${n}_sheet.png`:`../img/fx/${n}_sheet.webp`;
+// 무공(문파 경영 아이디) → 그 무공의 초식 카드. 수치는 로그라이크 그대로, 없는 무공(월녀검법·난화지·염화옥수)은 새로 만든다
+const CARDS={};const card=(id,n,art,type,cost,spec)=>CARDS[id]=Object.assign({id,n,art,type,cost},spec);
+// 장괘장권구식
+card('jounyuk','조운육환','janggwae','atk',1,{dmg:6});card('geumgang','금강서벽','janggwae','def',1,{block:8});card('samhwan','삼환투일','janggwae','atk',1,{dmg:4,hits:2});
+card('ogang','오강감계','janggwae','atk',1,{dmg:6,weak:1});card('danbong','단봉조양','janggwae','atk',2,{dmg:20});card('yeongyang','영양괘각','janggwae','atk',1,{dmg:5,block:7});
+// 천하삼십육검
+card('dodo','천하도도','cheonha','atk',1,{dmg:8,vuln:1});card('seongjin','천하성진','cheonha','atk',1,{dmg:3,hits:3});card('bisa','천하비사','cheonha','atk',1,{dmg:6,draw:1});
+card('suzo','천하수조','cheonha','atk',2,{dmg:28});card('jetan','천하제탄','cheonha','atk',1,{dmg:2,hits:4});card('milmil','천하밀밀','cheonha','def',1,{block:12});
+// 유운검법
+card('unmu','운무중첩','yuun','atk',1,{dmg:5,hits:2,hits6:3});card('geombong','유운검봉','yuun','atk',2,{dmg:4,hits:4,hitsPer3:1});card('baeun','배운축월','yuun','atk',1,{dmg:8,vuln:2});
+card('chulgok','유운출곡','yuun','def',1,{block:6,nextAtk:4});card('amjeon','운중암전','yuun','atk',1,{dmg:8,pierce:1});card('seunggi','운해승기','yuun','atk',2,{dmg:12,block:8});card('danak','유운단악','yuun','atk',1,{dmg:11});
+// 낙하구구검
+card('nakha','채흥서천','nakha','atk',1,{dmg:10,pierce:1});card('bancheon','반천흥염','nakha','atk',2,{dmg:11,block:6});card('hongye','홍예장공','nakha','atk',1,{dmg:11,combo:'cheongang',comboDmg:8});card('cheongang','천강은홍','nakha','def',1,{block:7,counter:7});
+// 약류장·홍단서천·무염십팔보
+card('yakryu','약류장','yakryu','atk',2,{dmg:18,execute:1});card('hongdan','홍단서천','hongdan','atk',1,{dmg:14});card('muyeom','무염십팔보','muyeom','skill',1,{dodge:1,draw:1});
+// 새로 만든 카드: 월녀검법(빠르고 가벼운 연타), 난화지·염화옥수(강일비의 지법·장법)
+card('wol1','월녀천사','wolnyeo','atk',1,{dmg:4,hits:2,fxn:'unmu'});card('wol2','월녀회풍','wolnyeo','atk',1,{dmg:7,draw:1,fxn:'bisa'});card('wol3','월녀영월','wolnyeo','def',1,{block:9,fxn:'milmil'});
+card('nan1','난화불혈','nanhwa','atk',1,{dmg:9,weak:1,fxn:'nakha'});card('nan2','난화점화','nanhwa','atk',2,{dmg:6,hits:3,fxn:'seongjin'});
+card('yeom1','염화옥수','yeomhwa','atk',2,{dmg:22,fxn:'danbong'});card('yeom2','옥수봉환','yeomhwa','def',1,{block:10,counter:5,fxn:'milmil'});
+const ARTN={yuun:'유운검법',cheonha:'천하삼십육검',nakha:'낙하구구검',janggwae:'장괘장권구식',yakryu:'약류장',hongdan:'홍단서천',wolnyeo:'월녀검법',nanhwa:'난화지',yeomhwa:'염화옥수',muyeom:'무염십팔보'};
+// 시험용 인물(문파 경영 처음 상태의 진산월·임영옥·낙일방)
+const HEROES={
+ jin:{n:'진산월',img:'img/jin.png',arts:{yuun:6,cheonha:6,nakha:5,janggwae:4,yakryu:3,hongdan:1},pas:{taeeul:3,hyeoncheong:1,hoeseon:1}},
+ lim:{n:'임영옥',img:'img/lim.webp',arts:{yuun:7,wolnyeo:6},pas:{taeeul:5,hoeseon:1}},
+ nak:{n:'낙일방',img:'img/nak.webp',arts:{janggwae:5},pas:{taeeul:3,janggwaebo:1}}};
+const FOES={gojin:{n:'형산 고진',pw:150},seong:{n:'초가보 상관명',pw:190},gang:{n:'무당 송문',pw:230}};
+const mul=lv=>.7+.06*lv; // 5성 1.0, 10성 1.3
+let S=null,PICK={hero:'jin',foe:'gojin',arts:[]};
+function setup(){const h=HEROES[PICK.hero];if(!PICK.arts.length)PICK.arts=Object.keys(h.arts).filter(a=>Object.values(CARDS).some(c=>c.art===a)).sort((a,b)=>h.arts[b]-h.arts[a]).slice(0,3);
+  const own=Object.keys(h.arts).filter(a=>Object.values(CARDS).some(c=>c.art===a));
+  return `<div class="panel"><b>누가</b> ${Object.entries(HEROES).map(([k,v])=>`<button ${PICK.hero===k?'class="main"':''} onclick="PICK.hero='${k}';PICK.arts=[];draw()">${v.n}</button>`).join(' ')}
+   &nbsp; <b>상대</b> ${Object.entries(FOES).map(([k,v])=>`<button ${PICK.foe===k?'class="main"':''} onclick="PICK.foe='${k}';draw()">${v.n} (전력 ${v.pw})</button>`).join(' ')}
+   <div style="margin-top:10px"><b>덱에 넣을 무공 셋</b> <span class="muted">(${PICK.arts.length}/3)</span></div>
+   <div class="pick">${own.map(a=>`<label><input type="checkbox" ${PICK.arts.includes(a)?'checked':''} onchange="togArt('${a}',this.checked)">${ARTN[a]} ${h.arts[a]}성 <span class="muted">· ${Object.values(CARDS).filter(c=>c.art===a).length}장</span></label>`).join('')}</div>
+   <div class="muted">패시브: ${Object.entries(h.pas).map(([k,v])=>({taeeul:`태을신공 ${v}성 → 첫 턴 내력 +1`,hyeoncheong:`현청건곤강기 → 시작 방어 +${4+v}`,hoeseon:'회선표 → 받는 피해 -10%',janggwaebo:'장괘보 → 권장 피해 +10%'})[k]).join(' · ')}</div>
+   <div style="margin-top:10px"><button class="main" onclick="start()" ${PICK.arts.length?'':'disabled'}>일기토 시작</button></div></div>`}
+function togArt(a,v){PICK.arts=v?[...PICK.arts,a].slice(-3):PICK.arts.filter(x=>x!==a);draw()}
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+function start(){const h=HEROES[PICK.hero],f=FOES[PICK.foe];const pw=100+Object.values(h.arts).reduce((s,v)=>s+v,0)*3;
+  const deck=[];for(const a of PICK.arts)for(const c of Object.values(CARDS))if(c.art===a)deck.push(c.id);
+  S={h,f,turn:0,max:6,p:{hp:60+Math.round(pw*.15),max:60+Math.round(pw*.15),block:0,vuln:0,weak:0,dodge:0,counter:0,nextAtk:0},
+     e:{hp:Math.round(55+f.pw*.35),max:Math.round(55+f.pw*.35),block:0,vuln:0,weak:0},deck:shuffle(deck),disc:[],hand:[],nae:0,played:[],log:[],over:false,fx:null,pops:[]};
+  if(h.pas.hyeoncheong)S.p.block=4+h.pas.hyeoncheong;S.log.push(`${h.n}이(가) ${f.n}과(와) 마주 섰다.`);nextTurn()}
+function drawN(n){for(let i=0;i<n;i++){if(!S.deck.length){S.deck=shuffle(S.disc);S.disc=[]}if(S.deck.length)S.hand.push(S.deck.pop())}}
+// 상대의 다음 행동: 전력에 따라 공격·연타·방어·기세를 돌린다
+function plan(){const p=S.f.pw,r=Math.random();S.intent=r<.45?{k:'atk',v:Math.round(6+p*.06)}:r<.7?{k:'multi',v:Math.round(3+p*.025),n:3}:r<.88?{k:'def',v:Math.round(8+p*.05)}:{k:'buff',v:3}}
+function nextTurn(){S.turn++;if(S.turn>S.max)return end();S.p.block=S.turn===1?S.p.block:0;S.nae=3+(S.turn===1&&S.h.pas.taeeul?1:0);S.played=[];drawN(5);plan();draw()}
+function cardDmg(c){const lv=S.h.arts[c.art]||1;let d=c.dmg||0;if(c.combo&&S.played.includes(c.combo))d+=c.comboDmg;d=Math.round(d*mul(lv));if(S.p.nextAtk&&c.type==='atk'){d+=S.p.nextAtk}
+  if(S.p.weak)d=Math.round(d*.75);if(S.e.vuln)d=Math.round(d*1.5);if(S.h.pas.janggwaebo&&c.art==='janggwae')d=Math.round(d*1.1);if(c.execute&&S.e.hp<=S.e.max*.4)d*=2;return d}
+function hitsOf(c){const lv=S.h.arts[c.art]||1;if(c.hits6&&lv>=6)return c.hits6;if(c.hitsPer3)return c.hits+Math.floor(lv/3)-1;return c.hits||1}
+function play(i){if(S.over)return;const id=S.hand[i],c=CARDS[id];if(c.cost>S.nae)return;S.nae-=c.cost;S.hand.splice(i,1);S.disc.push(id);
+  const lv=S.h.arts[c.art]||1;let tot=0;
+  if(c.dmg){const n=hitsOf(c),per=cardDmg(c);for(let k=0;k<n;k++){let x=per;if(!c.pierce&&S.e.block){const b=Math.min(S.e.block,x);S.e.block-=b;x-=b}S.e.hp-=x;tot+=x}if(S.p.nextAtk)S.p.nextAtk=0;
+    S.fx={side:'e',n:c.fxn||c.id};S.pops.push({side:'e',t:n>1?`${per}×${n}`:String(tot)})}
+  if(c.block){const b=Math.round(c.block*mul(lv));S.p.block+=b;if(!c.dmg){S.fx={side:'p',n:c.fxn||c.id};S.pops.push({side:'p',t:'+'+b,blue:1})}}
+  if(c.vuln)S.e.vuln+=c.vuln;if(c.weak)S.e.weak+=c.weak;if(c.draw)drawN(c.draw);if(c.nextAtk)S.p.nextAtk+=c.nextAtk;if(c.counter)S.p.counter+=c.counter;if(c.dodge)S.p.dodge+=c.dodge;
+  S.played.push(id);S.log.unshift(`${S.turn}턴: 「${c.n}」${tot?` → ${tot} 피해`:''}${c.block?` 방어 +${Math.round(c.block*mul(lv))}`:''}`);
+  if(S.e.hp<=0){S.e.hp=0;return end()}draw()}
+function enemyTurn(){if(S.over)return;S.disc.push(...S.hand);S.hand=[];const it=S.intent;S.e.block=0;
+  const dmgIn=v=>{let x=v;if(S.e.weak)x=Math.round(x*.75);if(S.p.vuln)x=Math.round(x*1.5);if(S.h.pas.hoeseon)x=Math.round(x*.9);if(S.p.dodge){S.p.dodge--;S.log.unshift('무염십팔보로 흘려보냈다.');return}
+    const b=Math.min(S.p.block,x);S.p.block-=b;x-=b;S.p.hp-=x;if(x)S.pops.push({side:'p',t:'-'+x});if(S.p.counter){S.e.hp-=S.p.counter;S.pops.push({side:'e',t:'반격 '+S.p.counter})}};
+  if(it.k==='atk'){dmgIn(it.v);S.fx={side:'p',n:'b_noesin'};S.log.unshift(`${S.f.n}의 공격 ${it.v}`)}
+  else if(it.k==='multi'){for(let k=0;k<it.n;k++)dmgIn(it.v);S.fx={side:'p',n:'b_biryong'};S.log.unshift(`${S.f.n}의 연타 ${it.v}×${it.n}`)}
+  else if(it.k==='def'){S.e.block+=it.v;S.log.unshift(`${S.f.n}이(가) 자세를 굳혔다(방어 ${it.v})`)}
+  else{S.f={...S.f,pw:S.f.pw+15};S.log.unshift(`${S.f.n}의 기세가 오른다`)}
+  S.p.counter=0;for(const t of ['vuln','weak']){if(S.e[t])S.e[t]--;if(S.p[t])S.p[t]--}
+  if(S.p.hp<=0){S.p.hp=0;return end()}if(S.e.hp<=0){S.e.hp=0;return end()}nextTurn()}
+function end(){S.over=true;const pr=S.p.hp/S.p.max,er=S.e.hp/S.e.max;S.win=S.e.hp<=0||(S.p.hp>0&&pr>er);S.log.unshift(S.win?`<b>${S.h.n}의 승리</b>`:`<b>${S.f.n}의 승리</b>`);draw()}
+function side(who){const isP=who==='p',o=isP?S.p:S.e,img=isP?S.h.img:'';
+  const st=[o.vuln?`내상 ${o.vuln}`:'',o.weak?`약화 ${o.weak}`:'',isP&&o.dodge?`회피 ${o.dodge}`:'',isP&&o.counter?`반격 ${o.counter}`:'',isP&&o.nextAtk?`다음 공격 +${o.nextAtk}`:''].filter(Boolean).join(' · ');
+  return `<div class="side ${S.fx&&S.fx.side===who?'hit':''}">${S.fx&&S.fx.side===who?`<div class="fx" data-fx="${S.fx.n}"></div>`:''}${S.pops.filter(x=>x.side===who).map(x=>`<div class="pop" style="${x.blue?'color:#9cc8ff':''}">${x.t}</div>`).join('')}
+   <div class="pt" style="${img?`background-image:url(${img})`:''}"></div><b>${isP?S.h.n:S.f.n}</b>
+   <div class="bar"><i style="width:${100*o.hp/o.max}%"></i></div><div>${o.hp}/${o.max} ${o.block?`<span class="blk">방어 ${o.block}</span>`:''}</div><div class="st">${st}</div>
+   ${!isP&&!S.over?`<div class="intent">${({atk:`⚔️ 공격 ${S.intent.v}`,multi:`⚔️ 연타 ${S.intent.v}×${S.intent.n}`,def:`🛡️ 방어 ${S.intent.v}`,buff:'🔥 기세를 끌어올린다'})[S.intent.k]}</div>`:''}</div>`}
+function cardHtml(id,i){const c=CARDS[id],off=c.cost>S.nae||S.over;const d=c.dmg?cardDmg(c):0,n=c.dmg?hitsOf(c):0,lv=S.h.arts[c.art]||1;
+  const tx=[d?`피해 ${d}${n>1?`×${n}`:''}`:'',c.block?`방어 ${Math.round(c.block*mul(lv))}`:'',c.vuln?`내상 ${c.vuln}`:'',c.weak?`약화 ${c.weak}`:'',c.pierce?'방어 무시':'',c.draw?`${c.draw}장 뽑기`:'',c.nextAtk?`다음 공격 +${c.nextAtk}`:'',c.counter?`반격 ${c.counter}`:'',c.dodge?'공격 한 번 회피':'',c.combo?'천강은홍 뒤 +8':'',c.execute?'체력 40% 이하면 2배':''].filter(Boolean).join(' · ');
+  return `<div class="card ${c.type} ${off?'off':''}" onclick="play(${i})"><div class="cost">${c.cost}</div><b>${c.n}</b><div class="art">${ARTN[c.art]} ${lv}성</div><div class="tx">${tx}</div></div>`}
+function draw(){const app=document.getElementById('app');
+  if(!S){app.innerHTML=setup();return}
+  app.innerHTML=`<div class="stage"><div class="sides">${side('p')}<div style="align-self:center;font-size:30px;color:#ff8a6a">對</div>${side('e')}</div>
+   <div class="hand">${S.hand.map(cardHtml).join('')}</div>
+   <div class="bottom"><div class="nae">${S.turn}/${S.max}턴 · 내력 <b>${S.nae}</b> · 덱 ${S.deck.length} · 버린 ${S.disc.length}</div>
+   <div>${S.over?`<button class="main" onclick="S=null;draw()">다시 고르기</button> <button onclick="start()">한 판 더</button>`:`<button class="main" onclick="enemyTurn()">턴 끝내기</button>`}</div></div>
+   <div class="log">${S.log.slice(0,12).join('<br>')}</div></div>`;
+  S.pops=[];playFx()}
+function playFx(){document.querySelectorAll('.fx[data-fx]').forEach(el=>{const n=el.dataset.fx;el.removeAttribute('data-fx');el.style.backgroundImage=`url(${rlFx(n)})`;let f=0;const t=setInterval(()=>{const k=Math.min(f,5);el.style.backgroundPosition=`${(k%3)*50}% ${Math.floor(k/3)*100}%`;el.style.opacity=f>6?String(Math.max(0,1-(f-6)/3)):'1';if(++f>=10){clearInterval(t);el.remove()}},120)})}
+draw();
+</script></body></html>
