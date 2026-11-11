@@ -158,7 +158,7 @@ function prologue(){return{title:'장례',art:'img/jin.png',p:[
     ['사부님 뜻대로 제가 먹겠습니다.',()=>{G.ilbi='late';G.flags.samUse='jin';log('삿갓 노인은 말없이 떠났다.')}],
     ['문파를 위해 쓰겠습니다.',()=>{G.ilbi='late';G.flags.samUse='jin';log('삿갓 노인은 말없이 떠났다.')}],
     ['사매의 몸이 요즘 이상합니다. 사매에게 쓸까 합니다.',()=>{G.ilbi='early';G.flags.samUse='lim';
-      MODAL={title:'삿갓 노인',p:['노인이 임영옥의 증상을 하나하나 물었다. 손끝이 차고, 기침이 잦고, 한여름에도 얼굴이 희다는 말을 듣자 노인의 얼굴이 굳었다.','"그 영약으로는 그 병을 못 고친다. 태음신맥이다." 노인은 삿갓을 벗었다. "내 이름은 강일비다. 네 사부의 사형이지. 그 아이는 내가 맡으마. 다만 내가 돌아왔다는 것은 문 밖에 알리지 마라."'],ch:[['알겠습니다, 사백님.',()=>{addArt('lim','chileum');log('강일비가 본산에 머물며 임영옥에게 칠음진기를 가르치기 시작했다.')}]]};
+      MODAL={title:'삿갓 노인',p:['노인이 임영옥의 증상을 하나하나 물었다. 손끝이 차고, 기침이 잦고, 한여름에도 얼굴이 희다는 말을 듣자 노인의 얼굴이 굳었다.','"그 영약으로는 그 병을 못 고친다. 태음신맥이다." 노인은 삿갓을 벗었다. "내 이름은 강일비다. 네 사부의 사형이지. 그 아이는 내가 맡으마. 다만 내가 돌아왔다는 것은 문 밖에 알리지 마라."'],ch:[['알겠습니다, 사백님.',()=>{addArt('lim','chileum');addIlbi(false);log('강일비가 본산에 머물며 임영옥에게 칠음진기를 가르치기 시작했다.')}]]};
       return true}]
   ]}}
 // 태을선거: 진산월이 직접 간다(한 달을 다 쓴다). 열석대진은 천하삼십육검 6성 이상이어야 뚫는다
@@ -176,6 +176,9 @@ function endRetreat(){const j=D('jin');G.flags.yongyeong=1;gainWis(j,3,'석실 �
   const gj=(j.arts.yuungyeol||0)>=7;if(gj)G.flags.geomjeong=1;
   MODAL={title:'출관',p:['백골은 이백 년 전의 혈선 정립병이었다. 그가 안고 있던 용영검과 《혈선비록》, 그리고 돌침상 밑 석판에 새겨진 곽일산의 유운검결 도해 백이십여 개가 남아 있었다.','석 달 동안 진산월은 도해를 따라 유운검법을 처음부터 다시 익혔다.'+(gj?' 마지막 달, 열여덟 초가 하나로 꿰이는 초식이 손끝에서 나왔다. 진산월은 그것을 검정중원이라 불렀다.':' 아직 열여덟 초가 하나로 꿰이지는 않았다. 유운검결이 7성에 이르면 닿을 것이다.')],
     ch:[['산을 내려간다.',()=>{log('진산월이 출관했다. 용영검, 태진강기 2성, 유운검법 → 유운검결'+(gj?', 검정중원':''))}]]}}
+// 강일비: 임장홍의 사형. 본산에 머물지만 싸움에는 나서지 않는다(파견·위기·기습 제외). 늦은 길이면 정체를 숨긴 떠돌이 노인으로 지낸다
+function addIlbi(hidden){if(has('ilbi'))return;G.ds.push({id:'ilbi',n:hidden?'삿갓 노인':'강일비',r:hidden?'떠돌이 객':'사백(원로)',elder:1,ch:90,
+  st:{tong:60,ji:90,jeong:50,ma:55,geom:95,gwon:70,oseong:95},arts:{yuun:8,cheonha:8,taeeul:8,guyang:3,hyeoncheong:3,chileum:2},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null})}
 function addArt(id,a){const d=D(id);if(d&&d.arts[a]==null){d.arts[a]=0;d.xp[a]=0}}
 // 이달 시작에 들어오는 정해진 사건
 function scheduled(m){
@@ -183,7 +186,7 @@ function scheduled(m){
   if(m===1)E.push({t:'event',id:'sam',title:'만년삼정',due:2,text:'만년삼정을 복용하려면 길일을 골라 몸을 다스려야 한다. 3월 초하루로 날을 잡았다. 그때까지 영약은 장문인 거처의 옥함에 있다.',info:1});
   if(m===2)E.push(theft());
   if(m===2)E.push({t:'event',id:'sign',title:'임영옥의 징조',text:'임영옥이 차를 따르다 찻잔을 떨어뜨렸다. 손끝이 얼음처럼 차다.',info:1});
-  if(m===3&&G.ilbi==='late'){addArt('lim','chileum');E.push({t:'event',id:'oldman',title:'떠돌이 노인',text:'장례식 날 보았던 삿갓 노인이 본산에 찾아와 하룻밤 묵기를 청했다. 노인은 그 뒤로 떠나지 않고 후산 초막에 머문다. 이상하게도 임영옥과 자주 이야기를 나눈다.',info:1})}
+  if(m===3&&G.ilbi==='late'){addArt('lim','chileum');addIlbi(true);E.push({t:'event',id:'oldman',title:'떠돌이 노인',text:'장례식 날 보았던 삿갓 노인이 본산에 찾아와 하룻밤 묵기를 청했다. 노인은 그 뒤로 떠나지 않고 후산 초막에 머문다. 이상하게도 임영옥과 자주 이야기를 나눈다.',info:1})}
   if(m===3)E.push({t:'task',id:'seongsim',title:'《성심록》 해독',due:14,text:'장경각 깊은 곳에서 3대조 장하민의 《성심록》이 나왔다. 오래된 글자라 읽어 내려면 오성 높은 제자가 장경각에 붙어 있어야 한다. 화산에서 이 책을 노린다는 소문이 있다.'});
   if(m===5||m===9)E.push(crisis(m));
   if(m===12)E.push({t:'event',id:'yearend',title:'1년이 지났다',info:1,text:'최소판은 여기까지다. 다음 판부터 태을선거, 석실 폐관, 초가보 본산 기습이 이어진다.'});
@@ -274,7 +277,7 @@ const A={
 // 가르칠 사람: 그 무공 5성 이상, 배우는 사람 말고. 요양·파견 중이면 못 가르친다
 function teacher(a,not){return G.ds.filter(x=>x.id!==not&&(x.arts[a]||0)>=5&&x.pos!=='away'&&x.pos!=='hurt').sort((x,y)=>y.arts[a]-x.arts[a])[0]}
 // 폐관 중 초가보 기습: 수비는 전력 그대로, 수련 중은 절반, 외당 단계마다 +25
-function raid(){const def=G.ds.filter(d=>d.id!=='jin'&&(d.pos==='guard'||d.pos==='train'||d.pos==='rest'||d.pos==='study')).reduce((s,d)=>s+power(d)*(d.pos==='guard'?1:.5)*(.6+d.st.tong/250),0)+25*G.fac.oe,atk=330;
+function raid(){const def=G.ds.filter(d=>d.id!=='jin'&&!d.elder&&(d.pos==='guard'||d.pos==='train'||d.pos==='rest'||d.pos==='study')).reduce((s,d)=>s+power(d)*(d.pos==='guard'?1:.5)*(.6+d.st.tong/250),0)+25*G.fac.oe,atk=330;
   if(def>=atk){G.fame+=6;G.qual+=3;log(`장문인이 없는 틈에 초가보가 본산을 쳤다. 남은 제자들이 막아 냈다. (방어 ${Math.round(def)} : 공격 ${atk}) 명성 +6`)}
   else{G.income.sang=Math.max(0,G.income.sang-20);for(const d of G.ds.filter(d=>d.pos==='guard'))if(Math.random()<.5){d.pos='hurt';d.away=4}
     log(`장문인이 없는 틈에 초가보가 본산을 쳤다. 막지 못했다. (방어 ${Math.round(def)} : 공격 ${atk}) 서안 상권 수입 -20, 수비하던 제자 일부 부상`)}}
@@ -402,7 +405,7 @@ function discTab(){
 ${lib.length?`<div style="margin-top:6px;font-size:12px"><select id="tc_${d.id}"><option value="">전수할 무공</option>${lib.map(a=>`<option value="${a}" ${okA(a)?'':'disabled'}>${ARTS[a].n}${tOf(a)?` (스승 ${tOf(a).n})`:' (가르칠 사람 없음)'}${SECRET[a]&&d.ch<SECRET[a]?' (충성 부족)':''}</option>`).join('')}</select> <button onclick="A.teach('${d.id}')" ${G.act<=0?'disabled':''}>전수</button></div>`:''}
 </div>`}).join('')}</div>`;
 }
-function freeDs(){return G.ds.filter(d=>d.id!=='jin'&&d.pos!=='away'&&d.pos!=='hurt')}
+function freeDs(){return G.ds.filter(d=>d.id!=='jin'&&!d.elder&&d.pos!=='away'&&d.pos!=='hurt')}
 function suggest(){
   const used=new Set(),pick={};
   const pool=()=>{const c=freeDs().filter(d=>!used.has(d.id)&&d.id!=='lim'&&d.pos!=='study');const calm=c.filter(d=>d.mind<70);return calm.length?calm:c};
@@ -478,7 +481,7 @@ function botMonth(){
   A.next();
 }
 if(BOT){save=()=>{};newGame();TAB="main";setInterval(botMonth,1500)}
-else if(load()){for(const d of G.ds){if(d.st&&d.st.mugol!=null&&d.st.geom==null){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{...d.st,geom:d.st.mugol,gwon:d.st.mugol}}}for(const d of G.ds)if(!d.st){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{tong:50,ji:50,jeong:50,ma:50,geom:60,gwon:60,oseong:60}}if(G.half==null){G.half=0;G.act=Math.min(G.act,1)}if(!G.ilbi)MODAL=prologue();if(G.flags.seongsim&&!G.flags.taeeul&&!G.q.some(e=>e.id==='taeeul'))openTaeeul();render()}else newGame();
+else if(load()){for(const d of G.ds){if(d.st&&d.st.mugol!=null&&d.st.geom==null){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{...d.st,geom:d.st.mugol,gwon:d.st.mugol}}}for(const d of G.ds)if(!d.st){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{tong:50,ji:50,jeong:50,ma:50,geom:60,gwon:60,oseong:60}}if(G.ilbi==='early'||(G.ilbi==='late'&&G.m>=3))addIlbi(G.ilbi==='late');if(G.half==null){G.half=0;G.act=Math.min(G.act,1)}if(!G.ilbi)MODAL=prologue();if(G.flags.seongsim&&!G.flags.taeeul&&!G.q.some(e=>e.id==='taeeul'))openTaeeul();render()}else newGame();
 </script>
 </body>
 </html>
