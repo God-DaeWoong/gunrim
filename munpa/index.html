@@ -739,7 +739,7 @@ function botMonth(){
 if(/[?&]gallery=1/.test(location.search)){const rows=[];
   const add=(grp,n,src,note)=>rows.push(`<div class="d" style="text-align:center"><div class="pt" style="width:96px;height:96px;margin:0 auto;font-size:36px">${src?`<img src="${src}" alt="" onerror="this.parentNode.innerHTML='✕'">`:n[0]}</div><b>${n}</b><br><span class="muted" style="font-size:11px">${grp} · ${src?src.split('/').pop():'그림 없음(이름 첫 글자)'}${note?'<br>'+note:''}</span></div>`);
   for(const r of ROSTER)add('종남',r.n,r.rl?rlImg(r.rl):r.img,r.rl?'로그라이크 연동':'');
-  add('종남','강일비',null,'그림요청 9·10번');add('종남','전풍개',null,'그림요청 11번');add('종남','전흠',null,'그림요청 12번');
+  add('종남','강일비',null,'그림요청 9·10번');add('종남','전풍개',null,'그림요청 11번');add('종남','전흠',null,'그림요청 12번');[['동중산',19],['유소응',20],['서문연상',21],['성락중',22],['단리상',23],['손풍',24]].forEach(([n,k])=>add('종남(합류)',n,null,`그림요청 ${k}번`));
   for(const L of LANES)add('종남혈사 장수',L.boss.n,RLEN[L.boss.n]?rlImg(RLEN[L.boss.n][0]):null,RLEN[L.boss.n]?'':'그림요청 13~15번');
   for(const n in RLEN)add('로그라이크 적',n,rlImg(RLEN[n][0]),RLEN[n][1]?RLEN[n][1].join('·'):'');
   document.getElementById('app').innerHTML=`<div class="wrap"><h2>초상 점검</h2><p class="muted">✕는 파일이 있어야 하는데 안 열린 것, 글자는 아직 그림이 없는 것이다.</p><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${rows.join('')}</div></div>`}
