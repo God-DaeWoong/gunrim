@@ -74,7 +74,7 @@ const SECRET={cheonha:70};
 const BASE_S=['taeeul','guyang','hyeoncheong'],SENIOR=['lim','mae','so','eung'];
 // 제자: apt = 수련 배율, ch = 충성
 const ROSTER=[
-  {id:'jin',n:'진산월',r:'장문인',img:'img/jin.png',apt:1,ch:100,arts:{yuun:4,cheonha:4,janggwae:3,hongdan:1,taeeul:3,guyang:1,hyeoncheong:1}},
+  {id:'jin',n:'진산월',r:'장문인',img:'img/jin.png',apt:1,ch:100,arts:{yuun:5,cheonha:5,janggwae:3,hongdan:1,taeeul:3,guyang:1,hyeoncheong:1}},
   {id:'lim',n:'임영옥',r:'사매',apt:1.1,ch:95,taeum:1,arts:{yuun:5,wolnyeo:3,taeeul:3}},
   {id:'mae',n:'매상',r:'사제',apt:.9,ch:80,arts:{cheonha:3,taeeul:3}},
   {id:'so',n:'소지산',r:'사제',apt:.9,ch:90,arts:{nakha:2,taeeul:2}},
@@ -324,7 +324,28 @@ ${{main:mainTab,disc:discTab,ev:evTab,cal:calTab}[TAB]()}</div>
 <button class="main next" onclick="A.next()" ${MODAL?'disabled':''}>다음 달 ▶</button>`+modalHTML();
 }
 /* ================= 시작 ================= */
-if(load()){if(!G.ilbi)MODAL=prologue();render()}else newGame();
+// 관전 모드(?bot=1): 봇이 한 달씩 두는 것을 보여 준다. 저장은 하지 않는다
+const BOT=/[?&]bot=1/.test(location.search);
+function botMonth(){
+  if(MODAL){A.choose(Math.floor(Math.random()*MODAL.ch.length));return}
+  if(G.over||G.done)return;
+  const fr=freeDs(),say=[];
+  if(G.task){const s=fr.filter(d=>d.id!=="lim").sort((a,b)=>b.apt-a.apt)[0];if(s&&s.pos!=="study"){A.pos(s.id,"study");say.push(s.n+" → 장경각 해독")}}
+  fr.filter(d=>d.pos!=="study"&&d.mind>=70).forEach(d=>{A.pos(d.id,"rest");say.push(d.n+" → 휴식(심마)")});
+  fr.filter(d=>d.pos==="rest"&&d.mind<20).forEach(d=>A.pos(d.id,"train"));
+  for(const e of [...G.q]){
+    if(e.t==="crisis"&&G.act>0){const d=freeDs().filter(d=>d.id!=="lim").sort((a,b)=>power(b)-power(a))[0];if(d){document.getElementById("cs_"+e.id).value=d.id;A.defend(e.id,"sang");say.push(d.n+" → 서안 상권 방어")}}
+    else if(e.t==="job"&&G.act>0){const d=freeDs().filter(d=>d.id!=="lim"&&d.mind<60).sort((a,b)=>power(b)-power(a))[0];if(d&&chance(d,e.need)>=50){document.getElementById("js_"+e.id).value=d.id;A.sendJob(e.id);say.push(d.n+" → "+e.title)}}
+    else if(e.t!=="job"&&e.t!=="crisis")A.info(e.id);
+  }
+  if(G.act>0&&G.fac.oe===0&&G.eun>=80&&G.m<2){A.build("oe");say.push("외당 짓기")}
+  else if(G.act>0&&G.eun>=260&&G.fac.yeon<3){A.build("yeon");say.push("연무장 올리기")}
+  if(G.act>0){A.focus();say.push("진산월 수련 전념")}
+  log("<span style=\"color:var(--blue)\">[봇] "+(say.join(", ")||"할 일 없음")+"</span>");
+  A.next();
+}
+if(BOT){save=()=>{};newGame();TAB="main";setInterval(botMonth,1500)}
+else if(load()){if(!G.ilbi)MODAL=prologue();render()}else newGame();
 </script>
 </body>
 </html>
