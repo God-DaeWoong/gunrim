@@ -213,6 +213,7 @@ const A={
     for(const x of e.opts)if(x!==o)lose(x);
     if(win){G.fame+=3;log(`${d.n}이(가) ${o.n}을(를) 지켜 냈다. 명성 +3`)}else{lose(o);log(`${d.n}이(가) ${o.n}을(를) 지키지 못했다.`)}
     G.q=G.q.filter(x=>x!==e);save();render()},
+  decline(eid){const e=G.q.find(x=>x.id===eid);if(!e)return;G.q=G.q.filter(x=>x!==e);log(`${e.title} 의뢰를 거절했다.`);save();render()},
   info(eid){G.q=G.q.filter(x=>x.id!==eid);save();render()},
   choose(i){const c=MODAL.ch[i];MODAL=null;const keep=c[1]();if(!keep)MODAL=MODAL||null;save();render()},
   autoNext(v){G.autoNext=v;save()},
@@ -325,7 +326,7 @@ function evTab(){
   const opt=(need,eid)=>fr.map(d=>`<option value="${d.id}" ${sg[eid]&&sg[eid].d===d.id?'selected':''}>${d.n} (전력 ${power(d)}, 승률 ${chance(d,need)}%${d.mind>=70?', 심마':''})</option>`).join('');
   const body=G.q.map(e=>{
     if(e.t==='job')return `<div class="panel ev job"><b>${e.title}</b> <span class="muted">· ${yr(e.due)}까지</span><p>${e.text} 필요 전력 ${e.need}</p>
-<select id="js_${e.id}">${opt(e.need,e.id)}</select> <button onclick="A.sendJob('${e.id}')" ${!fr.length?'disabled':''}>보내기</button></div>`;
+<select id="js_${e.id}">${opt(e.need,e.id)}</select> <button onclick="A.sendJob('${e.id}')" ${!fr.length?'disabled':''}>보내기</button> <button onclick="A.decline('${e.id}')">거절</button></div>`;
     if(e.t==='crisis')return `<div class="panel ev crisis"><b>${e.title}</b> <span class="muted">· ${yr(e.due)}까지, 미루면 둘 다 잃는다</span><p>${e.text}</p>
 <select id="cs_${e.id}">${fr.map(d=>`<option value="${d.id}" ${sg[e.id]&&sg[e.id].d===d.id?'selected':''}>${d.n} (전력 ${power(d)})</option>`).join('')}</select>
 ${e.opts.map(o=>`<div style="margin-top:6px"><button onclick="A.defend('${e.id}','${o.k}')" ${!fr.length?'disabled':''}>${o.n} 막기 (필요 전력 ${o.need})</button> <span class="muted">못 막으면 ${o.loss}</span></div>`).join('')}</div>`;
