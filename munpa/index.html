@@ -126,8 +126,8 @@ const ROSTER=[
 const STN={tong:'통솔',ji:'지력',jeong:'정치',ma:'매력',geom:'검재',gwon:'권재',oseong:'오성'};
 const growOf=(d,a)=>(ARTS[a].t==='s'?d.st.oseong:ARTS[a].w==='sin'?(d.st.geom+d.st.gwon)/2:d.st[ARTS[a].w]||60)/80;
 const POS={train:'수련',guard:'수비',rest:'휴식',study:'장경각 해독',shop:'주루 관리',away:'파견 중',hurt:'요양'};
-// 주루 관리: 정치가 높을수록 많이 번다. 셋까지만 센다(달마다)
-const shopEarn=()=>G.ds.filter(d=>d.pos==='shop').map(d=>Math.round(d.st.jeong/6+d.st.ji/20)).sort((a,b)=>b-a).slice(0,3).reduce((s,v)=>s+v,0);
+// 주루 관리: 정치가 높을수록 많이 번다. 여섯까지 센다(넷째부터는 절반, 달마다)
+const shopEarn=()=>G.ds.filter(d=>d.pos==='shop').map(d=>Math.round(d.st.jeong/6+d.st.ji/20)).sort((a,b)=>b-a).slice(0,6).reduce((s,v,i)=>s+(i<3?v:Math.round(v/2)),0);
 const FAC={yeon:{n:'연무장',d:'수련치 +10%/단계'},jang:{n:'장경각',d:'해독 속도, 전수할 수 있는 무공 수'},yak:{n:'약방',d:'심마·부상 회복'},oe:{n:'외당',d:'본산 방어, 잠입 차단, 사건을 일찍 앎'}};
 // 로그라이크 그림을 같은 사이트에서 불러 쓴다. 사이트: /gunrim/munpa/ → /gunrim/img/, 내 컴퓨터: 로그라이크 폴더
 const RL_LOCAL=location.protocol==='file:';
