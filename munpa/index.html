@@ -571,7 +571,7 @@ function endHalf(){
     else if(d.pos==='hurt'&&--d.away<=0){d.pos='rest';log(`${d.n}이(가) 회복했다.`)}
   // 심마(순)
   for(const d of G.ds){if(d.id==='jin')continue;
-    d.mind+=({train:1,guard:1.5,study:1.5,shop:1.5,away:6,rest:-10-5*G.fac.yak,hurt:-2.5}[d.pos]||0);d.mind=Math.round(Math.max(0,Math.min(120,d.mind)));
+    d.mind+=({train:-1,guard:0,study:0,shop:0,away:3,rest:-10-5*G.fac.yak,hurt:-2.5}[d.pos]||0);d.mind=Math.round(Math.max(0,Math.min(120,d.mind)));
     if(d.mind>=100&&d.pos!=='hurt'&&d.pos!=='away'){d.pos='rest';log(`${d.n}의 심마가 깊어 억지로 쉬게 했다.`)}}
   // 해독(순)
   if(G.task){const st=G.ds.filter(d=>d.pos==='study');const pr=st.reduce((s,d)=>s+10*d.st.ji/70,0)*(1+.5*(G.fac.jang-1));G.task.prog=Math.min(100,G.task.prog+pr);
@@ -597,7 +597,7 @@ function endMonth(){
     if(G.retreat===1&&!G.flags.raided&&!G.flags.choDone)raid();
     if(G.retreat===0)endRetreat()}
   // 돈
-  const up=G.ds.filter(d=>!d.elder&&d.id!=='jeonp').length*5+Object.values(G.fac).reduce((s,v)=>s+v*5,0);const sh=shopEarn(),inc=Object.values(G.income).reduce((s,v)=>s+v,0)+sh;
+  const up=G.ds.filter(d=>!d.elder&&d.id!=='jeonp').length*4+Object.values(G.fac).reduce((s,v)=>s+v*5,0);const sh=shopEarn(),inc=Object.values(G.income).reduce((s,v)=>s+v,0)+sh;
   G.eun+=inc-up;log(`월말 정산: 수입 ${inc}${sh?` (주루 관리 ${sh} 포함)`:''}, 지출 ${up} → 은자 ${G.eun}`);
   if(G.eun<0){G.broke++;if(G.broke>=3){gameOver('은자가 바닥난 채 석 달이 지났다. 제자들이 하나둘 산을 내려갔다.');return}}else G.broke=0;
   // 라이벌
@@ -676,7 +676,7 @@ ${(()=>{const lib=LIB.filter(a=>!knows(j,a)&&teacher(a,'jin'));return lib.length
  심법 <select onchange="A.jdir('s',this.value)"><option value="">자동</option>${Object.keys(j.arts).filter(a=>ARTS[a].t==='s').map(a=>`<option value="${a}" ${j.focusS===a?'selected':''} ${j.arts[a]>=capOf(j,a)?'disabled':''}>${ARTS[a].n}${j.arts[a]>=capOf(j,a)?(j.arts[a]>=10?' (대성)':' (상한)'):''}</option>`).join('')}</select></div></div>
 <div class="panel"><h3>시설</h3><div class="grid">${Object.keys(FAC).map(k=>{const lv=G.fac[k],c=80*(lv+1);return `<div class="d"><b>${FAC[k].n}</b> ${lv}단계<br><span class="muted">${FAC[k].d}</span><br>
 <button style="margin-top:6px" onclick="A.build('${k}')" ${lv>=(G.facCap||3)||G.eun<c||G.act<=0?'disabled':''}>${lv>=(G.facCap||3)?'최고 단계':`${lv?'올리기':'짓기'} (${c}냥)`}</button></div>`}).join('')}</div></div>
-<div class="panel"><h3>수입과 지출</h3><p>${Object.entries(G.income).map(([k,v])=>`${INCN[k]||k} ${v}`).join(' · ')} ${shopEarn()?` · 주루 관리 ${shopEarn()}`:''} / 제자 유지비 ${G.ds.filter(d=>!d.elder&&d.id!=='jeonp').length*5} · 시설 유지비 ${Object.values(G.fac).reduce((s,v)=>s+v*5,0)}</p></div>
+<div class="panel"><h3>수입과 지출</h3><p>${Object.entries(G.income).map(([k,v])=>`${INCN[k]||k} ${v}`).join(' · ')} ${shopEarn()?` · 주루 관리 ${shopEarn()}`:''} / 제자 유지비 ${G.ds.filter(d=>!d.elder&&d.id!=='jeonp').length*4} · 시설 유지비 ${Object.values(G.fac).reduce((s,v)=>s+v*5,0)}</p></div>
 <div class="panel"><h3>기록</h3><div class="log">${G.log.join('<br>')}</div></div>`;
 }
 function discTab(){
