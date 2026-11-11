@@ -301,9 +301,12 @@ function scheduled(m){
   if(m===1)E.push({t:'event',id:'sam',title:'만년삼정',due:2,text:'만년삼정을 복용하려면 길일을 골라 몸을 다스려야 한다. 3월 초하루로 날을 잡았다. 그때까지 영약은 장문인 거처의 옥함에 있다.',info:1});
   if(m===2)E.push(theft());
   if(m===2)E.push({t:'event',id:'sign',title:'임영옥의 징조',text:'임영옥이 차를 따르다 찻잔을 떨어뜨렸다. 손끝이 얼음처럼 차다.',info:1});
-  if(m===4&&G.ilbi==='late'&&!has('ilbi'))E.push({t:'event',id:'limcold',title:'임영옥의 한기',info:1,text:'임영옥의 손끝이 날로 차가워진다. 약방의 약으로는 듣지 않는다. 장례식 날 영전에 오래 절하던 삿갓 쓴 사내이 떠오른다. 그 사내는 무언가 아는 눈치였다. (소문 탐문으로 사내의 행방을 찾을 수 있다)'});
+  if(m===4&&G.ilbi==='late'&&!has('ilbi'))E.push({t:'quest',id:'limcold',title:'임영옥의 한기',btn:'사람을 풀어 그 사내를 찾게 한다',text:'임영옥의 손끝이 날로 차가워진다. 약방의 약으로는 듣지 않는다. 장례식 날 영전에 오래 절하던 삿갓 쓴 사내이 떠오른다. 그 사내는 무언가 아는 눈치였다.'});
+  // 7월까지 못 찾았으면 소문이 저절로 들어온다
+  if(m===7&&G.ilbi==='late'&&!has('ilbi')&&!G.q.some(e=>e.id==='findilbi')&&!G.flags.ilbiComing)E.push({t:'quest',id:'findilbi',title:'삿갓 쓴 사내의 행방',text:'낙양 북쪽 객잔에 삿갓 쓴 사내가 오래 묵고 있다는 소문이다. 매력 높은 사람을 보내 정중히 모셔 온다(매력 60 이상이면 잘 된다). 한 달 동안 자리를 비운다.',btn:'보낸다'});
   if(m===3)E.push({t:'task',id:'seongsim',title:'《성심록》 해독',due:14,text:'장경각 깊은 곳에서 3대조 장하민의 《성심록》이 나왔다. 오래된 글자라 읽어 내려면 오성 높은 제자가 장경각에 붙어 있어야 한다. 화산에서 이 책을 노린다는 소문이 있다.'});
   if(m===5||m===9||m===13||m===16)E.push(crisis(m));
+  if(G.flags.ilbiSearch===m&&!has('ilbi')&&!G.q.some(e=>e.id==='findilbi')){E.push({t:'quest',id:'findilbi',title:'삿갓 쓴 사내의 행방',text:'낙양 북쪽 객잔에 삿갓 쓴 사내가 오래 묵고 있다는 소문이다. 매력 높은 사람을 보내 정중히 모셔 온다(매력 60 이상이면 잘 된다). 한 달 동안 자리를 비운다.',btn:'보낸다'});G.flags.ilbiSearch=0}
   if(G.flags.ilbiComing===m&&!has('ilbi'))ilbiArrive('낙양에 갔던 제자가 삿갓 쓴 사내을 모시고 돌아왔다.');
   if(m===10)E.push({t:'quest',id:'gorge',title:'협곡 정찰',due:17,text:'초가보 패잔병이 종남산 뒤 절벽 쪽 협곡으로 숨어들었다는 소문이다. 한 사람을 보내 살핀다. 길이 험하다.',btn:'보낸다'});
   if(m===12&&G.ilbi==='early'){addArt('jin','chileum');E.push({t:'event',id:'ilbiteach',title:'사백의 가르침',info:1,text:'강일비가 진산월을 불렀다. "이제 너도 칠음진기의 첫머리를 알아 두어라. 태음신맥이 아니니 깊이 들어가지는 못할 것이다."'})}
@@ -391,11 +394,12 @@ const A={
   decline(eid){const e=G.q.find(x=>x.id===eid);if(!e)return;G.q=G.q.filter(x=>x!==e);log(`${e.title} 의뢰를 거절했다.`);save();render()},
   quest(eid){const e=G.q.find(x=>x.id===eid);if(!e)return;
     if(eid==='taeeul'){if(G.half!==0||G.act<1||G.jinBusy||G.retreat)return;G.act=0;G.jinBusy=true;G.jinLock=1;if(goTaeeul())G.q=G.q.filter(x=>x!==e)}
+    else if(eid==='limcold'){G.q=G.q.filter(x=>x!==e);G.flags.ilbiSearch=G.m+1;log('서안과 낙양 쪽에 사람을 풀어 장례식 날의 삿갓 쓴 사내를 찾게 했다.')}
     else if(eid==='seokshil'){if(G.retreat)return;G.retreat=3;G.act=0;G.q=G.q.filter(x=>x!==e);log('진산월이 중봉 석실에 들어가 폐관했다. 석 달 동안 자리를 비운다.')}
     save();render()},
   dev(id){G.dev=G.dev||[];const x=DEV.find(v=>v.id===id);if(!x||G.dev.length>=2||(x.req&&!x.req())||G.eun<x.c||!useAct())return;G.eun-=x.c;G.dev.push({id,left:x.t});log(`문파 개발을 시작했다: ${x.n} (${x.t}순)`);save();render()},
   findIlbi(eid){const sel=document.getElementById('fi_'+eid);const d=sel&&D(sel.value);if(!d)return;G.q=G.q.filter(x=>x.id!==eid);d.pos='away';d.away=2;d.job=null;
-    if(Math.random()*100<chanceK(d,60,'ma'))G.flags.ilbiComing=G.m+1;else{log(`${d.n}이(가) 낙양까지 갔지만 사내는 이미 떠난 뒤였다. 다시 소문을 찾아야 한다.`)}save();render()},
+    if(Math.random()*100<chanceK(d,60,'ma'))G.flags.ilbiComing=G.m+1;else{G.flags.ilbiSearch=G.m+2;log(`${d.n}이(가) 낙양까지 갔지만 사내는 이미 떠난 뒤였다. 두 달쯤 뒤 다시 소문이 들어올 것이다.`)}save();render()},
   gorge(eid){const sel=document.getElementById('gs_'+eid);const d=sel&&D(sel.value);if(!d)return;G.q=G.q.filter(x=>x.id!==eid);
     if(d.id==='nak'){d.pos='away';d.away=12;d.job={nak:1};log('낙일방이 협곡 정찰을 나갔다가 돌아오지 않았다. 절벽 아래로 떨어졌다는 말이 돈다.')}
     else{d.pos='away';d.away=1;d.job=null;G.fame+=2;log(`${d.n}이(가) 협곡을 살피고 돌아왔다. 초가보 패잔병을 쫓아냈다. 명성 +2`)}save();render()},
