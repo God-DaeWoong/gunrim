@@ -265,15 +265,15 @@ const DEV=[
   {id:'yeon',n:'연공실',c:180,t:6,d:'폐관 수련 1.3배, 직접 지도의 깨달음 확률 +20%'},
   {id:'land',n:'초가보 옛 땅 흡수',c:50,t:2,d:'초가보가 쥐던 관중 상권. 수입 +30',req:()=>G.flags.choDone,rq:'초가보 멸망'},
   {id:'sukso1',n:'숙소 증축 1',c:150,t:4,d:'제자 정원 12 → 18',big:1},
-  {id:'sukso2',n:'숙소 증축 2',c:400,t:6,d:'제자 정원 18 → 25',req:()=>(G.devDone||[]).includes('sukso1'),rq:'숙소 증축 1',big:1},
-  {id:'sukso3',n:'숙소 증축 3',c:900,t:8,d:'제자 정원 25 → 35',req:()=>(G.devDone||[]).includes('sukso2'),rq:'숙소 증축 2',big:1},
-  {id:'sanmun',n:'산문 중건',c:300,t:6,d:'무너진 산문을 다시 세운다. 명성 +10, 지원자가 더 온다',big:1},
-  {id:'josa',n:'조사전 복원',c:600,t:8,d:'역대 조사의 위패를 다시 모신다. 구파 자격 +10, 모든 제자 심마 -20',req:()=>G.fame>=30,rq:'명성 30',big:1},
-  {id:'jeongak1',n:'전각 증축 1',c:500,t:6,d:'시설을 4단계까지 올릴 수 있다',big:1},
-  {id:'jeongak2',n:'전각 증축 2',c:1000,t:8,d:'시설을 5단계까지 올릴 수 있다',req:()=>(G.devDone||[]).includes('jeongak1'),rq:'전각 증축 1',big:1},
-  {id:'sulyeon',n:'후산 수련동',c:400,t:6,d:'폐관 수련 1.2배, 직접 지도의 깨달음 확률 +10%',big:1},
-  {id:'wall1',n:'성벽·망루 1',c:300,t:6,d:'본산 방어 +40, 큰 싸움에서 아군 +10%',big:1},
-  {id:'wall2',n:'성벽·망루 2',c:700,t:8,d:'본산 방어 +40, 큰 싸움에서 아군 +10% 더',req:()=>(G.devDone||[]).includes('wall1'),rq:'성벽·망루 1',big:1}];
+  {id:'sukso2',n:'숙소 증축 2',c:250,t:6,d:'제자 정원 18 → 25',req:()=>(G.devDone||[]).includes('sukso1'),rq:'숙소 증축 1',big:1},
+  {id:'sukso3',n:'숙소 증축 3',c:500,t:8,d:'제자 정원 25 → 35',req:()=>(G.devDone||[]).includes('sukso2'),rq:'숙소 증축 2',big:1},
+  {id:'sanmun',n:'산문 중건',c:200,t:6,d:'무너진 산문을 다시 세운다. 명성 +10, 지원자가 더 온다',big:1},
+  {id:'josa',n:'조사전 복원',c:400,t:8,d:'역대 조사의 위패를 다시 모신다. 구파 자격 +10, 모든 제자 심마 -20',req:()=>G.fame>=30,rq:'명성 30',big:1},
+  {id:'jeongak1',n:'전각 증축 1',c:300,t:6,d:'시설을 4단계까지 올릴 수 있다',big:1},
+  {id:'jeongak2',n:'전각 증축 2',c:600,t:8,d:'시설을 5단계까지 올릴 수 있다',req:()=>(G.devDone||[]).includes('jeongak1'),rq:'전각 증축 1',big:1},
+  {id:'sulyeon',n:'후산 수련동',c:250,t:6,d:'폐관 수련 1.2배, 직접 지도의 깨달음 확률 +10%',big:1},
+  {id:'wall1',n:'성벽·망루 1',c:200,t:6,d:'본산 방어 +40, 큰 싸움에서 아군 +10%',big:1},
+  {id:'wall2',n:'성벽·망루 2',c:450,t:8,d:'본산 방어 +40, 큰 싸움에서 아군 +10% 더',req:()=>(G.devDone||[]).includes('wall1'),rq:'성벽·망루 1',big:1}];
 const capOfDs=()=>[12,18,25,35][G.fac.sukso||0];
 const dsCount=()=>G.ds.filter(d=>!d.elder&&d.id!=='jin'&&d.id!=='jeonp').length;
 function devDone(id){G.devDone=G.devDone||[];G.devDone.push(id);const x=DEV.find(v=>v.id===id);
