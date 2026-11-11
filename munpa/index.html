@@ -447,8 +447,8 @@ ${c.over?`<button class="main" onclick="A.duelNext()">${DUEL.i+1<DUEL.list.lengt
 // 비무: 상대마다 한 판씩 일기토. 이긴 판 수가 need 이상이면 승리
 function matchCands(e){return G.ds.filter(d=>!d.elder&&d.pos!=='away'&&d.pos!=='hurt'&&!(d.id==='jin'&&(G.retreat||G.jinBusy))&&!(e.noJin&&d.id==='jin')&&!(e.onlyJin&&d.id!=='jin'))}
 function matchSuggest(e){return matchCands(e).sort((a,b)=>power(b)-power(a)).slice(0,e.opp.length).map(d=>d.id).reverse()}
-function startMatch(eid){const e=G.q.find(x=>x.id===eid);if(!e)return;const used=new Set(),list=[];
-  e.opp.forEach((o,i)=>{const v=(document.getElementById(`mt_${eid}_${i}`)||{}).value;if(v&&!used.has(v)&&D(v)){used.add(v);list.push({t:`${e.title} ${i+1}번째 판`,d:v,bn:o.n,bpw:o.pw})}});
+function startMatch(eid,ids){const e=G.q.find(x=>x.id===eid);if(!e)return;const used=new Set(),list=[];
+  e.opp.forEach((o,i)=>{const v=ids?ids[i]:(document.getElementById(`mt_${eid}_${i}`)||{}).value;if(v&&!used.has(v)&&D(v)){used.add(v);list.push({t:`${e.title} ${i+1}번째 판`,d:v,bn:o.n,bpw:o.pw})}});
   if(list.length<e.opp.length){alertMsg('판마다 서로 다른 사람을 세워야 한다.');return}
   DUEL={kind:'match',eid,list,i:0};nextDuel()}
 function alertMsg(t){MODAL={title:'알림',p:[t],ch:[['알겠다.',()=>{}]]};render()}
@@ -639,6 +639,7 @@ const A={
     G.ds.push({id:'r'+G.m+Math.random().toString(36).slice(2,6),n:e.nm,r:'새 제자',st:e.st,ch:70,arts:{...e.arts},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null});log(`${e.nm}을(를) 제자로 받았다.`);save();render()},
   mapSel(k){MAPSEL=MAPSEL===k?null:k;render()},
   info(eid){G.q=G.q.filter(x=>x.id!==eid);save();render()},
+  autoJin(v){G.noAutoJin=!v;save();render()},
   infoAll(){G.q=G.q.filter(x=>!(x.t==='event'&&x.info));save();render()},
   choose(i){const c=MODAL.ch[i];MODAL=null;const keep=c[1]();if(!keep)MODAL=MODAL||null;save();render()},
   autoNext(v){G.autoNext=v;save()},
@@ -657,9 +658,22 @@ function chanceK(d,need,k){if(!k||k==='mu')return chance(d,need);return Math.max
 function chance(d,need){return Math.max(5,Math.min(95,Math.round(50+(power(d)-need)*1.2+boV(d,'eoryong'))))}
 
 /* ================= 월말 ================= */
+function autoJin(){if(G.noAutoJin||G.act<1||G.retreat||G.jinBusy||G.jinFocus||MODAL||DUEL)return;const r=recs()[0]||['focus','수련 전념'];const n0=G.act;
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v;return !!el};
+  try{if(r[0]==='sortie'){const h=G.q.find(e=>e.t==='crisis');if(h&&set('jin_sortie',h.id))A.sortie();else A.focus()}
+    else if(r[0]==='meet'){const t=G.ds.filter(d=>d.id!=='jin').sort((a,b)=>b.mind-a.mind)[0];if(t&&set('jin_meet',t.id))A.meet();else A.focus()}
+    else if(r[0]==='meetak'){if(set('jin_meet','ak'))A.meet();else A.focus()}
+    else if(r[0]==='limfocus'){D('lim').focusS='chileum';A.focus()}
+    else if(r[0]==='tq'){if((D('jin').arts.cheonha||0)>=5&&G.half===0)A.quest('taeeul');else A.focus()}
+    else if(r[0]==='sq'){freeDs().filter(d=>d.id!=='lim').sort((a,b)=>power(b)-power(a)).slice(0,3).forEach(d=>A.pos(d.id,'guard'));A.quest('seokshil')}
+    else if(r[0]!=='money'&&typeof A[r[0]]==='function')A[r[0]]();else A.focus()}catch(e){}
+  if(G.act===n0&&G.act>0&&!G.jinFocus&&!G.jinBusy)A.focus();
+  if(G.act<n0||G.jinFocus||G.retreat)log('(고르지 않아 추천대로) '+String(r[1]||'수련 전념').replace(/<[^>]+>/g,'').split('. ').pop())}
 function endHalf(){
   if(MODAL||DUEL)return;
-  if(G.half===1){const due=G.q.find(x=>(x.lanes||x.id==='hyeolsa'||x.id==='hyeolsa2')&&x.due<=G.m);if(due){log(`${due.title}: 기한이 되어 추천 배치로 출진한다.`);startDuels(due.id,battleSuggest());return}}
+  if(G.half===1){const due=G.q.find(x=>(x.lanes||x.id==='hyeolsa'||x.id==='hyeolsa2')&&x.due<=G.m);if(due){log(`${due.title}: 기한이 되어 추천 배치로 출진한다.`);startDuels(due.id,battleSuggest());return}
+    const mt=G.q.find(x=>x.t==='match'&&x.due<=G.m);if(mt){const ids=matchSuggest(mt);if(ids.length>=mt.opp.length){log(`${mt.title}: 기한이 되어 추천한 제자들이 나선다.`);startMatch(mt.id,ids);return}}}
+  autoJin();if(MODAL||DUEL)return;
   // 태음신맥 한기
   {const l=D('lim');if(l&&l.pos!=='away'&&l.pos!=='hurt'){const v=l.arts.chileum;const p=v==null?.35:v<4?.25:v<7?.12:0;if(Math.random()<p){l.cold=1;log(`임영옥에게 한기가 올라 이번 순은 몸을 녹이며 쉬었다.${v==null?' (칠음진기를 모른다)':` (칠음진기 ${v}성, 7성부터는 한기가 잡힌다)`}`)}}}
   // 수련(순)
@@ -772,7 +786,7 @@ ${jobs.length?`<select id="jin_sortie">${jobs.map(e=>`<option value="${e.id}">${
 <select id="jin_coach">${fr.map(d=>`<option value="${d.id}">${d.n}</option>`).join('')}</select><button onclick="A.coach()" ${no||busy?'disabled':''}>직접 지도 (수련 2배)</button>
 <select id="jin_meet">${G.ds.filter(d=>d.id!=='jin').sort((a,b)=>b.mind-a.mind).map(d=>`<option value="${d.id}">${d.n} (심마 ${d.mind})</option>`).join('')}</select><button ${hot('meet')} onclick="A.meet()" ${no?'disabled':''}>면담</button>
 </div>
-<p class="muted" style="font-size:12px">직접 읽기·출전·지도를 한 순은 진산월 자신의 수련이 없다. 시설 짓기와 무공 전수도 행동을 쓴다. 제자 파견은 행동을 쓰지 않는다.</p>`})()}</div>
+<label style="font-size:13px;display:block;margin-top:6px"><input type="checkbox" ${G.noAutoJin?'':'checked'} onchange="A.autoJin(this.checked)"> 장문인 행동을 고르지 않고 넘기면 추천대로 한다</label><p class="muted" style="font-size:12px">직접 읽기·출전·지도를 한 순은 진산월 자신의 수련이 없다. 시설 짓기와 무공 전수도 행동을 쓴다. 제자 파견은 행동을 쓰지 않는다.</p>`})()}</div>
 <div class="panel"><h3>진산월</h3><div class="hd" style="display:flex;gap:10px;align-items:center">${pt(j)}<div>${artChips(j)}<div style="font-size:12px;margin-top:4px">${Object.keys(STN).map(k=>`${STN[k]} <b>${j.st[k]}</b>`).join(' · ')}</div></div></div>
 ${(()=>{const lib=LIB.filter(a=>!knows(j,a)&&teacher(a,'jin'));return lib.length?`<div style="margin-top:8px;font-size:13px">배우기 <select id="tc_jin">${lib.map(a=>`<option value="${a}">${ARTS[a].n} (스승 ${teacher(a,'jin').n})</option>`).join('')}</select> <button onclick="A.teach('jin')" ${G.act<=0?'disabled':''}>배운다 (행동 1)</button></div>`:''})()}
 <div style="margin-top:8px;font-size:13px">초식 <select onchange="A.jdir('m',this.value)"><option value="">자동</option>${Object.keys(j.arts).filter(a=>ARTS[a].t==='m').map(a=>`<option value="${a}" ${j.focusM===a?'selected':''} ${j.arts[a]>=capOf(j,a)?'disabled':''}>${ARTS[a].n}${j.arts[a]>=capOf(j,a)?(j.arts[a]>=10?' (대성)':' (상한)'):''}</option>`).join('')}</select>
