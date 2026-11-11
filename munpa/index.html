@@ -826,13 +826,15 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
   groups.rest.forEach((d,i)=>put(d,W-300+i*44,H-56,'sit',0));
   c.restore();for(const h of YARD.hit)h.x+=PW;if(!PW)return;
   // 산문 밖: 하늘·먼 산·흙길, 가운데 산문, 계단 양옆에 수비
-  const sky=c.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#bcd6e8');sky.addColorStop(.55,'#e6eee0');sky.addColorStop(.56,'#a9b98a');sky.addColorStop(1,'#8f9c6e');c.fillStyle=sky;c.fillRect(0,0,PW,H);
+  if(!getIm('img/sd_gate_bg.webp')){const sky=c.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#bcd6e8');sky.addColorStop(.55,'#e6eee0');sky.addColorStop(.56,'#a9b98a');sky.addColorStop(1,'#8f9c6e');c.fillStyle=sky;c.fillRect(0,0,PW,H);
   c.fillStyle='#8aa0a8';c.beginPath();c.moveTo(0,120);c.lineTo(PW*.3,70);c.lineTo(PW*.55,105);c.lineTo(PW*.8,60);c.lineTo(PW,95);c.lineTo(PW,140);c.lineTo(0,140);c.fill();
-  c.fillStyle='#c2ad86';c.beginPath();c.moveTo(PW*.36,H-30);c.lineTo(PW*.64,H-30);c.lineTo(PW*.75,H);c.lineTo(PW*.1,H);c.fill();
-  if(gIm){const gh=Math.min(H*.86,PW*1.02*gIm.naturalHeight/gIm.naturalWidth),gw=gh*gIm.naturalWidth/gIm.naturalHeight,gx=(PW-gw)/2,gy=H-gh-18;
+  c.fillStyle='#c2ad86';c.beginPath();c.moveTo(PW*.36,H-30);c.lineTo(PW*.64,H-30);c.lineTo(PW*.75,H);c.lineTo(PW*.1,H);c.fill()}
+  // 받은 배경(정사각형, 공터는 세로 52~84%, 돌계단은 왼쪽 아래)이 있으면 꽉 채워 깐다
+  const oBg=getIm('img/sd_gate_bg.webp');if(oBg){const r=Math.max(PW/oBg.naturalWidth,H/oBg.naturalHeight);c.imageSmoothingEnabled=true;c.drawImage(oBg,(PW-oBg.naturalWidth*r)/2,(H-oBg.naturalHeight*r)/2,oBg.naturalWidth*r,oBg.naturalHeight*r);c.imageSmoothingEnabled=false}
+  if(gIm){const gh=oBg?H*.62:Math.min(H*.86,PW*1.02*gIm.naturalHeight/gIm.naturalWidth),gw=gh*gIm.naturalWidth/gIm.naturalHeight,gx=oBg?(PW-gw)/2+PW*.06:(PW-gw)/2,gy=oBg?H*.8-gh:H-gh-18;
     c.imageSmoothingEnabled=true;c.drawImage(gIm,gx,gy,gw,gh);c.imageSmoothingEnabled=false;
     const SP=[[.2,0],[.8,0],[.06,-8],[.94,-8]];gdOut.forEach((d,i)=>put(d,gx+gw*SP[i][0]-20,gy+gh*.97-56+SP[i][1]+6,'stand0',0));
-    YARD.door={ax:gx+gw*.5,ay:gy+gh*.8,bx:gx+gw*.05,by:H+30,fadeA:1,ph:.5};
+    YARD.door=oBg?{ax:gx+gw*.5,ay:gy+gh*.8,bx:PW*.04,by:H+24,fadeA:1,ph:.5}:{ax:gx+gw*.5,ay:gy+gh*.8,bx:gx+gw*.05,by:H+30,fadeA:1,ph:.5};
     G.ds.filter(d=>d.pos==='away'&&d.leftT===tid).forEach((d,i)=>put(d,i*25,0,'out',0));
     G.ds.filter(d=>d.backT===tid&&d.pos!=='away').forEach((d,i)=>put(d,-50-i*25,0,d.backHurt?'limp':'in',0));
     YARD.door=null}
