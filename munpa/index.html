@@ -780,7 +780,7 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
   groups.study.forEach((d,i)=>put(d,W-150+i*44,H-68,'read',0));
   groups.rest.forEach((d,i)=>put(d,W-300+i*44,H-56,'sit',0))}
 function initYard(){const cv=document.getElementById('yard');if(!cv||!cv.getContext)return;
-  const want=(G.devDone||[]).includes('sanmun')&&(G.devDone||[]).includes('josa')?'img/bonsan2.webp':'img/bonsan1.webp';
+  const want='img/sd_yard.webp';
   if(!YARD.bg||YARD.bgSrc!==want){YARD.bgSrc=want;YARD.bg=new Image();YARD.bg.src=want}
   const tip=document.getElementById('yardtip');cv.onmousemove=e=>{const r=cv.getBoundingClientRect(),k=cv.width/r.width,mx=(e.clientX-r.left)*k,my=(e.clientY-r.top)*k;const h=YARD.hit.find(o=>mx>=o.x&&mx<=o.x+o.w&&my>=o.y&&my<=o.y+o.h);if(h&&tip){tip.style.display='block';tip.textContent=h.n;tip.style.left=(e.clientX-r.left+10)+'px';tip.style.top=(e.clientY-r.top-24)+'px'}else if(tip)tip.style.display='none'};cv.onmouseleave=()=>{if(tip)tip.style.display='none'};
   drawYard();if(!YARD.timer&&typeof setInterval!=='undefined')YARD.timer=setInterval(drawYard,120)}
