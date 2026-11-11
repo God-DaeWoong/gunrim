@@ -94,7 +94,7 @@ function newGame(){
   G={m:1,act:2,eun:150,fame:5,fav:0,qual:30,broke:0,
      fac:{yeon:1,jang:1,yak:0,oe:0},
      ds:ROSTER.map(r=>{const arts={...r.arts};for(const s of BASE_S)if(arts[s]==null)arts[s]=SENIOR.includes(r.id)&&s!=='taeeul'?1:0;return{...r,arts,xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null}}),
-     q:[],log:[],flags:{},ilbi:null,jinFocus:false,income:{sang:40,yak:20},task:null,done:false};
+     q:[],log:[],flags:{},ilbi:null,jinFocus:false,income:{sang:45,yak:20},task:null,done:false};
   // 진산월은 장문인이라 배치 대신 행동으로 수련한다
   G.ds[0].pos='guard';
   MODAL=prologue();
@@ -173,8 +173,23 @@ function theft(){return{t:'event',id:'theft',title:'옥함',info:1,resolve:()=>{
   return'아침에 옥함을 열자 비어 있었다. 두기춘도 사라졌다. 사부가 목숨과 바꾼 영약이었다.'}}}
 function crisis(m){return{t:'crisis',id:'cho'+m,title:'초가보의 압박',due:m+1,text:'초가보 무사들이 두 곳에 동시에 나타났다. 한 곳만 막을 수 있다.',opts:[
   {k:'sang',n:'서안 상권',need:35,loss:'서안 상권 수입 -15'},{k:'yak',n:'약초밭',need:30,loss:'약초밭 수입 -10'}]}}
-function job(){const L=[['서안 표행 호위',50,30],['위남 상단 호위',60,40],['조암령 산적 소탕',70,55],['서안 객잔 난동 정리',45,20]];
-  const [n,need,pay]=L[Math.floor(Math.random()*L.length)];return{t:'job',id:'j'+G.m+Math.random().toString(36).slice(2,6),title:n,need,pay,due:G.m+1,text:`보수 ${pay}냥. 한 달 동안 제자 하나가 자리를 비운다.`}}
+// 의뢰: [이름, 필요 전력, 은자, 명성, 호감, 달 수, 설명]. 같은 의뢰는 석 달 동안 다시 뜨지 않는다
+const JOBS=[
+  ['서안 표행 호위',50,30,0,0,1,'서안 표국의 짐을 호위한다.'],
+  ['위남 상단 호위',60,40,0,0,1,'위남으로 가는 상단을 호위한다.'],
+  ['조암령 산적 소탕',70,45,2,0,1,'조암령 고개에 산적이 들끓는다는 하소연이 들어왔다.'],
+  ['서안 객잔 난동 정리',45,20,1,0,1,'술 취한 낭인들이 객잔을 부수고 있다.'],
+  ['태백산 약초 채집 호위',40,15,0,0,1,'약초꾼들을 호위하고 약재를 나눠 받는다. 돌아오면 제자들 심마가 조금 가라앉는다.','herb'],
+  ['화산에 서신 전달',30,0,0,4,1,'이웃 문파에 예를 갖춘 서신을 전한다.'],
+  ['서안 상가 분쟁 중재',55,25,2,0,1,'두 상가가 칼부림 직전이다. 종남의 이름으로 말린다.'],
+  ['낙양 원행 호위',70,90,1,0,2,'낙양까지 가는 먼 길이다. 두 달 동안 자리를 비운다.'],
+  ['폐사 탐방',60,0,1,0,2,'종남산 뒤편 폐사에 옛 고수의 흔적이 있다는 소문. 장경각 해독에 도움이 될 기록이 나올지도 모른다.','clue']
+];
+function job(){
+  G.jcool=G.jcool||{};const open=JOBS.filter(j=>!(G.jcool[j[0]]>G.m)&&!G.q.some(e=>e.title===j[0])&&(j[7]!=='clue'||G.task));
+  if(!open.length)return null;const [n,need,pay,fame,fav,mon,txt,sp]=open[Math.floor(Math.random()*open.length)];G.jcool[n]=G.m+3;
+  const rw=[pay&&`은자 ${pay}`,fame&&`명성 ${fame}`,fav&&`호감 ${fav}`].filter(Boolean).join(', ');
+  return{t:'job',id:'j'+G.m+Math.random().toString(36).slice(2,6),title:n,need,pay,fame,fav,mon,sp,due:G.m+1,text:`${txt} 보상: ${rw||'단서'}.`}}
 
 /* ================= 행동 ================= */
 function useAct(){if(G.act<=0)return false;G.act--;return true}
@@ -189,9 +204,11 @@ const A={
     d.arts[a]=1;d.xp[a]=0;d.focusM=a;t.teachHalf=true;log(`${t.n}이(가) ${d.n}에게 ${ARTS[a].n}을(를) 가르쳤다. (${t.n}은 이달 수련이 절반)`);save();render()},
   jdir(t,v){const j=D('jin');if(t==='m')j.focusM=v||null;else j.focusS=v||null;save();render()},
   dir(id,t,v){const d=D(id);if(t==='m')d.focusM=v||null;else d.focusS=v||null;save();render()},
-  sendJob(eid){const e=G.q.find(x=>x.id===eid);const sel=document.getElementById('js_'+eid);const d=sel&&D(sel.value);if(!e||!d||G.act<=0)return;useAct();
-    d.pos='away';d.away=1;d.job={need:e.need,pay:e.pay,title:e.title};G.q=G.q.filter(x=>x!==e);log(`${d.n}을(를) ${e.title}에 보냈다. (승률 ${chance(d,e.need)}%)`);save();render()},
-  defend(eid,k){const e=G.q.find(x=>x.id===eid);const sel=document.getElementById('cs_'+eid);const d=sel&&D(sel.value);if(!e||!d||G.act<=0)return;useAct();
+  auto(){const p=suggest();for(const id in p){const e=G.q.find(x=>x.id===id);if(!e)continue;
+    if(e.t==='crisis'){document.getElementById('cs_'+id).value=p[id].d;A.defend(id,p[id].o)}else{document.getElementById('js_'+id).value=p[id].d;A.sendJob(id)}}render()},
+  sendJob(eid){const e=G.q.find(x=>x.id===eid);const sel=document.getElementById('js_'+eid);const d=sel&&D(sel.value);if(!e||!d)return;
+    d.pos='away';d.away=e.mon||1;d.job={need:e.need,pay:e.pay,fame:e.fame,fav:e.fav,sp:e.sp,title:e.title};G.q=G.q.filter(x=>x!==e);log(`${d.n}을(를) ${e.title}에 보냈다. (승률 ${chance(d,e.need)}%)`);save();render()},
+  defend(eid,k){const e=G.q.find(x=>x.id===eid);const sel=document.getElementById('cs_'+eid);const d=sel&&D(sel.value);if(!e||!d)return;
     const o=e.opts.find(x=>x.k===k);const win=Math.random()*100<chance(d,o.need);d.mind+=15;
     for(const x of e.opts)if(x!==o)lose(x);
     if(win){G.fame+=3;log(`${d.n}이(가) ${o.n}을(를) 지켜 냈다. 명성 +3`)}else{lose(o);log(`${d.n}이(가) ${o.n}을(를) 지키지 못했다.`)}
@@ -216,7 +233,10 @@ function endMonth(){
   for(const d of G.ds)train(d);
   // 파견 귀환
   for(const d of G.ds)if(d.pos==='away'&&--d.away<=0){const j=d.job;d.pos='rest';d.job=null;
-    if(Math.random()*100<chance(d,j.need)){G.eun+=j.pay;G.fame+=1;log(`${d.n}이(가) ${j.title}을(를) 마치고 돌아왔다. 은자 +${j.pay}`)}
+    if(Math.random()*100<chance(d,j.need)){G.eun+=j.pay||0;G.fame+=j.fame||0;G.fav+=j.fav||0;let x='';
+      if(j.sp==='herb'){for(const o of G.ds)o.mind=Math.max(0,o.mind-10);x=' 약재로 제자들 심마 -10'}
+      if(j.sp==='clue'&&G.task){G.task.prog=Math.min(100,G.task.prog+25);x=' 옛 기록을 찾아 성심록 해독 +25%'}
+      log(`${d.n}이(가) ${j.title}을(를) 마치고 돌아왔다.${j.pay?` 은자 +${j.pay}`:''}${j.fame?` 명성 +${j.fame}`:''}${j.fav?` 호감 +${j.fav}`:''}${x}`)}
     else{d.pos='hurt';d.away=2;log(`${d.n}이(가) ${j.title}에서 다쳐 돌아왔다. 두 달 요양`)}}
     else if(d.pos==='hurt'&&--d.away<=0){d.pos='rest';log(`${d.n}이(가) 회복했다.`)}
   // 심마
@@ -224,7 +244,7 @@ function endMonth(){
     d.mind+={train:2,guard:3,study:3,away:12,rest:-20-10*G.fac.yak,hurt:-5}[d.pos]||0;d.mind=Math.max(0,Math.min(120,d.mind));
     if(d.mind>=100&&d.pos!=='hurt'&&d.pos!=='away'){d.pos='rest';log(`${d.n}의 심마가 깊어 억지로 쉬게 했다.`)}}
   // 해독 과제
-  if(G.task){const st=G.ds.filter(d=>d.pos==='study');const p=st.reduce((s,d)=>s+12*d.apt,0)*(1+.5*(G.fac.jang-1));G.task.prog=Math.min(100,G.task.prog+p);
+  if(G.task){const st=G.ds.filter(d=>d.pos==='study');const p=st.reduce((s,d)=>s+20*d.apt,0)*(1+.5*(G.fac.jang-1));G.task.prog=Math.min(100,G.task.prog+p);
     if(G.task.prog>=100){G.flags.seongsim=1;log('《성심록》 해독을 마쳤다. 매종도가 머물던 태을선거의 위치가 적혀 있다.');G.task=null;for(const d of G.ds)if(d.pos==='study')d.pos='train'}
     else if(G.m>=G.task.due){log('《성심록》 해독 기한을 넘겼다. 화산이 책을 가져갔다는 소문이 돈다.');G.flags.seongsimLost=1;G.task=null;for(const d of G.ds)if(d.pos==='study')d.pos='train'}}
   // 만년삼정 복용(3월)
@@ -247,7 +267,7 @@ function endMonth(){
   G.m++;G.act=2;G.jinFocus=false;
   for(const e of scheduled(G.m)){if(e.id==='seongsim'){G.task={prog:0,due:e.due}}
     if(e.resolve){const t=e.resolve();if(t)e.text=t}G.q.push(e)}
-  const n=G.m<4?1:2;for(let i=0;i<n;i++)if(Math.random()<.8)G.q.push(job());
+  for(let i=0;i<2;i++)if(G.q.filter(e=>e.t==='job').length<3&&Math.random()<.65){const j=job();if(j)G.q.push(j)}
   save();render();
 }
 function gameOver(t){G.over=t;save();render()}
@@ -266,7 +286,7 @@ function mainTab(){
 <button onclick="A.focus()" ${G.act<=0||G.jinFocus?'disabled':''}>진산월 수련 전념${G.jinFocus?' (이달 함)':''}</button>
 <button onclick="A.diplo()" ${G.act<=0||G.eun<30?'disabled':''}>외교 (30냥)</button>
 ${has('du')&&G.m<=2?`<button onclick="A.talk()" ${G.act<=0?'disabled':''}>두기춘과 이야기</button>`:''}
-</p><p class="muted" style="font-size:13px">시설 짓기, 무공 전수, 의뢰·위기 대응도 행동을 하나씩 쓴다.</p></div>
+</p><p class="muted" style="font-size:13px">시설 짓기와 무공 전수도 행동을 쓴다. 제자를 의뢰나 위기에 보내는 것은 행동을 쓰지 않는다.</p></div>
 <div class="panel"><h3>진산월</h3><div class="hd" style="display:flex;gap:10px;align-items:center">${pt(j)}<div>${artChips(j)}</div></div>
 <div style="margin-top:8px;font-size:13px">초식 <select onchange="A.jdir('m',this.value)"><option value="">자동</option>${Object.keys(j.arts).filter(a=>ARTS[a].t==='m').map(a=>`<option value="${a}" ${j.focusM===a?'selected':''}>${ARTS[a].n}</option>`).join('')}</select>
  심법 <select onchange="A.jdir('s',this.value)"><option value="">자동</option>${Object.keys(j.arts).filter(a=>ARTS[a].t==='s').map(a=>`<option value="${a}" ${j.focusS===a?'selected':''}>${ARTS[a].n}</option>`).join('')}</select></div></div>
@@ -289,19 +309,29 @@ ${lib.length?`<div style="margin-top:6px;font-size:12px"><select id="tc_${d.id}"
 </div>`}).join('')}</div>`;
 }
 function freeDs(){return G.ds.filter(d=>d.id!=='jin'&&d.pos!=='away'&&d.pos!=='hurt')}
+function suggest(){
+  const used=new Set(),pick={};
+  const pool=()=>freeDs().filter(d=>!used.has(d.id)&&d.id!=='lim'&&d.pos!=='study'&&d.mind<70);
+  const best=need=>{const c=pool();const ok=c.filter(d=>chance(d,need)>=60).sort((a,b)=>power(a)-power(b));return ok[0]||c.sort((a,b)=>power(b)-power(a))[0]};
+  // 위기 먼저(놓치면 손해가 크다), 그다음 보수 큰 의뢰부터
+  for(const e of G.q.filter(x=>x.t==='crisis')){const o=e.opts.slice().sort((a,b)=>a.need-b.need)[0];const d=best(o.need);if(d){used.add(d.id);pick[e.id]={d:d.id,o:o.k}}}
+  for(const e of G.q.filter(x=>x.t==='job').sort((a,b)=>(b.pay||0)-(a.pay||0))){const d=best(e.need);if(d&&chance(d,e.need)>=50){used.add(d.id);pick[e.id]={d:d.id}}}
+  return pick;
+}
 function evTab(){
-  const fr=freeDs();
-  const opt=need=>fr.map(d=>`<option value="${d.id}">${d.n} (전력 ${power(d)}, 승률 ${chance(d,need)}%)</option>`).join('');
+  const fr=freeDs(),sg=suggest();
+  const opt=(need,eid)=>fr.map(d=>`<option value="${d.id}" ${sg[eid]&&sg[eid].d===d.id?'selected':''}>${d.n} (전력 ${power(d)}, 승률 ${chance(d,need)}%${d.mind>=70?', 심마':''})</option>`).join('');
   const body=G.q.map(e=>{
     if(e.t==='job')return `<div class="panel ev job"><b>${e.title}</b> <span class="muted">· ${yr(e.due)}까지</span><p>${e.text} 필요 전력 ${e.need}</p>
-<select id="js_${e.id}">${opt(e.need)}</select> <button onclick="A.sendJob('${e.id}')" ${G.act<=0||!fr.length?'disabled':''}>보내기 (행동 1)</button></div>`;
+<select id="js_${e.id}">${opt(e.need,e.id)}</select> <button onclick="A.sendJob('${e.id}')" ${!fr.length?'disabled':''}>보내기</button></div>`;
     if(e.t==='crisis')return `<div class="panel ev crisis"><b>${e.title}</b> <span class="muted">· ${yr(e.due)}까지, 미루면 둘 다 잃는다</span><p>${e.text}</p>
-<select id="cs_${e.id}">${fr.map(d=>`<option value="${d.id}">${d.n} (전력 ${power(d)})</option>`).join('')}</select>
-${e.opts.map(o=>`<div style="margin-top:6px"><button onclick="A.defend('${e.id}','${o.k}')" ${G.act<=0||!fr.length?'disabled':''}>${o.n} 막기 (필요 전력 ${o.need})</button> <span class="muted">못 막으면 ${o.loss}</span></div>`).join('')}</div>`;
-    if(e.t==='task')return `<div class="panel ev task"><b>${e.title}</b> <span class="muted">· ${yr(e.due)}까지</span><p>${e.text}</p><p>진행 ${G.task?Math.round(G.task.prog):100}% — 제자 화면에서 "장경각 해독"에 배치한다.</p><button onclick="A.info('${e.id}')">닫기</button></div>`;
+<select id="cs_${e.id}">${fr.map(d=>`<option value="${d.id}" ${sg[e.id]&&sg[e.id].d===d.id?'selected':''}>${d.n} (전력 ${power(d)})</option>`).join('')}</select>
+${e.opts.map(o=>`<div style="margin-top:6px"><button onclick="A.defend('${e.id}','${o.k}')" ${!fr.length?'disabled':''}>${o.n} 막기 (필요 전력 ${o.need})</button> <span class="muted">못 막으면 ${o.loss}</span></div>`).join('')}</div>`;
+    if(e.t==='task')return `<div class="panel ev task"><b>${e.title}</b> <span class="muted">· ${yr(e.due)}까지</span><p>${e.text}</p><p>진행 ${G.task?Math.round(G.task.prog):100}% · 이달 예상 +${G.task?Math.round(G.ds.filter(d=>d.pos==='study').reduce((s,d)=>s+20*d.apt,0)*(1+.5*(G.fac.jang-1))):0}% — 제자 화면에서 "장경각 해독"에 배치한다. 한 사람이면 다섯 달 안팎, 둘이면 석 달 안팎.</p><button onclick="A.info('${e.id}')">닫기</button></div>`;
     return `<div class="panel ev"><b>${e.title}</b><p>${e.text}</p><button onclick="A.info('${e.id}')">확인</button></div>`;
   }).join('');
-  return body||'<p class="muted">이달에 들어온 일이 없다.</p>';
+  const n=Object.keys(sg).length;
+  return (n?`<div class="panel"><button class="main" onclick="A.auto()">추천대로 한 번에 보내기 (${n}건)</button> <span class="muted" style="font-size:13px">임영옥·해독 중·심마 70 이상은 빼고, 이길 만한 사람 중 가장 약한 사람을 고른다.</span></div>`:'')+(body||'<p class="muted">이달에 들어온 일이 없다.</p>');
 }
 function calTab(){
   const rows=[];
@@ -333,8 +363,9 @@ function botMonth(){
   if(G.task){const s=fr.filter(d=>d.id!=="lim").sort((a,b)=>b.apt-a.apt)[0];if(s&&s.pos!=="study"){A.pos(s.id,"study");say.push(s.n+" → 장경각 해독")}}
   fr.filter(d=>d.pos!=="study"&&d.mind>=70).forEach(d=>{A.pos(d.id,"rest");say.push(d.n+" → 휴식(심마)")});
   fr.filter(d=>d.pos==="rest"&&d.mind<20).forEach(d=>A.pos(d.id,"train"));
+  const n0=G.q.length;A.auto();if(G.q.length<n0)say.push("추천대로 파견 "+(n0-G.q.length)+"건");
   for(const e of [...G.q]){
-    if(e.t==="crisis"&&G.act>0){const d=freeDs().filter(d=>d.id!=="lim").sort((a,b)=>power(b)-power(a))[0];if(d){document.getElementById("cs_"+e.id).value=d.id;A.defend(e.id,"sang");say.push(d.n+" → 서안 상권 방어")}}
+    if(false){const d=freeDs().filter(d=>d.id!=="lim").sort((a,b)=>power(b)-power(a))[0];if(d){document.getElementById("cs_"+e.id).value=d.id;A.defend(e.id,"sang");say.push(d.n+" → 서안 상권 방어")}}
     else if(e.t==="job"&&G.act>0){const d=freeDs().filter(d=>d.id!=="lim"&&d.mind<60).sort((a,b)=>power(b)-power(a))[0];if(d&&chance(d,e.need)>=50){document.getElementById("js_"+e.id).value=d.id;A.sendJob(e.id);say.push(d.n+" → "+e.title)}}
     else if(e.t!=="job"&&e.t!=="crisis")A.info(e.id);
   }
