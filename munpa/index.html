@@ -60,10 +60,10 @@ table.cal td,table.cal th{border-bottom:1px solid var(--line);padding:5px 6px;te
 /* ================= 데이터 ================= */
 // 무공: t = s(심법)/m(초식), cap = 기본 상한
 const ARTS={
-  yuun:{n:'유운검법',t:'m',cap:7}, yuungyeol:{n:'유운검결',t:'m',cap:10},
-  cheonha:{n:'천하삼십육검',t:'m',cap:7}, nakha:{n:'낙하구구검',t:'m',cap:10},
-  janggwae:{n:'장괘장권구식',t:'m',cap:10}, hongdan:{n:'홍단서천',t:'m',cap:10},
-  wolnyeo:{n:'월녀검법',t:'m',cap:10}, yakryu:{n:'약류장',t:'m',cap:10},
+  yuun:{n:'유운검법',t:'m',w:'geom',cap:7}, yuungyeol:{n:'유운검결',t:'m',w:'geom',cap:10},
+  cheonha:{n:'천하삼십육검',t:'m',w:'geom',cap:7}, nakha:{n:'낙하구구검',t:'m',w:'geom',cap:10},
+  janggwae:{n:'장괘장권구식',t:'m',w:'gwon',cap:10}, hongdan:{n:'홍단서천',t:'m',w:'geom',cap:10},
+  wolnyeo:{n:'월녀검법',t:'m',w:'geom',cap:10}, yakryu:{n:'약류장',t:'m',w:'gwon',cap:10},
   taeeul:{n:'태을신공',t:'s',cap:10}, guyang:{n:'구양신공',t:'s',cap:10},
   hyeoncheong:{n:'현청건곤강기',t:'s',cap:10}, taejin:{n:'태진강기',t:'s',cap:10}, chileum:{n:'칠음진기',t:'s',cap:2}
 };
@@ -74,16 +74,19 @@ const SECRET={cheonha:70};
 const BASE_S=['taeeul','guyang','hyeoncheong'],SENIOR=['lim','mae','so','eung'];
 // 제자: apt = 수련 배율, ch = 충성
 const ROSTER=[
-  {id:'jin',n:'진산월',r:'장문인',img:'img/jin.png',apt:1,ch:100,arts:{yuun:6,cheonha:6,janggwae:4,hongdan:1,taeeul:3,guyang:1,hyeoncheong:1}},
-  {id:'lim',n:'임영옥',r:'사매',apt:1.1,ch:95,taeum:1,arts:{yuun:6,wolnyeo:5,taeeul:5}},
-  {id:'mae',n:'매상',r:'사제',apt:.9,ch:80,arts:{cheonha:6,taeeul:5}},
-  {id:'so',n:'소지산',r:'사제',apt:.9,ch:90,arts:{nakha:5,taeeul:4}},
-  {id:'eung',n:'응계성',r:'사제',apt:.8,ch:85,arts:{janggwae:6,taeeul:4}},
-  {id:'nak',n:'낙일방',r:'사제',apt:1.1,ch:85,arts:{janggwae:5,taeeul:3}},
-  {id:'du',n:'두기춘',r:'사제',img:'img/du.png',apt:1,ch:35,arts:{yuun:5,taeeul:4}},
-  {id:'jeong',n:'정해',r:'사제',apt:.8,ch:80,arts:{yuun:5,taeeul:4}},
-  {id:'bang',n:'방취아',r:'막내',apt:.9,ch:90,arts:{wolnyeo:4,taeeul:3}}
+  {id:'jin',n:'진산월',r:'장문인',img:'img/jin.png',st:{tong:85,ji:80,jeong:65,ma:80,geom:95,gwon:70,oseong:80},ch:100,arts:{yuun:6,cheonha:6,janggwae:4,hongdan:1,taeeul:3,guyang:1,hyeoncheong:1}},
+  {id:'lim',n:'임영옥',r:'사매',st:{tong:55,ji:75,jeong:45,ma:85,geom:90,gwon:50,oseong:85},ch:95,taeum:1,arts:{yuun:6,wolnyeo:5,taeeul:5}},
+  {id:'mae',n:'매상',r:'사제',st:{tong:60,ji:45,jeong:30,ma:40,geom:80,gwon:60,oseong:55},ch:80,arts:{cheonha:6,taeeul:5}},
+  {id:'so',n:'소지산',r:'사제',st:{tong:70,ji:55,jeong:55,ma:45,geom:70,gwon:50,oseong:60},ch:90,arts:{nakha:5,taeeul:4}},
+  {id:'eung',n:'응계성',r:'사제',st:{tong:50,ji:35,jeong:25,ma:40,geom:45,gwon:80,oseong:45},ch:85,arts:{janggwae:6,taeeul:4}},
+  {id:'nak',n:'낙일방',r:'사제',st:{tong:45,ji:50,jeong:30,ma:65,geom:40,gwon:95,oseong:70},ch:85,arts:{janggwae:5,taeeul:3}},
+  {id:'du',n:'두기춘',r:'사제',img:'img/du.png',st:{tong:40,ji:80,jeong:70,ma:70,geom:50,gwon:45,oseong:75},ch:35,arts:{yuun:5,taeeul:4}},
+  {id:'jeong',n:'정해',r:'사제',st:{tong:55,ji:80,jeong:75,ma:60,geom:60,gwon:55,oseong:70},ch:80,arts:{yuun:5,taeeul:4}},
+  {id:'bang',n:'방취아',r:'막내',st:{tong:30,ji:60,jeong:40,ma:80,geom:65,gwon:45,oseong:65},ch:90,arts:{wolnyeo:4,taeeul:3}}
 ];
+// 능력치 이름. 무골은 초식, 오성은 심법이 오르는 속도(80이 보통)
+const STN={tong:'통솔',ji:'지력',jeong:'정치',ma:'매력',geom:'검재',gwon:'권재',oseong:'오성'};
+const growOf=(d,a)=>(ARTS[a].t==='s'?d.st.oseong:d.st[ARTS[a].w]||60)/80;
 const POS={train:'수련',guard:'수비',rest:'휴식',study:'장경각 해독',away:'파견 중',hurt:'요양'};
 const FAC={yeon:{n:'연무장',d:'수련치 +10%/단계'},jang:{n:'장경각',d:'해독 속도, 전수할 수 있는 무공 수'},yak:{n:'약방',d:'심마·부상 회복'},oe:{n:'외당',d:'본산 방어, 잠입 차단, 사건을 일찍 앎'}};
 const SAVE='munpa-v1';
@@ -127,17 +130,17 @@ function pickFocus(d,t){
 function gain(d){
   const half=d.teachHalf?.5:1;d.teachHalf=false;
   if(d.id==='jin')return (G.retreat?3:G.jinBusy?0:G.jinFocus?1.5:.5)*(1+.1*G.fac.yeon)*half;
-  if(d.coach){d.coach=false;return {train:1,guard:.35,study:.2,rest:0,away:.2,hurt:0}[d.pos]*d.apt*(1+.1*G.fac.yeon)*half*2}
+  if(d.coach){d.coach=false;return {train:1,guard:.35,study:.2,rest:0,away:.2,hurt:0}[d.pos]*(1+.1*G.fac.yeon)*half*2}
   const base={train:1,guard:.35,study:.2,rest:0,away:.2,hurt:0}[d.pos]||0;
-  return base*d.apt*(1+.1*G.fac.yeon)*half;
+  return base*(1+.1*G.fac.yeon)*half;
 }
-function monthPct(d,a){let g;if(d.id==='jin')g=(G.retreat?3:G.jinBusy?0:G.jinFocus?1.5:.5)*(1+.1*G.fac.yeon);else g=({train:1,guard:.35,study:.2,rest:0,away:.2,hurt:0}[d.pos]||0)*d.apt*(1+.1*G.fac.yeon)*(d.coach?2:1);
-  return Math.round(100*g*(a==='chileum'&&d.taeum?1.5:1)/costOf(d.arts[a]))}
+function monthPct(d,a){let g;if(d.id==='jin')g=(G.retreat?3:G.jinBusy?0:G.jinFocus?1.5:.5)*(1+.1*G.fac.yeon);else g=({train:1,guard:.35,study:.2,rest:0,away:.2,hurt:0}[d.pos]||0)*(1+.1*G.fac.yeon)*(d.coach?2:1);
+  return Math.round(100*g*growOf(d,a)*(a==='chileum'&&d.taeum?1.5:1)/costOf(d.arts[a]))}
 function train(d){
   const g=gain(d)/2;if(!g)return;
   for(const t of['m','s']){
     const a=pickFocus(d,t);if(!a)continue;
-    d.xp[a]=(d.xp[a]||0)+g*(a==='chileum'&&d.taeum?1.5:1);
+    d.xp[a]=(d.xp[a]||0)+g*growOf(d,a)*(a==='chileum'&&d.taeum?1.5:1);
     while(d.arts[a]<capOf(d,a)&&d.xp[a]>=costOf(d.arts[a])){const need=gateOf(d,a);if(need&&(d.wis||0)<need){if(!d.gateSaid)log(`${d.n}의 ${ARTS[a].n}이(가) ${d.arts[a]}성에서 막혔다. 깨달음 ${need}이(가) 필요하다.`);d.gateSaid=1;d.xp[a]=Math.min(d.xp[a],costOf(d.arts[a]));break}
       if(need){d.wis-=need;d.gateSaid=0;log(`${d.n}이(가) 깨달음을 얻어 ${ARTS[a].n}의 벽을 넘었다.`)}
       d.xp[a]-=costOf(d.arts[a]);d.arts[a]++;
@@ -209,11 +212,14 @@ const JOBS=[
   ['낙양 원행 호위',90,117,1,0,2,'낙양까지 가는 먼 길이다. 두 달 동안 자리를 비운다.'],
   ['폐사 탐방',80,0,1,0,2,'종남산 뒤편 폐사에 옛 고수의 흔적이 있다는 소문. 장경각 해독에 도움이 될 기록이 나올지도 모른다.','clue']
 ];
+// 무력이 아닌 의뢰: [능력치, 필요 값]
+const JOBK={'화산에 서신 전달':['ma',60],'서안 상가 분쟁 중재':['jeong',60],'폐사 탐방':['ji',65],'태백산 약초 채집 호위':['ji',50]};
 function job(){
   G.jcool=G.jcool||{};const open=JOBS.filter(j=>!(G.jcool[j[0]]>G.m)&&!G.q.some(e=>e.title===j[0])&&(j[7]!=='clue'||G.task));
   if(!open.length)return null;const [n,need,pay,fame,fav,mon,txt,sp]=open[Math.floor(Math.random()*open.length)];G.jcool[n]=G.m+3;
   const rw=[pay&&`은자 ${pay}`,fame&&`명성 ${fame}`,fav&&`호감 ${fav}`].filter(Boolean).join(', ');
-  return{t:'job',id:'j'+G.m+Math.random().toString(36).slice(2,6),title:n,need,pay,fame,fav,mon,sp,due:G.m+1,text:`${txt} 보상: ${rw||'단서'}.`}}
+  const jk=JOBK[n];
+  return{t:'job',id:'j'+G.m+Math.random().toString(36).slice(2,6),title:n,need:jk?jk[1]:need,k:jk?jk[0]:'mu',pay,fame,fav,mon,sp,due:G.m+1,text:`${txt} 보상: ${rw||'단서'}.`}}
 
 /* ================= 행동 ================= */
 function useAct(){if(G.act<=0)return false;G.act--;return true}
@@ -236,9 +242,9 @@ const A={
     if(G.task&&Math.random()<.5){G.task.prog=Math.min(100,G.task.prog+15);log('객잔에서 옛 종남 고수의 이야기를 주워들었다. 《성심록》 해독 +15%')}else{G.fame+=1;log(nx?`초가보가 ${yr(nx)}쯤 다시 움직인다는 소문을 들었다.`:'강호의 소문을 모았다. 명성 +1')}save();render()},
   patrol(){if(G.patrol||!useAct())return;G.patrol=true;log('이달은 진산월이 서안 상권을 돌며 순찰한다.');save();render()},
   recruit(){if(G.eun<60||G.fame<15||!useAct())return;G.eun-=60;const sur='왕,유,하,장,조,한,서,오'.split(','),giv='진,명,호,성,연,우,평,기'.split(',');
-    const n=sur[Math.floor(Math.random()*8)]+giv[Math.floor(Math.random()*8)]+giv[Math.floor(Math.random()*8)];const apt=+(.6+Math.min(.5,G.fame/100)+Math.random()*.2).toFixed(2);
-    G.ds.push({id:'r'+G.m+Math.random().toString(36).slice(2,5),n,r:'새 제자',apt,ch:70,arts:{taeeul:0,guyang:0,hyeoncheong:0},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null});
-    log(`${n}을(를) 새 제자로 받았다. (자질 ${apt})`);save();render()},
+    const n=sur[Math.floor(Math.random()*8)]+giv[Math.floor(Math.random()*8)]+giv[Math.floor(Math.random()*8)];const rs=()=>Math.round(30+Math.min(25,G.fame/2)+Math.random()*30),st={tong:rs(),ji:rs(),jeong:rs(),ma:rs(),geom:rs(),gwon:rs(),oseong:rs()};
+    G.ds.push({id:'r'+G.m+Math.random().toString(36).slice(2,5),n,r:'새 제자',st,ch:70,arts:{taeeul:0,guyang:0,hyeoncheong:0},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null});
+    log(`${n}을(를) 새 제자로 받았다. (검재 ${st.geom}, 권재 ${st.gwon}, 오성 ${st.oseong})`);save();render()},
   pos(id,v){const d=D(id);if(!d||d.pos==='away'||d.pos==='hurt')return;d.pos=v;save();render()},
   teach(id){const sel=document.getElementById('tc_'+id);const a=sel&&sel.value,d=D(id),t=a&&teacher(a,id);if(!a||!t||(SECRET[a]&&d.ch<SECRET[a])||!useAct()){render();return}
     d.arts[a]=1;d.xp[a]=0;d.focusM=a;t.teachHalf=true;log(`${t.n}이(가) ${d.n}에게 ${ARTS[a].n}을(를) 가르쳤다. (${t.n}은 이달 수련이 절반)`);save();render()},
@@ -247,7 +253,7 @@ const A={
   auto(){const p=suggest();for(const id in p){const e=G.q.find(x=>x.id===id);if(!e)continue;
     if(e.t==='crisis'){document.getElementById('cs_'+id).value=p[id].d;A.defend(id,p[id].o)}else{document.getElementById('js_'+id).value=p[id].d;A.sendJob(id)}}render()},
   sendJob(eid){const e=G.q.find(x=>x.id===eid);const sel=document.getElementById('js_'+eid);const d=sel&&D(sel.value);if(!e||!d)return;
-    d.pos='away';d.away=(e.mon||1)===1?1:e.mon*2;d.job={need:e.need,pay:e.pay,fame:e.fame,fav:e.fav,sp:e.sp,title:e.title};G.q=G.q.filter(x=>x!==e);log(`${d.n}을(를) ${e.title}에 보냈다. (승률 ${chance(d,e.need)}%)`);save();render()},
+    d.pos='away';d.away=(e.mon||1)===1?1:e.mon*2;d.job={need:e.need,k:e.k,pay:e.pay,fame:e.fame,fav:e.fav,sp:e.sp,title:e.title};G.q=G.q.filter(x=>x!==e);log(`${d.n}을(를) ${e.title}에 보냈다. (승률 ${chanceK(d,e.need,e.k)}%)`);save();render()},
   defend(eid,k){const e=G.q.find(x=>x.id===eid);const sel=document.getElementById('cs_'+eid);const d=sel&&D(sel.value);if(!e||!d)return;
     const o=e.opts.find(x=>x.k===k);const win=Math.random()*100<chance(d,o.need);d.mind+=15;d.pos='away';d.away=1;d.job=null;
     for(const x of e.opts)if(x!==o)lose(x);
@@ -268,11 +274,12 @@ const A={
 // 가르칠 사람: 그 무공 5성 이상, 배우는 사람 말고. 요양·파견 중이면 못 가르친다
 function teacher(a,not){return G.ds.filter(x=>x.id!==not&&(x.arts[a]||0)>=5&&x.pos!=='away'&&x.pos!=='hurt').sort((x,y)=>y.arts[a]-x.arts[a])[0]}
 // 폐관 중 초가보 기습: 수비는 전력 그대로, 수련 중은 절반, 외당 단계마다 +25
-function raid(){const def=G.ds.filter(d=>d.id!=='jin'&&(d.pos==='guard'||d.pos==='train'||d.pos==='rest'||d.pos==='study')).reduce((s,d)=>s+power(d)*(d.pos==='guard'?1:.5),0)+25*G.fac.oe,atk=330;
+function raid(){const def=G.ds.filter(d=>d.id!=='jin'&&(d.pos==='guard'||d.pos==='train'||d.pos==='rest'||d.pos==='study')).reduce((s,d)=>s+power(d)*(d.pos==='guard'?1:.5)*(.6+d.st.tong/250),0)+25*G.fac.oe,atk=330;
   if(def>=atk){G.fame+=6;G.qual+=3;log(`장문인이 없는 틈에 초가보가 본산을 쳤다. 남은 제자들이 막아 냈다. (방어 ${Math.round(def)} : 공격 ${atk}) 명성 +6`)}
   else{G.income.sang=Math.max(0,G.income.sang-20);for(const d of G.ds.filter(d=>d.pos==='guard'))if(Math.random()<.5){d.pos='hurt';d.away=4}
     log(`장문인이 없는 틈에 초가보가 본산을 쳤다. 막지 못했다. (방어 ${Math.round(def)} : 공격 ${atk}) 서안 상권 수입 -20, 수비하던 제자 일부 부상`)}}
 function lose(o){G.income[o.k]=Math.max(0,G.income[o.k]-(o.k==='sang'?15:10));log(`초가보에게 밀렸다: ${o.loss}`)}
+function chanceK(d,need,k){if(!k||k==='mu')return chance(d,need);return Math.max(5,Math.min(95,Math.round(50+(d.st[k]-need)*1.5)))}
 function chance(d,need){return Math.max(5,Math.min(95,Math.round(50+(power(d)-need)*1.2)))}
 
 /* ================= 월말 ================= */
@@ -282,7 +289,7 @@ function endHalf(){
   for(const d of G.ds)train(d);
   // 파견·요양 (순 단위)
   for(const d of G.ds)if(d.pos==='away'&&--d.away<=0){const j=d.job;d.pos='train';d.job=null;if(!j)continue;
-    if(Math.random()*100<chance(d,j.need)){G.eun+=j.pay||0;G.fame+=j.fame||0;G.fav+=j.fav||0;let x='';if(Math.random()<(j.need>=80?.4:.2))gainWis(d,1,j.title);
+    if(Math.random()*100<chanceK(d,j.need,j.k)){G.eun+=j.pay||0;G.fame+=j.fame||0;G.fav+=j.fav||0;let x='';if((!j.k||j.k==='mu')&&Math.random()<(j.need>=80?.4:.2)*d.st.oseong/70)gainWis(d,1,j.title);
       if(j.sp==='herb'){for(const o of G.ds)o.mind=Math.max(0,o.mind-10);x=' 약재로 제자들 심마 -10'}
       if(j.sp==='clue'&&G.task){G.task.prog=Math.min(100,G.task.prog+25);x=' 옛 기록을 찾아 성심록 해독 +25%'}
       log(`${d.n}이(가) ${j.title}을(를) 마치고 돌아왔다.${j.pay?` 은자 +${j.pay}`:''}${j.fame?` 명성 +${j.fame}`:''}${j.fav?` 호감 +${j.fav}`:''}${x}`)}
@@ -293,7 +300,7 @@ function endHalf(){
     d.mind+=({train:1,guard:1.5,study:1.5,away:6,rest:-10-5*G.fac.yak,hurt:-2.5}[d.pos]||0);d.mind=Math.round(Math.max(0,Math.min(120,d.mind)));
     if(d.mind>=100&&d.pos!=='hurt'&&d.pos!=='away'){d.pos='rest';log(`${d.n}의 심마가 깊어 억지로 쉬게 했다.`)}}
   // 해독(순)
-  if(G.task){const st=G.ds.filter(d=>d.pos==='study');const pr=st.reduce((s,d)=>s+10*d.apt,0)*(1+.5*(G.fac.jang-1));G.task.prog=Math.min(100,G.task.prog+pr);
+  if(G.task){const st=G.ds.filter(d=>d.pos==='study');const pr=st.reduce((s,d)=>s+10*d.st.ji/70,0)*(1+.5*(G.fac.jang-1));G.task.prog=Math.min(100,G.task.prog+pr);
     if(G.task.prog>=100){G.flags.seongsim=1;log('《성심록》 해독을 마쳤다. 매종도가 머물던 태을선거의 위치가 적혀 있다.');openTaeeul();G.task=null;for(const d of G.ds)if(d.pos==='study')d.pos='train'}}
   if(G.half===0){G.half=1;G.act=G.retreat||G.jinLock?0:1;G.jinLock=0;G.jinFocus=false;G.jinBusy=false;save();render();return}
   endMonth();
@@ -338,7 +345,7 @@ function gameOver(t){G.over=t;save();render()}
 function pt(d){return `<div class="pt">${d.img?`<img src="${d.img}" alt="">`:d.n[0]}</div>`}
 function artChips(d){return Object.keys(d.arts).sort((a,b)=>ARTS[a].t.localeCompare(ARTS[b].t)||d.arts[b]-d.arts[a]).map(a=>{
   const cap=capOf(d,a),f=a===pickFocus(d,ARTS[a].t),pc=d.arts[a]>=cap?0:Math.min(100,Math.floor(100*(d.xp[a]||0)/costOf(d.arts[a])));return `<span class="chip ${ARTS[a].t}" title="상한 ${cap}성">${f?'▸':''}${ARTS[a].n} ${d.arts[a]}성${d.arts[a]>=cap?'(상한)':gateOf(d,a)&&(d.wis||0)<gateOf(d,a)&&pc>=100?' <b style="color:var(--red)">깨달음 필요</b>':f?` <b>${pc}%</b> <small class="muted">+${monthPct(d,a)}%/월</small>`:''}</span>`}).join('')}
-function taskRate(){return Math.round(G.ds.filter(d=>d.pos==='study').reduce((s,d)=>s+20*d.apt,0)*(1+.5*(G.fac.jang-1)))}
+function taskRate(){return Math.round(G.ds.filter(d=>d.pos==='study').reduce((s,d)=>s+20*d.st.ji/70,0)*(1+.5*(G.fac.jang-1)))}
 function topBar(){return `<div class="top"><span class="serif" style="font-size:17px">終南</span>
 <span><b>${yr(G.m)} ${HALF[G.half]}</b> (${G.m}/48)</span><span>행동 <b>${G.act}</b>/1</span><span>은자 <b>${G.eun}</b></span><span>명성 <b>${G.fame}</b></span><span>호감 <b>${G.fav}</b></span>
 ${G.task?`<span title="제자 탭에서 장경각 해독에 배치">《성심록》 <b>${Math.round(G.task.prog)}%</b> (+${taskRate()}%/월, ${yr(G.task.due)}까지)</span>`:''}<span>구파 자격 <span class="bar"><i style="width:${Math.min(100,G.qual)}%"></i></span> ${G.qual}</span></div>`}
@@ -373,7 +380,7 @@ ${jobs.length?`<select id="jin_sortie">${jobs.map(e=>`<option value="${e.id}">${
 <select id="jin_meet">${G.ds.filter(d=>d.id!=='jin').sort((a,b)=>b.mind-a.mind).map(d=>`<option value="${d.id}">${d.n} (심마 ${d.mind})</option>`).join('')}</select><button ${hot('meet')} onclick="A.meet()" ${no?'disabled':''}>면담</button>
 </div>
 <p class="muted" style="font-size:12px">직접 읽기·출전·지도를 한 달은 진산월 자신의 수련이 없다. 시설 짓기와 무공 전수도 행동을 쓴다. 제자 파견은 행동을 쓰지 않는다.</p>`})()}</div>
-<div class="panel"><h3>진산월</h3><div class="hd" style="display:flex;gap:10px;align-items:center">${pt(j)}<div>${artChips(j)}</div></div>
+<div class="panel"><h3>진산월</h3><div class="hd" style="display:flex;gap:10px;align-items:center">${pt(j)}<div>${artChips(j)}<div style="font-size:12px;margin-top:4px">${Object.keys(STN).map(k=>`${STN[k]} <b>${j.st[k]}</b>`).join(' · ')}</div></div></div>
 <div style="margin-top:8px;font-size:13px">초식 <select onchange="A.jdir('m',this.value)"><option value="">자동</option>${Object.keys(j.arts).filter(a=>ARTS[a].t==='m').map(a=>`<option value="${a}" ${j.focusM===a?'selected':''}>${ARTS[a].n}</option>`).join('')}</select>
  심법 <select onchange="A.jdir('s',this.value)"><option value="">자동</option>${Object.keys(j.arts).filter(a=>ARTS[a].t==='s').map(a=>`<option value="${a}" ${j.focusS===a?'selected':''}>${ARTS[a].n}</option>`).join('')}</select></div></div>
 <div class="panel"><h3>시설</h3><div class="grid">${Object.keys(FAC).map(k=>{const lv=G.fac[k],c=80*(lv+1);return `<div class="d"><b>${FAC[k].n}</b> ${lv}단계<br><span class="muted">${FAC[k].d}</span><br>
@@ -386,6 +393,7 @@ function discTab(){
     const lock=d.pos==='away'||d.pos==='hurt';const lib=LIB.filter(a=>d.arts[a]==null).slice(0,2+G.fac.jang*2);const tOf=a=>teacher(a,d.id),okA=a=>tOf(a)&&!(SECRET[a]&&d.ch<SECRET[a]);
     const ms=Object.keys(d.arts).filter(a=>ARTS[a].t==='m'),ss=Object.keys(d.arts).filter(a=>ARTS[a].t==='s');
     return `<div class="d"><div class="hd">${pt(d)}<div><b>${d.n}</b> <span class="muted">${d.r}</span><br>전력 ${power(d)} · 충성 ${d.ch} · 깨달음 ${d.wis||0}</div></div>
+<div style="margin-top:4px;font-size:12px">${['tong','ji','jeong','ma'].map(k=>`${STN[k]} <b>${d.st[k]}</b>`).join(' · ')}<br>${['geom','gwon','oseong'].map(k=>`${STN[k]} <b>${d.st[k]}</b>`).join(' · ')} <span class="muted">(수련 속도: 검법·권장·심법)</span></div>
 <div style="margin-top:6px">${artChips(d)}</div>
 <div class="mind" title="심마 ${d.mind}"><i style="width:${Math.min(100,d.mind)}%"></i></div><span class="muted" style="font-size:11px">심마 ${d.mind}</span>
 <div style="margin-top:6px">${lock?`<b>${POS[d.pos]}</b> (${d.away}달 남음)`:`<select onchange="A.pos('${d.id}',this.value)">${['train','guard','rest',...(G.task?['study']:[])].map(p=>`<option value="${p}" ${d.pos===p?'selected':''}>${POS[p]}</option>`).join('')}</select>`}</div>
@@ -398,22 +406,23 @@ function freeDs(){return G.ds.filter(d=>d.id!=='jin'&&d.pos!=='away'&&d.pos!=='h
 function suggest(){
   const used=new Set(),pick={};
   const pool=()=>{const c=freeDs().filter(d=>!used.has(d.id)&&d.id!=='lim'&&d.pos!=='study');const calm=c.filter(d=>d.mind<70);return calm.length?calm:c};
-  const best=need=>{const c=pool();const ok=c.filter(d=>chance(d,need)>=60).sort((a,b)=>power(a)-power(b));return ok[0]||c.sort((a,b)=>power(b)-power(a))[0]};
+  const sv=(d,k)=>!k||k==='mu'?power(d):d.st[k];
+  const best=(need,k)=>{const c=pool();const ok=c.filter(d=>chanceK(d,need,k)>=60).sort((a,b)=>sv(a,k)-sv(b,k));return ok[0]||c.sort((a,b)=>sv(b,k)-sv(a,k))[0]};
   // 위기 먼저(놓치면 손해가 크다), 그다음 보수 큰 의뢰부터
   for(const e of G.q.filter(x=>x.t==='crisis')){const o=e.opts.slice().sort((a,b)=>a.need-b.need)[0];const d=best(o.need);if(d){used.add(d.id);pick[e.id]={d:d.id,o:o.k}}}
-  for(const e of G.q.filter(x=>x.t==='job').sort((a,b)=>(b.pay||0)-(a.pay||0))){const d=best(e.need);if(d){used.add(d.id);pick[e.id]={d:d.id}}}
+  for(const e of G.q.filter(x=>x.t==='job').sort((a,b)=>(b.pay||0)-(a.pay||0))){const d=best(e.need,e.k);if(d){used.add(d.id);pick[e.id]={d:d.id}}}
   return pick;
 }
 function evTab(){
   const fr=freeDs(),sg=suggest();
-  const opt=(need,eid)=>fr.map(d=>`<option value="${d.id}" ${sg[eid]&&sg[eid].d===d.id?'selected':''}>${d.n} (전력 ${power(d)}, 승률 ${chance(d,need)}%${d.mind>=70?', 심마':''})</option>`).join('');
+  const opt=(need,eid,k)=>fr.map(d=>`<option value="${d.id}" ${sg[eid]&&sg[eid].d===d.id?'selected':''}>${d.n} (${!k||k==='mu'?`전력 ${power(d)}`:`${STN[k]} ${d.st[k]}`}, 승률 ${chanceK(d,need,k)}%${d.mind>=70?', 심마':''})</option>`).join('');
   const body=G.q.map(e=>{
-    if(e.t==='job')return `<div class="panel ev job"><b>${e.title}</b> <span class="muted">· ${yr(e.due)}까지</span><p>${e.text} 필요 전력 ${e.need}</p>
-<select id="js_${e.id}">${opt(e.need,e.id)}</select> <button onclick="A.sendJob('${e.id}')" ${!fr.length?'disabled':''}>보내기</button> <button onclick="A.decline('${e.id}')">거절</button></div>`;
+    if(e.t==='job')return `<div class="panel ev job"><b>${e.title}</b> <span class="muted">· ${yr(e.due)}까지</span><p>${e.text} 필요 ${!e.k||e.k==='mu'?'전력':STN[e.k]} ${e.need}</p>
+<select id="js_${e.id}">${opt(e.need,e.id,e.k)}</select> <button onclick="A.sendJob('${e.id}')" ${!fr.length?'disabled':''}>보내기</button> <button onclick="A.decline('${e.id}')">거절</button></div>`;
     if(e.t==='crisis')return `<div class="panel ev crisis"><b>${e.title}</b> <span class="muted">· ${yr(e.due)}까지, 미루면 둘 다 잃는다</span><p>${e.text}</p>
 <select id="cs_${e.id}">${fr.map(d=>`<option value="${d.id}" ${sg[e.id]&&sg[e.id].d===d.id?'selected':''}>${d.n} (전력 ${power(d)})</option>`).join('')}</select>
 ${e.opts.map(o=>`<div style="margin-top:6px"><button onclick="A.defend('${e.id}','${o.k}')" ${!fr.length?'disabled':''}>${o.n} 막기 (필요 전력 ${o.need})</button> <span class="muted">못 막으면 ${o.loss}</span></div>`).join('')}<div style="margin-top:6px"><button onclick="A.giveup('${e.id}')">포기 (둘 다 잃음)</button></div></div>`;
-    if(e.t==='task')return `<div class="panel ev task"><b>${e.title}</b> <span class="muted">· ${yr(e.due)}까지</span><p>${e.text}</p><p>진행 ${G.task?Math.round(G.task.prog):100}% · 이달 예상 +${G.task?Math.round(G.ds.filter(d=>d.pos==='study').reduce((s,d)=>s+20*d.apt,0)*(1+.5*(G.fac.jang-1))):0}% — 제자 화면에서 "장경각 해독"에 배치한다. 한 사람이면 다섯 달 안팎, 둘이면 석 달 안팎.</p><button onclick="A.info('${e.id}')">닫기</button></div>`;
+    if(e.t==='task')return `<div class="panel ev task"><b>${e.title}</b> <span class="muted">· ${yr(e.due)}까지</span><p>${e.text}</p><p>진행 ${G.task?Math.round(G.task.prog):100}% · 이달 예상 +${G.task?Math.round(G.ds.filter(d=>d.pos==='study').reduce((s,d)=>s+20*d.st.ji/70,0)*(1+.5*(G.fac.jang-1))):0}% — 제자 화면에서 "장경각 해독"에 배치한다. 한 사람이면 다섯 달 안팎, 둘이면 석 달 안팎.</p><button onclick="A.info('${e.id}')">닫기</button></div>`;
     if(e.t==='quest')return `<div class="panel ev task"><b>${e.title}</b><p>${e.text}</p><button class="main" onclick="A.quest('${e.id}')" ${(e.id==='taeeul'&&(G.half!==0||G.act<1||G.jinBusy))||G.retreat?'disabled':''}>${e.btn}</button></div>`;
     return `<div class="panel ev"><b>${e.title}</b><p>${e.text}</p><button onclick="A.info('${e.id}')">확인</button></div>`;
   }).join('');
@@ -450,7 +459,7 @@ function botMonth(){
   if(MODAL){A.choose(Math.floor(Math.random()*MODAL.ch.length));return}
   if(G.over||G.done)return;
   const fr=freeDs(),say=[];
-  if(G.task){const s=fr.filter(d=>d.id!=="lim").sort((a,b)=>b.apt-a.apt)[0];if(s&&s.pos!=="study"){A.pos(s.id,"study");say.push(s.n+" → 장경각 해독")}}
+  if(G.task){const s=fr.filter(d=>d.id!=="lim").sort((a,b)=>b.st.ji-a.st.ji)[0];if(s&&s.pos!=="study"){A.pos(s.id,"study");say.push(s.n+" → 장경각 해독")}}
   fr.filter(d=>d.pos!=="study"&&d.mind>=70).forEach(d=>{A.pos(d.id,"rest");say.push(d.n+" → 휴식(심마)")});
   fr.filter(d=>d.pos==="rest"&&d.mind<20).forEach(d=>A.pos(d.id,"train"));
   const n0=G.q.length;A.auto();if(G.q.length<n0)say.push("추천대로 파견 "+(n0-G.q.length)+"건");
@@ -469,7 +478,7 @@ function botMonth(){
   A.next();
 }
 if(BOT){save=()=>{};newGame();TAB="main";setInterval(botMonth,1500)}
-else if(load()){if(G.half==null){G.half=0;G.act=Math.min(G.act,1)}if(!G.ilbi)MODAL=prologue();if(G.flags.seongsim&&!G.flags.taeeul&&!G.q.some(e=>e.id==='taeeul'))openTaeeul();render()}else newGame();
+else if(load()){for(const d of G.ds){if(d.st&&d.st.mugol!=null&&d.st.geom==null){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{...d.st,geom:d.st.mugol,gwon:d.st.mugol}}}for(const d of G.ds)if(!d.st){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{tong:50,ji:50,jeong:50,ma:50,geom:60,gwon:60,oseong:60}}if(G.half==null){G.half=0;G.act=Math.min(G.act,1)}if(!G.ilbi)MODAL=prologue();if(G.flags.seongsim&&!G.flags.taeeul&&!G.q.some(e=>e.id==='taeeul'))openTaeeul();render()}else newGame();
 </script>
 </body>
 </html>
