@@ -819,9 +819,12 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
   G.ds.filter(d=>d.backT===tid&&d.pos!=='away').forEach((d,i)=>put(d,-50-i*25,H-70-(i%2)*10,d.backHurt?'limp':'in',0));
   const outL=G.ds.filter(d=>d.pos==='away'&&d.leftT!==tid);
   const gdLab=gdRest;if(gdLab.length||outL.length){const gd=gdLab,few=(a,f)=>a.length>3?a.slice(0,3).map(f).join(', ')+` 외 ${a.length-3}명`:a.map(f).join(', ');const rows=[];    if(gd.length)rows.push([`산문 수비 · ${few(gd,d=>d.n)}`,gd.map(d=>d.n).join(', ')+' · 산문 수비']);    if(outL.length)rows.push([`출타 중 · ${few(outL,d=>d.n)}`,outL.map(d=>`${d.n}(${d.job&&d.job.title?d.job.title:'원행'}, ${d.away}순 남음)`).join(', ')]);    c.font='bold 12px sans-serif';rows.forEach(([tx,tip],i)=>{const tw=c.measureText(tx).width+14,y=8+i*26;c.fillStyle='rgba(29,26,22,.72)';c.fillRect(8,y,tw,22);c.fillStyle='#f1e9d8';c.fillText(tx,15,y+15);YARD.hit.push({x:8,y,w:tw,h:22,n:tip})})}
+  // 허수아비: 수련하는 사람 왼쪽(치는 쪽)에. 칠 때(박자 5~9) 밑동을 축으로 흔들린다
+  const dIm=getIm('img/sd_dummy.png');const dummy=(x,y)=>{if(!dIm)return;const dh=56,dw=dIm.naturalWidth*dh/dIm.naturalHeight,ph=(YARD.t+Math.round(x))%24,ang=ph>=5&&ph<=9?Math.sin((ph-5)/4*Math.PI)*.12:0,bx=x-16,by=y+56;
+    c.fillStyle='rgba(40,30,20,.22)';c.beginPath();c.ellipse(bx,by,dw*.3,3,0,0,7);c.fill();c.save();c.translate(bx,by);c.rotate(-ang);c.imageSmoothingEnabled=true;c.drawImage(dIm,-dw/2,-dh,dw,dh);c.restore();c.imageSmoothingEnabled=false};
   const nT=groups.train.length,cols=Math.max(5,Math.min(9,Math.ceil(nT/2))),gapX=(YARD.gx0?W*.86-YARD.gx0-30:W*.62)/cols;
   if(jinD)put(jinD,W*.5-24,G.retreat?-999:62,G.jinFocus||G.retreat?'swing':'stand0',f);
-  groups.train.forEach((d,i)=>{const row=Math.floor(i/cols),x=(YARD.gx0?YARD.gx0+30:W*.18)+(i%cols)*gapX+(row%2?gapX/2:0),y=118+row*42;const m=Object.keys(d.arts).filter(a=>ARTS[a].t==='m').sort((a,b)=>d.arts[b]-d.arts[a])[0];put(d,x,Math.min(y,H-56),m&&ARTS[m].w==='gwon'?'punch':'swing',(f+i)%2)});
+  groups.train.forEach((d,i)=>{const row=Math.floor(i/cols),x=(YARD.gx0?YARD.gx0+30:W*.18)+(i%cols)*gapX+(row%2?gapX/2:0),y=118+row*42;const m=Object.keys(d.arts).filter(a=>ARTS[a].t==='m').sort((a,b)=>d.arts[b]-d.arts[a])[0];const yy=Math.min(y,H-56);dummy(x,yy);put(d,x,yy,m&&ARTS[m].w==='gwon'?'punch':'swing',(f+i)%2)});
   groups.study.forEach((d,i)=>put(d,W-150+i*44,H-68,'read',0));
   groups.rest.forEach((d,i)=>put(d,W-300+i*44,H-56,'sit',0));
   c.restore();for(const h of YARD.hit)h.x+=PW;if(!PW)return;c.save();c.beginPath();c.rect(0,0,PW-3,H);c.clip();
