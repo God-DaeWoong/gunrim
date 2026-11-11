@@ -167,6 +167,7 @@ function gain(d){
 function monthPct(d,a){let g;if(d.id==='jin')g=(G.retreat?3:G.jinBusy?0:G.jinFocus?2:1)*(1+.1*G.fac.yeon);else g=({train:1,guard:.35,study:.2,rest:0,away:.2,hurt:0}[d.pos]||0)*(1+.1*G.fac.yeon)*(d.coach?2:1);
   return Math.round(100*g*growOf(d,a)*(a==='chileum'&&d.taeum?1.2:1)/costOf(d.arts[a]))}
 function train(d){
+  if(d.cold){d.cold=0;return}
   const g=gain(d)/2;if(!g)return;
   // 돈오: 수련에 든 순(진산월은 전념·폐관)에 오성에 따라 2~4%로 수련 중인 무공이 한 단계 오른다(관문도 넘는다)
   if((d.id==='jin'?(G.jinFocus||G.retreat):d.pos==='train')&&Math.random()<.025*d.st.oseong/80){const t=Math.random()<.5?'m':'s',a=pickFocus(d,t)||pickFocus(d,t==='m'?'s':'m');
@@ -423,6 +424,8 @@ function chance(d,need){return Math.max(5,Math.min(95,Math.round(50+(power(d)-ne
 /* ================= 월말 ================= */
 function endHalf(){
   if(MODAL)return;
+  // 태음신맥 한기
+  {const l=D('lim');if(l&&l.pos!=='away'&&l.pos!=='hurt'){const v=l.arts.chileum;const p=v==null?.35:v<4?.25:v<7?.12:0;if(Math.random()<p){l.cold=1;log(`임영옥에게 한기가 올라 이번 순은 몸을 녹이며 쉬었다.${v==null?' (칠음진기를 모른다)':` (칠음진기 ${v}성, 7성부터는 한기가 잡힌다)`}`)}}}
   // 수련(순)
   for(const d of G.ds)train(d);
   // 파견·요양 (순 단위)
