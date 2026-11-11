@@ -213,7 +213,7 @@ function endRetreat(){const j=D('jin');G.flags.yongyeong=1;gainWis(j,3,'석실 �
   MODAL={title:'출관',p:['백골은 이백 년 전의 혈선 정립병이었다. 그가 안고 있던 용영검과 《혈선비록》, 그리고 돌침상 밑 석판에 새겨진 곽일산의 유운검결 도해 백이십여 개가 남아 있었다.','석 달 동안 진산월은 도해를 따라 유운검법을 처음부터 다시 익혔다.'+(gj?' 마지막 달, 열여덟 초가 하나로 꿰이는 초식이 손끝에서 나왔다. 진산월은 그것을 검정중원이라 불렀다.':' 아직 열여덟 초가 하나로 꿰이지는 않았다. 유운검결이 7성에 이르면 닿을 것이다.')],
     ch:[['산을 내려간다.',()=>{log(`진산월이 출관했다. 용영검, 태진강기 3성, 태을신공 +1, 유운검법 → 유운검결 ${D('jin').arts.yuungyeol}성(+2)`+(gj?', 검정중원':''))}]]}}
 // 강일비: 임장홍의 사형. 본산에 머물지만 싸움에는 나서지 않는다(파견·위기·기습 제외). 늦은 길이면 정체를 숨긴 떠돌이 사내으로 지낸다
-function addIlbi(hidden){if(has('ilbi'))return;G.ds.push({id:'ilbi',n:hidden?'삿갓 쓴 사내':'강일비',r:hidden?'떠돌이 객':'사백(원로)',elder:1,img:'img/ilbi_hat.webp',ch:90,
+function addIlbi(hidden){if(has('ilbi'))return;G.ds.push({id:'ilbi',n:hidden?'삿갓 쓴 사내':'강일비',r:hidden?'떠돌이 객':'사백(원로)',elder:1,img:hidden?'img/ilbi_hat.webp':'img/ilbi.webp',ch:90,
   st:{tong:60,ji:90,jeong:50,ma:55,geom:95,gwon:70,oseong:95},arts:{yuun:8,cheonha:8,taeeul:8,guyang:3,hyeoncheong:3,chileum:2,muyeom:8,nanhwa:7,yeomhwa:6},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null})}
 // 문파 개발: 장문인 행동 1번과 은자로 시작하고, 순마다 진행된다. 동시에 둘까지
 const INCN={nohae:'노해광 첩보망',gyeong:'경요궁',sang:'서안 상권',yak:'약초밭',ju:'조암령 주루',pyo:'표국',land:'초가보 옛 땅'};
@@ -277,7 +277,7 @@ function fight(eid,lanes,mods){const e=G.q.find(x=>x.id===eid);if(!e)return;cons
 // 늦은 길: 초가보 멸망으로 이름이 오르자 떠돌이 사내이 정체를 밝힌다
 function ilbiArrive(why){if(has('ilbi'))return;addIlbi(false);addArt('lim','chileum');addArt('jin','chileum');G.flags.ilbiFound=G.m;
   MODAL={title:'강일비',p:[why,'사내는 임영옥의 손목을 잡아 보고 얼굴이 굳었다. "태음신맥이다. 지금이라도 칠음진기를 익혀야 한다." 사내는 삿갓을 벗었다. "내 이름은 강일비다. 네 사부의 사형이지."'],ch:[['사백님을 뵙습니다.',()=>{log('강일비가 본산에 들어왔다. 임영옥이 칠음진기를 배우기 시작했다(제자 탭에서 심법을 칠음진기로 정해 두어야 한다). 진산월도 배울 수 있다.')}]]}}
-function revealIlbi(){if(G.ilbi==='late'&&!has('ilbi')){ilbiArrive('초가보가 무너졌다는 소문이 퍼진 지 며칠 뒤, 장례식 날의 삿갓 쓴 사내이 산문 앞에 나타났다. "종남의 이름이 다시 들리기에 왔다."');return}const i=D('ilbi');if(G.ilbi==='late'&&i&&i.n!=='강일비'){i.n='강일비';i.r='사백(원로)';
+function revealIlbi(){if(G.ilbi==='late'&&!has('ilbi')){ilbiArrive('초가보가 무너졌다는 소문이 퍼진 지 며칠 뒤, 장례식 날의 삿갓 쓴 사내이 산문 앞에 나타났다. "종남의 이름이 다시 들리기에 왔다."');return}const i=D('ilbi');if(G.ilbi==='late'&&i&&i.n!=='강일비'){i.n='강일비';i.r='사백(원로)';i.img='img/ilbi.webp';
   MODAL={title:'떠돌이 사내',p:['후산 초막의 사내가 처음으로 산문 앞까지 내려왔다. 사내는 삿갓을 벗었다.','"종남의 이름이 다시 들리는구나. 내 이름은 강일비다. 네 사부의 사형이지." 그동안 임영옥에게 가르친 것이 칠음진기였다고 했다.'],ch:[['사백님을 뵙습니다.',()=>{addArt('jin','chileum');log('삿갓 쓴 사내의 정체는 강일비였다. 진산월도 칠음진기를 배울 수 있다.')}]]}}}
 // 일기토: 강공·쾌검·수비. 강공은 쾌검을, 쾌검은 수비를, 수비는 강공을 이긴다. 체력 100, 여섯 합
 let DUEL=null;
@@ -751,12 +751,12 @@ function botMonth(){
 if(/[?&]gallery=1/.test(location.search)){const rows=[];
   const add=(grp,n,src,note)=>rows.push(`<div class="d" style="text-align:center"><div class="pt" style="width:96px;height:96px;margin:0 auto;font-size:36px">${src?`<img src="${src}" alt="" onerror="this.parentNode.innerHTML='✕'">`:n[0]}</div><b>${n}</b><br><span class="muted" style="font-size:11px">${grp} · ${src?src.split('/').pop():'그림 없음(이름 첫 글자)'}${note?'<br>'+note:''}</span></div>`);
   for(const r of ROSTER)add('종남',r.n,r.rl?rlImg(r.rl):r.img,r.rl?'로그라이크 연동':'');
-  add('종남','강일비','img/ilbi_hat.webp','삿갓판(9번), 10번 대기');add('종남','전풍개',null,'그림요청 11번');add('종남','전흠',null,'그림요청 12번');[['악자화',25],['노해광',27],['하동원',26],['동중산',19],['유소응',20],['서문연상',21],['성락중',22],['단리상',23],['손풍',24]].forEach(([n,k])=>add('종남(합류)',n,null,`그림요청 ${k}번`));
+  add('종남','강일비(숨긴 모습)','img/ilbi_hat.webp','');add('종남','강일비','img/ilbi.webp','');add('종남','전풍개',null,'그림요청 11번');add('종남','전흠',null,'그림요청 12번');[['악자화',25],['노해광',27],['하동원',26],['동중산',19],['유소응',20],['서문연상',21],['성락중',22],['단리상',23],['손풍',24]].forEach(([n,k])=>add('종남(합류)',n,null,`그림요청 ${k}번`));
   for(const L of LANES)add('종남혈사 장수',L.boss.n,RLEN[L.boss.n]?rlImg(RLEN[L.boss.n][0]):null,RLEN[L.boss.n]?'':'그림요청 13~15번');
   for(const n in RLEN)add('로그라이크 적',n,rlImg(RLEN[n][0]),RLEN[n][1]?RLEN[n][1].join('·'):'');
   document.getElementById('app').innerHTML=`<div class="wrap"><h2>초상 점검</h2><p class="muted">✕는 파일이 있어야 하는데 안 열린 것, 글자는 아직 그림이 없는 것이다.</p><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${rows.join('')}</div></div>`}
 else if(BOT){save=()=>{};newGame();TAB="main";setInterval(botMonth,1500)}
-else if(load()){for(const d of G.ds){if(d.id==='lim')d.img='img/lim.webp';if(d.id==='mae')d.img='img/mae.webp';if(d.id==='so')d.img='img/so.webp';if(d.id==='eung')d.img='img/eung.webp';if(d.id==='jeong')d.img='img/jeong.webp';if(d.id==='bang')d.img='img/bang.webp';if(d.id==='ilbi')d.img='img/ilbi_hat.webp';if(d.id==='nak')d.img=d.mukryeong?'img/nak2.webp':'img/nak.webp';if(d.id==='ilbi'){d.arts.muyeom=d.arts.muyeom||8;d.arts.nanhwa=d.arts.nanhwa||7;d.arts.yeomhwa=d.arts.yeomhwa||6}if(d.id==='jin'){d.rl='player';delete d.img}if(d.id==='du'){d.rl='dugichun';delete d.img}}for(const d of G.ds){if(d.st&&d.st.mugol!=null&&d.st.geom==null){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{...d.st,geom:d.st.mugol,gwon:d.st.mugol}}}for(const d of G.ds)if(!d.st){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{tong:50,ji:50,jeong:50,ma:50,geom:60,gwon:60,oseong:60}}if(G.ilbi==='early')addIlbi(false);if(G.half==null){G.half=0;G.act=Math.min(G.act,1)}if(!G.ilbi)MODAL=prologue();if(G.flags.seongsim&&!G.flags.taeeul&&!G.q.some(e=>e.id==='taeeul'))openTaeeul();render()}else newGame();
+else if(load()){for(const d of G.ds){if(d.id==='lim')d.img='img/lim.webp';if(d.id==='mae')d.img='img/mae.webp';if(d.id==='so')d.img='img/so.webp';if(d.id==='eung')d.img='img/eung.webp';if(d.id==='jeong')d.img='img/jeong.webp';if(d.id==='bang')d.img='img/bang.webp';if(d.id==='ilbi')d.img=d.n==='강일비'?'img/ilbi.webp':'img/ilbi_hat.webp';if(d.id==='nak')d.img=d.mukryeong?'img/nak2.webp':'img/nak.webp';if(d.id==='ilbi'){d.arts.muyeom=d.arts.muyeom||8;d.arts.nanhwa=d.arts.nanhwa||7;d.arts.yeomhwa=d.arts.yeomhwa||6}if(d.id==='jin'){d.rl='player';delete d.img}if(d.id==='du'){d.rl='dugichun';delete d.img}}for(const d of G.ds){if(d.st&&d.st.mugol!=null&&d.st.geom==null){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{...d.st,geom:d.st.mugol,gwon:d.st.mugol}}}for(const d of G.ds)if(!d.st){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{tong:50,ji:50,jeong:50,ma:50,geom:60,gwon:60,oseong:60}}if(G.ilbi==='early')addIlbi(false);if(G.half==null){G.half=0;G.act=Math.min(G.act,1)}if(!G.ilbi)MODAL=prologue();if(G.flags.seongsim&&!G.flags.taeeul&&!G.q.some(e=>e.id==='taeeul'))openTaeeul();render()}else newGame();
 </script>
 </body>
 </html>
