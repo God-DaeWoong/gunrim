@@ -833,8 +833,8 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
   const oBg=getIm('img/sd_gate_bg.webp');if(oBg){const r=Math.max(PW/oBg.naturalWidth,H/oBg.naturalHeight);c.imageSmoothingEnabled=true;c.drawImage(oBg,(PW-oBg.naturalWidth*r)/2,(H-oBg.naturalHeight*r)/2,oBg.naturalWidth*r,oBg.naturalHeight*r);c.imageSmoothingEnabled=false}
   if(gIm){const gh=oBg?H*.62:Math.min(H*.86,PW*1.02*gIm.naturalHeight/gIm.naturalWidth),gw=gh*gIm.naturalWidth/gIm.naturalHeight,gx=oBg?(PW-gw)/2+PW*.06:(PW-gw)/2,gy=oBg?H*.8-gh:H-gh-18;
     c.imageSmoothingEnabled=true;c.drawImage(gIm,gx,gy,gw,gh);c.imageSmoothingEnabled=false;
-    // 수비 자리(발밑): 계단 오른쪽 → 산문 왼쪽 공터 → 공터 오른쪽 끝 → 계단 앞. 드나드는 길(왼쪽 아래 계단)은 비운다
-    const base=gy+gh,SP=oBg?[[gx+gw*.9,base+2],[gx-6,base-46],[PW-38,base-52],[gx+gw*.66,base+24]]:[[gx+gw*.2,gy+gh*.97+6],[gx+gw*.8,gy+gh*.97+6],[gx+gw*.06,gy+gh*.97-2],[gx+gw*.94,gy+gh*.97-2]];
+    // 수비 자리(발밑): 계단 오른쪽 → 왼쪽 아래 돌계단 꼭대기 → 공터 오른쪽 끝 → 계단 앞. 드나드는 길(왼쪽 아래 계단)은 비운다
+    const base=gy+gh,SP=oBg?[[gx+gw*.9,base+2],[PW*.24,H*.8],[PW-38,base-52],[gx+gw*.66,base+24]]:[[gx+gw*.2,gy+gh*.97+6],[gx+gw*.8,gy+gh*.97+6],[gx+gw*.06,gy+gh*.97-2],[gx+gw*.94,gy+gh*.97-2]];
     gdOut.map((d,i)=>[d,SP[i]]).sort((u,v)=>u[1][1]-v[1][1]).forEach(([d,[x,y]])=>put(d,x-22,y-56,'stand0',0));
     YARD.door=oBg?{ax:gx+gw*.5,ay:gy+gh*.8,bx:PW*.04,by:H+24,fadeA:1,ph:.5}:{ax:gx+gw*.5,ay:gy+gh*.8,bx:gx+gw*.05,by:H+30,fadeA:1,ph:.5};
     G.ds.filter(d=>d.pos==='away'&&d.leftT===tid).forEach((d,i)=>put(d,i*25,0,'out',0));
