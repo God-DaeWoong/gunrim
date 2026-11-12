@@ -153,7 +153,7 @@ const MOVES={
   nakroe:[['뇌정만균','nakroe'],['낙뢰신권','nakroe'],['낙뢰신권','nakroe']]};
 // 로그라이크 적: 이름 → [초상 파일, 강공·쾌검·수비 때 쓰는 초식 이름]
 const RLEN={'감종간':['gamjong',['대라섬요','색탈혼','허무보']],'두기춘':['dugichun',['검세','연검','운기']],'고진':['gojin',['대라궁해(반쪽)','백락심연','검막']],'유중악':['yujung',['뇌신파황','낙뢰구검','신뢰하격']],'백모란':['baekmo',['구주홍염화','월녀검법','음양화벽']],'조익현':['joik',['대라궁해','대라섬요','현음진기']],'야율척':['yayul',['항룡금강권','불광만천','금강항마']],'백대행':['baekdae',['천룡번공','천개유룡','백원적과']],'복양수':['bokyang',null],'당각':['danggak',null],'매장원':['maejang',null],'운자추':['unjachu',null]};
-const ENIMG={'소림 무승':'img/sd_ally_sorim.png','화산 고수':'img/sd_mook_hs.png','서장 선봉장':'img/sd_sj_boss.png','서장 철기대장':'img/sd_sj_boss.png','서장 대장':'img/sd_sj_boss.png','석동':'img/seokdong.webp','용 선생':'img/yongseon.webp','초일산':'img/choil.webp','갈태독':'img/galtae.webp','곽태보':'img/gwaktae.webp'};
+const ENIMG={'검단현':'img/geomdan.webp','점창 제자':'img/sd_ally_jeom.png','소림 무승':'img/sd_ally_sorim.png','화산 고수':'img/sd_mook_hs.png','서장 선봉장':'img/sd_sj_boss.png','서장 철기대장':'img/sd_sj_boss.png','서장 대장':'img/sd_sj_boss.png','석동':'img/seokdong.webp','용 선생':'img/yongseon.webp','초일산':'img/choil.webp','갈태독':'img/galtae.webp','곽태보':'img/gwaktae.webp'};
 const enemyImg=bn=>ENIMG[bn]||(RLEN[bn]&&RLEN[bn][0]?rlImg(RLEN[bn][0]):null);
 RLEN['서장 무승']=['sadae',null];RLEN['석동']=['',['대라장천','천양신공','구양신공']];
 const emvName=(bn,em)=>{const r=RLEN[bn];return r&&r[1]?r[1][['kang','kwae','su'].indexOf(em)]:MV[em]};
@@ -369,7 +369,7 @@ function meleeInit(c){const e=G.q.find(x=>x.id===DUEL.eid),L=LN(e)[c.l],k=e.k||1
   const others=G.ds.filter(d=>!d.elder&&d.id!=='jin'&&!c.ids.includes(d.id)),tm0=Math.max(.7,Math.min(1.6,(others.reduce((s,d)=>s+power(d),0)/Math.max(1,others.length))/110)),tm=tm0*(1+.05*(e.arm||0)),ourB=c.ids.reduce((s,id)=>{const d=D(id);return s+power(d)*(.6+d.st.tong/250)},0)*(1+.1*(G.wall||0)),emR=dk()*(typeof MKM!=='undefined'?MKM:1.35)*Math.pow(L.e*k/Math.max(1,ourB),typeof MKE!=='undefined'?MKE:.5);
   const nt=mTroops()+(e.kind==='p2b'&&G.p2?2*Math.min(5,G.p2.kept.length):0),ne=Math.max(19,Math.min(32,Math.round(L.e*k/10))),em=Math.max(.3,Math.min(3,emR*15/ne*tm0));
   for(let i=0;i<nt;i++)U.push({side:0,ally:e.kind==='p2b'&&i>=mTroops(),allyN:e.kind==='p2b'&&i>=mTroops()&&G.p2&&G.p2.kept.length?G.p2.kept[(i-mTroops())%G.p2.kept.length]:null,x:rnd(30,200),y:MTOP+10+(i+rnd(.1,.9))*(MBOT-MTOP-10)/nt,hp:90*tm,max:90*tm,atk:9*tm,rng:34,spd:55,cd:rnd(0,1),f:0});
-  for(let i=0;i<ne;i++)U.push({side:1,vimg:mFoeOf(e)==='seojang'&&i%3===2?'img/sd_mook_kw.png':null,x:rnd(700,930),y:MTOP+10+(i+rnd(.1,.9))*(MBOT-MTOP-10)/ne,hp:86*em,max:86*em,atk:9*em,rng:34,spd:55,cd:rnd(0,1),f:0});
+  for(let i=0;i<ne;i++)U.push({side:1,vimg:mFoeOf(e)==='seojang'?(i%4===1?'img/sd_mook_kw.png':i%4===3?'img/sd_mook_hg.png':null):null,x:rnd(700,930),y:MTOP+10+(i+rnd(.1,.9))*(MBOT-MTOP-10)/ne,hp:86*em,max:86*em,atk:9*em,rng:34,spd:55,cd:rnd(0,1),f:0});
   const chain=e.kind==='hwasan'||!!(G.p2&&P2BOSS[L.boss.n]);const bp=Math.round(L.boss.pw*k*dk());if(!chain)U.push({side:1,boss:1,n:L.boss.n,x:860,y:330,hp:200+bp*2,max:200+bp*2,atk:8+bp/6,rng:50,spd:45,cd:0,f:0});
   c.m={U,FX:[],TXT:[],COIN:[],T:30,tt:0,eun:0,shake:0,auto:G.mAuto!==false,sel:U[0],foe:mFoeOf(e),bg:mBgOf(e,L),ne,nt,em,tm};c.m.chain=chain;c.msg=[`${L.n}. 종남 ${c.ids.length+nt}명 대 ${MFOE[c.m.foe][0]} ${ne+(chain?0:1)}명.${chain?` 적장 ${L.boss.n}은(는) 뒤에서 지켜본다.`:''}`]}
 const mAlive=(M,s)=>M.U.filter(u=>u.side===s&&u.hp>0);
