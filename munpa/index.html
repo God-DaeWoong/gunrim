@@ -323,13 +323,13 @@ const LANES=[{n:'소량산로',e:180,boss:{n:'초일산',pw:110}},{n:'태평곡�
 const canOut=d=>!d.elder||(d.id==='ilbi'&&d.n!=='삿갓 쓴 사내');
 function laneCands(){return G.ds.filter(d=>canOut(d)&&d.pos!=='away'&&d.pos!=='hurt'&&d.pos!=='seclude'&&!(d.id==='jin'&&(G.retreat||G.jinBusy)))}
 const isHome=e=>!!e&&(e.kind==='hwasan'||e.kind==='raid');
-function battleSuggest(e){const home=isHome(e),NL=e?LN(e).length:3;const c=laneCands().filter(d=>!d.elder&&!(home&&d.id==='jin')&&!(home&&d.pos!=='guard')).sort((a,b)=>power(b)-power(a)),pick=[[],[],[]];const order=NL===1?[0,0,0]:[2,0,1];let i=0;for(const d of c.slice(0,6)){pick[order[i%3]].push(d.id);i++}return pick}
+function battleSuggest(e){const home=isHome(e),NL=e?LN(e).length:3;let c=laneCands().filter(d=>!d.elder&&!(home&&d.id==='jin')&&!(home&&d.pos!=='guard')).sort((a,b)=>power(b)-power(a));if(home&&!c.length)c=laneCands().filter(d=>!d.elder&&d.id!=='jin'&&d.pos!=='away').sort((a,b)=>power(b)-power(a)).slice(0,Math.min(NL,2));const pick=[[],[],[]];const order=NL===1?[0,0,0]:[2,0,1];let i=0;for(const d of c.slice(0,6)){pick[order[i%3]].push(d.id);i++}return pick}
 function readLanes(){const used=new Set();return [0,1,2].map(l=>{const ids=[0,1].map(i=>(document.getElementById(`bl_${l}_${i}`)||{}).value).filter(v=>v&&!used.has(v));ids.forEach(v=>used.add(v));return ids})}
 function fight(eid,lanes,mods){const e=G.q.find(x=>x.id===eid);if(!e)return;const k=e.k||1,res=[];lanes=lanes||battleSuggest(e);mods=mods||[];
   const NL=LN(e).length;for(let l=0;l<NL;l++){const md=mods[l]||{o:1,e:1};
     const ds=lanes[l].map(D).filter(Boolean),our=ds.reduce((s,d)=>s+power(d)*(.6+d.st.tong/250),0)*(.85+Math.random()*.3)*md.o*(1+.1*(G.wall||0)),en=Math.round(LN(e)[l].e*k*md.e);res.push({l,boss:LN(e)[l].boss&&LN(e)[l].boss.n,dw:md.dw,ds,win:md.force!=null?md.force:our>=en,our:Math.round(our),en,duel:md.t})}
   const wins=res.filter(r=>r.win).length,ok=wins>=(NL>=3?2:1);
-  for(const r of res){for(const d of r.ds){if(r.win){if(Math.random()<.6)gainWis(d,1,e.title)}else if(d.id!=='jin'&&Math.random()<.5){d.pos='hurt';d.away=4}}}
+  for(const r of res){for(const d of r.ds){if(r.win){if(Math.random()<.6)gainWis(d,1,e.title)}else if(d.id!=='jin'&&Math.random()<(isHome(e)?.25:.5)){d.pos='hurt';d.away=isHome(e)?2:4}}}
   G.q=G.q.filter(x=>x!==e);
   const txt=res.map(r=>`${LN(e)[r.l].n}: ${r.duel?r.duel+' / ':''}${r.ds.map(d=>d.n).join('·')||'아무도 없음'} ${r.our} 대 ${r.en} → ${r.win?'승':'패'}`);
   if(P2FIGHT[e.kind]){P2FIGHT[e.kind](ok,txt,e,res);save();render();return}
@@ -367,25 +367,25 @@ const mTroops=()=>Math.max(13,Math.min(24,8+Math.round(dsCount()*.45)));
 function mSkillOf(d){const a=duelArt(d)||'yuun';if((d.arts.wolnyeo||0)>=(d.arts[a]||0)&&d.arts.wolnyeo!=null)return{n:'월녀검법',t:'ring',fx:'wolnyeo'};
   const t=['janggwae','nakroe','guban','pungroe','yeomhwa'].includes(a)?'cone':'line',mf=MOVES[a]&&MOVES[a][0][1];return{n:ARTS[a].n,t,fx:mf||(t==='cone'?'cheonjeon':'geombong')}}
 function meleeInit(c){const e=G.q.find(x=>x.id===DUEL.eid),L=LN(e)[c.l],k=e.k||1,rnd=(a,b)=>a+Math.random()*(b-a),U=[];
-  c.ids.forEach((id,i)=>{const d=D(id),P=power(d);U.push({side:0,d:id,n:d.n,sk:mSkillOf(d),hero:1,x:120,y:270+i*110,hp:(90+P)/eqDef(d),max:(90+P)/eqDef(d),atk:(4+P/9)*eqAtk(d),rng:46,spd:62,cd:0,skc:3,f:0})});
+  c.ids.forEach((id,i)=>{const d=D(id),late=isHome(e)&&d.pos!=='guard',P=power(d)*(late?.8:1);U.push({side:0,d:id,n:d.n,sk:mSkillOf(d),hero:1,wait:late?6:0,x:late?-60:120,y:270+i*110,hp:(90+P)/eqDef(d),max:(90+P)/eqDef(d),atk:(4+P/9)*eqAtk(d),rng:46,spd:62,cd:0,skc:3,f:0})});
   const others=G.ds.filter(d=>!d.elder&&d.id!=='jin'&&!c.ids.includes(d.id)),tm0=Math.max(.7,Math.min(1.6,(others.reduce((s,d)=>s+power(d),0)/Math.max(1,others.length))/110)),tm=tm0*(1+.05*(e.arm||0)),ourB=Math.max(isHome(e)?140:1,c.ids.reduce((s,id)=>{const d=D(id);return s+power(d)*(.6+d.st.tong/250)},0))*(1+.1*(G.wall||0))*(isHome(e)?1+.08*G.fac.oe:1),emR=(isHome(e)?(typeof MHK!=='undefined'?MHK:.5):1)*dk()*(typeof MKM!=='undefined'?MKM:1.35)*Math.pow(L.e*k/Math.max(1,ourB),typeof MKE!=='undefined'?MKE:.5);
   const nt=mTroops()+(e.kind==='p2b'&&G.p2?2*Math.min(5,G.p2.kept.length):0),ne=Math.max(19,Math.min(32,Math.round(L.e*k/10))),em=Math.max(.3,Math.min(3,emR*15/ne*tm0));
   for(let i=0;i<nt;i++)U.push({side:0,ally:e.kind==='p2b'&&i>=mTroops(),allyN:e.kind==='p2b'&&i>=mTroops()&&G.p2&&G.p2.kept.length?G.p2.kept[(i-mTroops())%G.p2.kept.length]:null,x:rnd(30,200),y:MTOP+10+(i+rnd(.1,.9))*(MBOT-MTOP-10)/nt,hp:90*tm,max:90*tm,atk:9*tm,rng:34,spd:55,cd:rnd(0,1),f:0});
   for(let i=0;i<ne;i++)U.push({side:1,vimg:mFoeOf(e)==='seojang'?(i%4===1?'img/sd_mook_kw.png':i%4===3?'img/sd_mook_hg.png':null):null,x:rnd(700,930),y:MTOP+10+(i+rnd(.1,.9))*(MBOT-MTOP-10)/ne,hp:86*em,max:86*em,atk:9*em,rng:34,spd:55,cd:rnd(0,1),f:0});
   const chain=e.kind==='hwasan'||!!(G.p2&&P2BOSS[L.boss.n]);const bp=Math.round(L.boss.pw*k*dk());if(!chain)U.push({side:1,boss:1,n:L.boss.n,x:860,y:330,hp:200+bp*2,max:200+bp*2,atk:8+bp/6,rng:50,spd:45,cd:0,f:0});
   c.m={U,FX:[],TXT:[],COIN:[],T:30,tt:0,eun:0,shake:0,auto:G.mAuto!==false,sel:U[0],foe:mFoeOf(e),bg:mBgOf(e,L),ne,nt,em,tm};c.m.chain=chain;c.msg=[`${L.n}. 종남 ${c.ids.length+nt}명 대 ${MFOE[c.m.foe][0]} ${ne+(chain?0:1)}명.${chain?` 적장 ${L.boss.n}은(는) 뒤에서 지켜본다.`:''}`]}
-const mAlive=(M,s)=>M.U.filter(u=>u.side===s&&u.hp>0);
+const mAlive=(M,s)=>M.U.filter(u=>u.side===s&&u.hp>0&&!(u.wait>0));
 const mMorale=(M,s)=>{const a=M.U.filter(u=>u.side===s);return a.reduce((t,u)=>t+Math.max(0,u.hp)*(u.boss||u.hero?1.6:1),0)/a.reduce((t,u)=>t+u.max*(u.boss||u.hero?1.6:1),0)};
 function mHit(M,v,d,col){if(v.hp<=0)return;v.hp-=d;M.TXT.push({x:v.x,y:v.y-56,t:0,s:String(Math.round(d)),col:col||(v.side?'#ffd36a':'#ff6a5a')});
   if(v.hp<=0){v.dead=0;if(v.side===1)for(let i=0,n=v.boss?6:Math.random()<.5?1:0;i<n;i++)M.COIN.push({x:v.x+14,y:v.y-20,vx:(Math.random()-.5)*120,vy:-90-Math.random()*70,gy:v.y+Math.random()*14,t:0,v:v.boss?3:1});
     if(v.boss){M.TXT.push({x:v.x,y:v.y-90,t:0,s:`적장 ${v.n}이(가) 쓰러졌다!`,col:'#fff',big:1});M.shake=14;for(const e of mAlive(M,1))e.hp*=.7}
     if(v.hero){M.TXT.push({x:v.x,y:v.y-90,t:0,s:`${v.n}이(가) 물러났다`,col:'#ffb0a0',big:1});for(const e of mAlive(M,0))if(!e.hero)e.hp*=.85}}}
-function mSkill(M,i){const u=M.U.filter(x=>x.hero)[i];if(!u||u.hp<=0||u.skc>0||M.over)return;u.skc=10;u.bub={s:u.sk.n+'!',t:0};M.shake=8;const foes=mAlive(M,1),dmg=u.atk*3;
+function mSkill(M,i){const u=M.U.filter(x=>x.hero)[i];if(!u||u.hp<=0||u.skc>0||u.wait>0||M.over)return;u.skc=10;u.bub={s:u.sk.n+'!',t:0};M.shake=8;const foes=mAlive(M,1),dmg=u.atk*3;
   if(u.sk.t==='line'){M.FX.push({k:'line',x:u.x+30,y:u.y-30,len:280,t:0},{k:'sheet',n:u.sk.fx,x:u.x+140,y:u.y-22,w:200,t:0});for(const e of foes)if(e.x>u.x-10&&e.x<u.x+300&&Math.abs(e.y-u.y)<32)mHit(M,e,e.boss?dmg*1.4:dmg,'#9fe6ff');u.x=Math.min(MW-60,u.x+60)}
   if(u.sk.t==='ring'){M.FX.push({k:'ring',x:u.x+20,y:u.y-20,r:80,t:0},{k:'sheet',n:u.sk.fx,x:u.x+24,y:u.y-34,w:170,t:0});for(const e of foes)if(Math.hypot(e.x-u.x,(e.y-u.y)*1.4)<110)mHit(M,e,dmg*.75,'#cfe4ff')}
   if(u.sk.t==='cone'){M.FX.push({k:'cone',x:u.x+30,y:u.y-25,t:0},{k:'sheet',n:u.sk.fx,x:u.x+120,y:u.y-34,w:160,t:0});for(const e of foes)if(e.x>u.x&&e.x<u.x+180&&Math.abs(e.y-u.y)<60){mHit(M,e,dmg*.6,'#ffe08a');e.x=Math.min(MW-20,e.x+60)}}}
 function mStep(M,dt){M.tt+=dt;if(M.over)return;M.T-=dt;const rnd=(a,b)=>a+Math.random()*(b-a);
-  for(const u of M.U){if(u.hp<=0){u.dead=(u.dead||0)+dt;continue}    u.cd-=dt;if(u.hero)u.skc=Math.max(0,u.skc-dt);if(u.bub)u.bub.t+=dt;
+  for(const u of M.U){if(u.hp<=0){u.dead=(u.dead||0)+dt;continue}if(u.wait>0){u.wait-=dt;if(u.wait<=0){u.x=20;u.bub={s:'늦어서 미안하다!',t:0}}continue}    u.cd-=dt;if(u.hero)u.skc=Math.max(0,u.skc-dt);if(u.bub)u.bub.t+=dt;
     if(u.boss){u.bsk=(u.bsk==null?7:u.bsk)-dt;if(u.bsk<=0){const t=mAlive(M,0).filter(o=>Math.hypot(o.x-u.x,o.y-u.y)<170);if(t.length){u.bsk=13;const r=RLEN[u.n],nm=r&&r[1]?r[1][0]:null,fx=(nm&&NAMEFX[nm])||ENEMY_FX[Math.floor(Math.random()*ENEMY_FX.length)];u.bub={s:(nm||'일격')+'!',t:0};M.shake=6;const c0=t.reduce((s,o)=>({x:s.x+o.x/t.length,y:s.y+o.y/t.length}),{x:0,y:0});M.FX.push({k:'sheet',n:fx,x:c0.x+20,y:c0.y-30,w:180,t:0});for(const o of t)if(Math.hypot(o.x-c0.x,o.y-c0.y)<60)mHit(M,o,u.atk*(o.hero?.4:.6)*(typeof MBK!=='undefined'?MBK:1))}}}
     if(u.go){const dx=u.go.x-u.x,dy=u.go.y-u.y,d=Math.hypot(dx,dy);if(d>8){u.x+=dx/d*u.spd*1.5*dt;u.y+=dy/d*u.spd*1.5*dt;u.face=dx<0;u.f=0;u.mv=1;continue}u.go=null;u.tg=null}
     const foes=mAlive(M,1-u.side);if(!foes.length)continue;let tg=u.tg;
@@ -405,7 +405,7 @@ function mDraw(M,c){c.save();if(M.shake>0){c.translate((Math.random()-.5)*M.shak
   const BG=mImg(M.bg);if(BG.naturalWidth){const r=Math.max(MW/BG.naturalWidth,MH/BG.naturalHeight);c.drawImage(BG,(MW-BG.naturalWidth*r)/2,(MH-BG.naturalHeight*r)/2,BG.naturalWidth*r,BG.naturalHeight*r)}else{c.fillStyle='#2a241d';c.fillRect(0,0,MW,MH)}
   c.fillStyle='rgba(20,14,10,.4)';c.fillRect(0,0,MW,MH);
   const mook=mImg('img/sd_mook_jn.png'),order=M.U.slice().sort((a,b)=>(a.hp>0)-(b.hp>0)||a.y-b.y);
-  for(const u of order){const dead=u.hp<=0;if(dead&&u.dead>3)continue;c.globalAlpha=dead?Math.max(0,1-u.dead/3):1;
+  for(const u of order){const dead=u.hp<=0;if(dead&&u.dead>3||u.wait>0)continue;c.globalAlpha=dead?Math.max(0,1-u.dead/3):1;
     const hi=u.hero?mImg('img/sd_'+u.d+'.png'):null,fi=u.vimg?mImg(u.vimg):u.allyN&&MALLY_IMG[u.allyN]?mImg(MALLY_IMG[u.allyN]):u.side&&(u.boss?MBOSS_IMG[u.n]:MFOE_IMG[M.foe])?mImg(u.boss?MBOSS_IMG[u.n]:MFOE_IMG[M.foe]):null,own=fi&&fi.naturalWidth,im=hi&&hi.naturalWidth?hi:own?fi:mook;
     if(im.naturalWidth){const h=u.hero?66:u.boss?72:52,w=h*im.naturalWidth/im.naturalHeight,bob=u.mv?Math.abs(Math.sin(M.tt*14))*4:0;c.save();
       if(!u.hero&&!own&&(u.side||u.ally))c.filter=u.ally?'hue-rotate(90deg) saturate(1.4)':u.boss?'sepia(1) hue-rotate(-40deg) saturate(3) brightness(.85)':MFOE[M.foe][1];
@@ -883,7 +883,7 @@ function chanceK(d,need,k){if(!k||k==='mu')return chance(d,need);return Math.max
 function chance(d,need){return Math.max(5,Math.min(95,Math.round(50+(power(d)-need)*1.2+boV(d,'eoryong'))))}
 
 /* ================= 월말 ================= */
-function autoJin(){if(G.noAutoJin||G.act<1||G.retreat||G.jinBusy||G.jinFocus||MODAL||DUEL)return;const r=recs()[0]||['focus','수련 전념'];const n0=G.act;
+function autoJin(){if(G.noAutoJin||G.act<1||G.retreat||G.jinBusy||G.jinFocus||MODAL||DUEL)return;const r=recs().find(x=>x[0]!=='guard'&&x[0]!=='money')||['focus','수련 전념'];const n0=G.act;
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v;return !!el};
   try{if(r[0]==='sortie'){const h=G.q.find(e=>e.t==='crisis');if(h&&set('jin_sortie',h.id))A.sortie();else A.focus()}
     else if(r[0]==='meet'){const t=G.ds.filter(d=>d.id!=='jin').sort((a,b)=>b.mind-a.mind)[0];if(t&&set('jin_meet',t.id))A.meet();else A.focus()}
@@ -994,7 +994,7 @@ function recs(){const r=[];if(G.eun<0)r.push(['money',`<b style="color:var(--red
   if(G.fame>=15&&G.eun>=300&&dsCount()<capOfDs())r.push(['recruit','명성과 은자가 넉넉하다. 제자 모집']);
   if(G.q.some(e=>e.id==='taeeul')&&!G.retreat)r.unshift(['tq',(D('jin').arts.cheonha||0)>=5?'태을선거로 떠날 수 있다(사건 탭)':'태을선거에 가려면 천하삼십육검 5성이 필요하다. 수련 전념']);
   {const j=D('jin'),a=j&&Object.keys(YUK).find(a=>j.arts[a]==null&&teacher(a,'jin'));if(a)r.unshift(['learnyuk',`진산월이 ${ARTS[a].n}을(를) 배울 수 있다. 육합귀진에 필요하다(배운다)`])}
-  if(G.m>=8&&!G.ds.some(d=>d.pos==='guard'&&d.id!=='jin'&&!d.elder))r.push(['guard','수비 자리에 아무도 없다. 본산이 습격당하면 이름 없는 제자들만 맞선다(제자 탭에서 한 명 이상 수비로)']);
+  if(G.m>=8&&!G.ds.some(d=>d.pos==='guard'&&d.id!=='jin'&&!d.elder)){const hu=G.ds.filter(d=>d.pos==='hurt'&&d.home==='guard');r.unshift(['guard',hu.length?`${hu.map(d=>d.n).join('·')}이(가) 다쳐 수비가 비었다. 다른 제자를 수비로 세우라(수비는 둘 이상이 안전하다)`:'수비 자리에 아무도 없다. 본산이 습격당하면 이름 없는 제자들만 맞선다(제자 탭에서 한 명 이상 수비로)'])}
   if(G.q.some(e=>e.id==='seokshil'))r.push(['sq','석실 폐관은 수비를 갖춘 뒤에(사건 탭)']);
   if(!r.length)r.push(['focus','급한 일이 없다. 수련 전념']);return r.slice(0,2)}
 function evBar(){if(!G.q.length)return '';const n=Object.keys(suggest()).length,work=G.q.filter(e=>e.t==='job'||e.t==='crisis').length,news=G.q.filter(e=>e.t==='event'&&e.info).length,rest=G.q.length-work-news;
