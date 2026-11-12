@@ -289,7 +289,7 @@ const DEV=[
   {id:'wall2',n:'성벽·망루 2',c:450,t:8,d:'본산 방어 +40, 큰 싸움에서 아군 +10% 더',req:()=>(G.devDone||[]).includes('wall1'),rq:'성벽·망루 1',big:1}];
 const capOfDs=()=>[15,20,27,35][G.fac.sukso||0];
 const dsCount=()=>G.ds.filter(d=>!d.elder&&d.id!=='jin'&&d.id!=='jeonp').length;
-function devDone(id){G.devDone=G.devDone||[];const rb=yardRebuilt();G.devDone.push(id);if(!rb&&yardRebuilt())log('<b>본산의 모습이 달라졌다.</b> 무너졌던 곳을 다시 세우고 새 깃발과 등을 걸었다.');const x=DEV.find(v=>v.id===id);
+function devDone(id){G.devDone=G.devDone||[];const st0=yardStage();G.devDone.push(id);{const st=yardStage();if(st>st0){log('<b>본산의 모습이 달라졌다.</b> '+YARD_TXT[st]);if(!MODAL)MODAL={title:'본산의 모습이 달라졌다',art:BONSAN_ART[st],p:[YARD_TXT[st]],ch:[['둘러본다.',()=>{}]]}}}const x=DEV.find(v=>v.id===id);
   if(id==='sang')G.income.sang+=15;if(id==='yak')G.income.yak+=10;if(id==='ju')G.income.ju=25;if(id==='pyo'){G.flags.pyo=1;G.income.pyo=10}if(id==='yeon')G.flags.yeongong=1;if(id==='land')G.income.land=30;
   if(id.startsWith('sukso'))G.fac.sukso=(G.fac.sukso||0)+1;if(id==='sanmun'){G.fame+=10;G.flags.sanmun=1}if(id==='josa'){G.qual+=10;for(const o of G.ds)o.mind=Math.max(0,o.mind-20)}
   if(id==='jeongak1')G.facCap=4;if(id==='jeongak2')G.facCap=5;if(id==='sulyeon')G.flags.sulyeon=1;if(id==='wall1')G.wall=1;if(id==='wall2')G.wall=2;
@@ -1097,8 +1097,8 @@ function calTab(){
 let TITLE=null;
 const DIFF={easy:{n:'쉬움',k:.9,eun:100,d:'적이 약하다. 처음 해 보는 사람에게'},normal:{n:'보통',k:1,eun:0,d:'기준 난이도'},hard:{n:'어려움',k:1.15,eun:-50,d:'적이 강하다. 놓친 일이 그대로 멸문으로 이어진다'}};
 const dk=()=>(DIFF[G&&G.diff]||DIFF.normal).k;
-function titleHTML(){return `<div class="modal" style="align-items:flex-end;padding-bottom:14vh;background:rgba(29,26,22,.3)"><div class="box" style="max-width:380px;text-align:center;padding:26px 22px"><h1 style="font-size:34px;letter-spacing:.2em;margin:0">君臨天下</h1><p class="muted" style="letter-spacing:.3em;margin:4px 0 18px">군림천하 · 문파 경영</p><div class="ch">${TITLE.save?`<button class="main" onclick="A.titleGo(0)">이어하기 <span style="font-size:12px;opacity:.75">(${yr(G.m)} ${HALF[G.half||0]})</span></button>`:''}${TITLE.pick?Object.entries(DIFF).map(([k,v])=>`<button ${k==='normal'?'class="main"':''} onclick="A.titleDiff('${k}')">${v.n} <span style="font-size:12px;opacity:.75">· ${v.d}</span></button>`).join(''):`<button ${TITLE.save?'':'class="main"'} onclick="A.titleGo(1)">게임 시작</button>`}</div></div></div>`}
-function modalHTML(){if(TITLE)return titleHTML();if(WIS)return wisHTML();if(!MODAL)return'';return `<div class="modal"><div class="box"><h2>${MODAL.title}</h2>${MODAL.p.map(x=>`<p class="serif">${x}</p>`).join('')}
+function titleHTML(){return `<div class="modal" style="align-items:flex-end;padding-bottom:14vh;background:linear-gradient(rgba(29,26,22,.15),rgba(29,26,22,.55)),url(${BONSAN_ART[TITLE.save&&G?yardStage():0]}) center/cover"><div class="box" style="max-width:380px;text-align:center;padding:26px 22px"><h1 style="font-size:34px;letter-spacing:.2em;margin:0">君臨天下</h1><p class="muted" style="letter-spacing:.3em;margin:4px 0 18px">군림천하 · 문파 경영</p><div class="ch">${TITLE.save?`<button class="main" onclick="A.titleGo(0)">이어하기 <span style="font-size:12px;opacity:.75">(${yr(G.m)} ${HALF[G.half||0]})</span></button>`:''}${TITLE.pick?Object.entries(DIFF).map(([k,v])=>`<button ${k==='normal'?'class="main"':''} onclick="A.titleDiff('${k}')">${v.n} <span style="font-size:12px;opacity:.75">· ${v.d}</span></button>`).join(''):`<button ${TITLE.save?'':'class="main"'} onclick="A.titleGo(1)">게임 시작</button>`}</div></div></div>`}
+function modalHTML(){if(TITLE)return titleHTML();if(WIS)return wisHTML();if(!MODAL)return'';return `<div class="modal"><div class="box">${MODAL.art&&/bonsan/.test(MODAL.art)?`<img src="${MODAL.art}" alt="" style="width:100%;border-radius:8px;margin-bottom:8px;display:block">`:''}<h2>${MODAL.title}</h2>${MODAL.p.map(x=>`<p class="serif">${x}</p>`).join('')}
 <div class="ch">${MODAL.ch.map((c,i)=>`<button onclick="A.choose(${i})">${c[0]}</button>`).join('')}</div></div></div>`}
 function playFx(){document.querySelectorAll?.('.fx[data-fx]').forEach(el=>{const n=el.dataset.fx;el.removeAttribute('data-fx');el.style.backgroundImage=`url(${fxUrl(n)})`;let f=0;const t=setInterval(()=>{const k=Math.min(f,5);el.style.backgroundPosition=`${(k%3)*50}% ${Math.floor(k/3)*100}%`;el.style.opacity=f>6?String(Math.max(0,1-(f-6)/3)):'1';if(++f>=10){clearInterval(t);el.remove()}},140)})}
 /* ================= 연무장(도트) ================= */
@@ -1186,7 +1186,7 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
   YARD.door=null;YARD.gx0=0;const T=YARD.bgT,BP=(x,y)=>[T.ox+x*T.r,T.oy+y*T.r];
   if(T){const [bx,by]=BP(290,418),[ax,ay]=BP(400,600);YARD.door={bx,by,ax,ay,fadeA:1};
     }
-  const gIm=PW?getIm('img/sd_gate.png'):null,gdOut=gIm?gd.filter(d=>sdOf(d)&&getIm(sdOf(d))).slice(0,4):[],gdRest=gd.filter(d=>!gdOut.includes(d));
+  const gIm=PW?((!G.flags.sanmun&&getIm('img/sd_gate_ruin.png'))||getIm('img/sd_gate.png')):null,gdOut=gIm?gd.filter(d=>sdOf(d)&&getIm(sdOf(d))).slice(0,4):[],gdRest=gd.filter(d=>!gdOut.includes(d));
   YARD.gx=120;
   G.ds.filter(d=>d.pos==='away'&&d.leftT===tid).forEach((d,i,L)=>put((YARD.wi[d.id]=i/L.length,d),YARD.gx+i*25,H-74-(i%2)*10,'out',0));
   G.ds.filter(d=>d.backT===tid&&d.pos!=='away').forEach((d,i,L)=>put((YARD.wi[d.id]=i/L.length,d),-50-i*25,H-70-(i%2)*10,d.backHurt?'limp':'in',0));
@@ -1222,10 +1222,12 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
   c.fillStyle='#5b4636';c.fillRect(PW-3,0,3,H)}
 // 본산 공사를 세 건 마치면 연무장 배경이 가난한 본산에서 다시 세운 본산으로 바뀐다
 const YARD_B=['sanmun','josa','jeongak1','jeongak2','sukso1','sukso2','sukso3','wall1','wall2','yeon','sulyeon'];
-const yardRebuilt=()=>(G.devDone||[]).filter(x=>YARD_B.includes(x)).length>=3;
+const yardStage=()=>{const dd=G.devDone||[],n=dd.filter(x=>YARD_B.includes(x)).length;return dd.includes('jeongak1')&&n>=4?3:n>=4?2:n>=2?1:0};const yardRebuilt=()=>yardStage()>=2;
+const YARD_IMG=['img/sd_yard_ruin.webp','img/sd_yard.webp','img/sd_yard_a.webp','img/sd_yard_big.webp'],BONSAN_ART=['img/bonsan0.webp','img/bonsan1.webp','img/bonsan2.webp','img/bonsan2.webp'];
+const YARD_TXT4='전각을 늘리고 담장을 넓혔다. 누각이 서고 연무장이 커졌다. 종남의 본산이 옛 위용을 넘보기 시작했다.';const YARD_TXT=['','무너졌던 담장과 산문을 손보기 시작했다. 잡초를 걷어 내고 깨진 기와를 갈았다. 본산에 다시 사람 사는 기척이 돈다.','본산을 다시 세웠다. 새 깃발과 등을 걸고 병기대를 채웠다. 종남이 다시 문파다운 모습을 갖추었다.',YARD_TXT4];
 function initYard(){const cv=document.getElementById('yard');if(!cv||!cv.getContext)return;
-  const want=yardRebuilt()?'img/sd_yard_a.webp':'img/sd_yard.webp';
-  if(!YARD.bg||YARD.bgSrc!==want){YARD.bgSrc=want;YARD.bg=new Image();YARD.bg.src=want}
+  const want=YARD_IMG[yardStage()];
+  if(!YARD.bg||YARD.bgSrc!==want){YARD.bgSrc=want;YARD.bg=new Image();const st=YARD_IMG.indexOf(want);YARD.bg.onerror=function(){if(st>0&&this.src.indexOf(YARD_IMG[st-1])<0)this.src=YARD_IMG[st-1]};YARD.bg.src=want}
   const tip=document.getElementById('yardtip');cv.onmousemove=e=>{const r=cv.getBoundingClientRect(),k=cv.width/r.width,mx=(e.clientX-r.left)*k,my=(e.clientY-r.top)*k;const h=YARD.hit.find(o=>mx>=o.x&&mx<=o.x+o.w&&my>=o.y&&my<=o.y+o.h);if(h&&tip){tip.style.display='block';tip.textContent=h.n;tip.style.left=(e.clientX-r.left+10)+'px';tip.style.top=(e.clientY-r.top-24)+'px'}else if(tip)tip.style.display='none'};cv.onmouseleave=()=>{if(tip)tip.style.display='none'};
   drawYard();if(!YARD.timer&&typeof setInterval!=='undefined')YARD.timer=setInterval(drawYard,120)}
 /* ================= 강호 지도 ================= */
