@@ -445,13 +445,13 @@ function meleeEnd(c){const M=c.m;if(c.over)return;c.over=true;const win=M.over.w
 function meleeHTML(){const c=DUEL.cur,M=c.m,hs=M.U.filter(x=>x.hero);
   return `<div class="modal"><div class="box duel gorge" style="max-width:1000px;padding:12px 14px"><h2 style="margin:0 0 8px">떼싸움 · ${c.t}</h2><canvas id="mcv" width="${MW}" height="${MH}" style="width:100%;display:block;border-radius:8px;touch-action:manipulation" onpointerdown="meleeTap(event)"></canvas>
 <div style="display:flex;gap:8px;margin-top:8px;align-items:stretch;flex-wrap:wrap">${hs.map((u,i)=>`<button id="msk${i}" class="msk" onclick="A.mSkill(${i})" style="position:relative;width:74px;height:92px;padding:0;overflow:hidden;border-radius:8px;background:#2a241d">${D(u.d).img?`<img src="${D(u.d).img}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:top">`:`<b style="font-size:28px;color:#fff3dc">${u.n[0]}</b>`}<span style="position:absolute;left:0;right:0;top:0;background:rgba(0,0,0,.6);color:#fff3dc;font-size:11px;line-height:1.3">${u.n}<br>${u.sk.n}</span><span class="mcd" style="position:absolute;left:0;right:0;bottom:0;background:rgba(10,8,6,.72);height:0"></span><b style="position:absolute;right:3px;bottom:3px;background:#d9b25a;color:#1d1a16;border-radius:4px;padding:0 5px;font:bold 12px sans-serif">${'QW'[i]}</b></button>`).join('')}
-<span style="margin-left:auto;display:flex;flex-direction:column;gap:6px">${c.over?`<button class="main" onclick="A.duelNext()">${DUEL.list[DUEL.i+1]&&DUEL.list[DUEL.i+1].chain?'적장과 일기토':DUEL.i+1<DUEL.list.length?'다음 갈래로':'결과 보기'}</button>`:`<button id="mauto" onclick="A.mAuto()">${M.auto?'절초 맡김 켬':'절초 맡김 끔'}</button><button onclick="A.duelAuto()">결과만 보기</button>`}</span></div>
+<span style="margin-left:auto;display:flex;flex-direction:column;gap:6px">${c.over?`<button class="main" onclick="A.duelNext()">${DUEL.list[DUEL.i+1]&&DUEL.list[DUEL.i+1].chain?'적장과 일기토':DUEL.i+1<DUEL.list.length?'다음 갈래로':'결과 보기'}</button>`:`<button id="mauto" onclick="A.mAuto()">${M.auto?'절초 맡김 켬':'절초 맡김 끔'}</button><button id="mspd" onclick="A.mSpd()">배속 ×${G.mSpd||1}</button><button onclick="A.duelAuto()">결과만 보기</button>`}</span></div>
 <p class="muted" style="font-size:12px;margin:6px 0 0">장수를 누르면 고르고, 땅을 누르면 그 장수가 그리로 간다. 초상이나 Q·W로 절초. 30초 뒤 기세가 높은 쪽이 이긴다. 적장을 쓰러뜨리면 적 기세가 크게 꺾인다.</p></div></div>`}
 function meleeTap(ev){const c=DUEL&&DUEL.cur;if(!c||!c.m||c.m.over)return;const M=c.m,cv=ev.currentTarget,r=cv.getBoundingClientRect(),x=(ev.clientX-r.left)*MW/r.width,y=(ev.clientY-r.top)*MH/r.height;
   const h=M.U.find(u=>u.hero&&u.hp>0&&x>u.x-10&&x<u.x+60&&y>u.y-80&&y<u.y+24);if(h){M.sel=h;return}if(M.sel&&M.sel.hp>0){M.sel.go={x:x-24,y:Math.max(MTOP,Math.min(MBOT,y))};M.FX.push({k:'spark',x,y,t:0})}}
 let MLOOP=0,MLAST=0;
 function meleeKick(){if(MLOOP||typeof requestAnimationFrame==='undefined')return;MLOOP=1;MLAST=0;requestAnimationFrame(meleeFrame)}
-function meleeFrame(t){const c=DUEL&&DUEL.cur;if(!c||!c.m){MLOOP=0;return}const M=c.m,dt=Math.min(.05,MLAST?(t-MLAST)/1000:0);MLAST=t;mStep(M,dt);
+function meleeFrame(t){const c=DUEL&&DUEL.cur;if(!c||!c.m){MLOOP=0;return}const M=c.m,dt=Math.min(.05,MLAST?(t-MLAST)/1000:0);MLAST=t;for(let s=0;s<(G.mSpd||1);s++)if(!M.over)mStep(M,dt);
   const cv=document.getElementById('mcv');if(cv&&cv.getContext)mDraw(M,cv.getContext('2d'));
   M.U.filter(x=>x.hero).forEach((u,i)=>{const b=document.getElementById('msk'+i);if(b){b.style.opacity=u.hp>0?1:.4;const cd=b.querySelector('.mcd');if(cd)cd.style.height=(u.hp>0?Math.round(100*u.skc/10):100)+'%'}});
   if(M.over&&!c.over){meleeEnd(c);save();render()}
@@ -866,6 +866,7 @@ const A={
   keepPay(eid){const e=G.q.find(x=>x.id===eid);if(!e||!e.sp||!e.sp.startsWith('keep:')||G.eun<300)return;G.eun-=300;G.q=G.q.filter(x=>x!==e);log('군자금 300냥을 보냈다.'+(P2JOB.keep({sp:e.sp},true)||''));save();render()},
   infoAll(){const ns=G.q.filter(x=>x.t==='event'&&x.info);if(!ns.length)return;G.q=G.q.filter(x=>!(x.t==='event'&&x.info));MODAL={title:`소식 ${ns.length}건`,p:ns.map(e=>`<b>${e.title}</b> — ${typeof e.text==='function'?e.text():e.text}`),ch:[['모두 읽었다.',()=>{}]]};save();render()},
   choose(i){const c=MODAL.ch[i];MODAL=null;const keep=c[1]();if(!keep)MODAL=MODAL||null;save();render()},
+  mSpd(){G.mSpd=(G.mSpd||1)>=3?1:(G.mSpd||1)+1;const b=document.getElementById("mspd");if(b)b.textContent="배속 ×"+G.mSpd;save()},
   autoNext(v){G.autoNext=v;save()},
   next(){if(DUEL)return;if(G.autoNext&&!MODAL)A.auto();endHalf()},
   titleGo(n){if(n){TITLE.pick=1;TITLE.rec=0;render();return}TITLE=null;render()},
