@@ -251,9 +251,9 @@ function photoDraw(){const cv=document.getElementById('endphoto');if(!cv||!cv.ge
     // 뒷줄: 동맹군은 양쪽, 문도는 가운데
     const back=[];const al=allies.flatMap(n=>[ims[MALLY_IMG[n]],ims[MALLY_IMG[n]]]),half=Math.ceil(al.length/2);
     back.push(...al.slice(0,half));for(let i=0;i<nMun;i++)back.push(ims['img/sd_mook_jn.png']);back.push(...al.slice(half));
-    row(back,H*.75,H*.13,W/22);
+    row(back,rest.length>10?H*.70:H*.75,H*.12,W/22);
     // 가운데 줄: 이름 있는 제자
-    const mid=[];rest.slice(0,10).forEach((d,i)=>i%2?mid.push(ims[src(d)]):mid.unshift(ims[src(d)]));row(mid,H*.86,H*.155,W/15);
+    const mk=a=>{const m=[];a.forEach((d,i)=>i%2?m.push(ims[src(d)]):m.unshift(ims[src(d)]));return m};if(rest.length>10){const k=Math.ceil(rest.length/2);row(mk(rest.slice(k)),H*.80,H*.14,W/14);row(mk(rest.slice(0,k)),H*.89,H*.155,W/13)}else row(mk(rest),H*.86,H*.155,W/15);
     // 앞줄: 원로, 장문인, 임영옥
     const fr=[];if(eld[0])fr.push(ims[src(eld[0])]);if(jin)fr.push(ims[src(jin)]);if(lim)fr.push(ims[src(lim)]);if(eld[1])fr.push(ims[src(eld[1])]);row(fr,H*.985,H*.19,W/9);
     // 동맹 이름
