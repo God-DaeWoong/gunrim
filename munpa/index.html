@@ -236,6 +236,30 @@ const brItem=id=>({t:'branch',id,title:BRANCH[id].title,due:999});
 function branchModal(b){const B=BRANCH[b.id];MODAL={title:B.title,p:[B.text,...B.o.map(o=>'· <b>'+o[0]+'</b>: '+o[1]),'<span class="muted">이 선택은 되돌릴 수 없다.</span>'],ch:B.o.map((o,i)=>[o[0],()=>{A.branch(b.id,i)}])}}
 const brLine=()=>{const f=G.flags,a=[];if(f.hsSide)a.push(f.hsSide==='ally'?'화산과 손을 잡았고':'화산을 서안에서 몰아냈고');if(f.brB)a.push(f.brB==='sang'?'상단과 손잡아 재물을 모았으며':'청빈을 지켰으며');if(f.brC)a.push(f.brC==='elite'?'정예의 길을 걸었다':'문을 넓게 열어 대문파가 되었다');return a.length?'— 종남은 '+a.join(', ')+'.':''};
 const upkeepDs=()=>G.ds.filter(d=>!d.elder&&d.id!=='jeonp').reduce((s,d)=>s+(G.flags.brC==='big'&&isMun(d)?6:4),0);
+const SDS_G={jin:'img/sd_jin.png',lim:'img/sd_lim.png',mae:'img/sd_mae.png',so:'img/sd_so.png',eung:'img/sd_eung.png',nak:'img/sd_nak.png',jeong:'img/sd_jeong.png',bang:'img/sd_bang.png',du:'img/sd_du.png',jeonp:'img/sd_jeonp.png',ilbi:'img/sd_ilbi.png',jeonh:'img/sd_jeonh.png',dong:'img/sd_dong.png',ak:'img/sd_ak.png',yuso:'img/sd_yuso.png',danri:'img/sd_danri.png',seomun:'img/sd_seomun.png',seongrak:'img/sd_seongrak.png',sonp:'img/sd_sonp.png',hadong:'img/sd_hadong.png',nohae:'img/sd_nohae.png'};
+// 엔딩 기념사진: 본산 연무장에 종남 제자·문도·동맹군 도트를 세운다
+function photoDraw(){const cv=document.getElementById('endphoto');if(!cv||!cv.getContext)return;const c=cv.getContext('2d'),W=cv.width,H=cv.height;
+  const named=G.ds.filter(d=>!isMun(d)&&SDS_G[d.id]),jin=named.find(d=>d.id==='jin'),lim=named.find(d=>d.id==='lim'),eld=named.filter(d=>d.elder||d.id==='jeonp'),rest=named.filter(d=>d!==jin&&d!==lim&&!eld.includes(d)).sort((a,b)=>power(b)-power(a));
+  const allies=(G.part===2&&G.p2?G.p2.kept:(G.allyN||[])).filter(n=>MALLY_IMG[n]),nMun=Math.min(8,munAll().length+2);
+  const src=d=>d.id==='nak'&&d.mukryeong&&SDS_G.nak2?SDS_G.nak2:SDS_G[d.id];
+  const list=['img/bonsan2.webp','img/sd_mook_jn.png',...named.map(src),...allies.map(n=>MALLY_IMG[n])];const ims={};
+  Promise.all([...new Set(list)].map(s=>new Promise(r=>{const im=new Image();im.onload=()=>{ims[s]=im;r()};im.onerror=r;im.src=s}))).then(()=>{
+    const bg=ims['img/bonsan2.webp'];if(bg)c.drawImage(bg,0,0,W,H);else{c.fillStyle='#c9bfa8';c.fillRect(0,0,W,H)}
+    c.imageSmoothingEnabled=false;
+    const put=(im,x,yb,h,flip)=>{if(!im)return;const w=im.naturalWidth*h/im.naturalHeight;c.save();c.fillStyle='rgba(0,0,0,.18)';c.beginPath();c.ellipse(x,yb-2,w*.32,h*.05,0,0,7);c.fill();c.translate(x,yb);if(flip)c.scale(-1,1);c.drawImage(im,-w/2,-h,w,h);c.restore()};
+    const row=(arr,yb,h,gap)=>{const n=arr.length;if(!n)return;const sp=Math.min(gap,(W*.9)/n),x0=W/2-sp*(n-1)/2;arr.forEach((im,i)=>{const x=x0+i*sp;put(im,x,yb,h,x<W/2)})};
+    // 뒷줄: 동맹군은 양쪽, 문도는 가운데
+    const back=[];const al=allies.flatMap(n=>[ims[MALLY_IMG[n]],ims[MALLY_IMG[n]]]),half=Math.ceil(al.length/2);
+    back.push(...al.slice(0,half));for(let i=0;i<nMun;i++)back.push(ims['img/sd_mook_jn.png']);back.push(...al.slice(half));
+    row(back,H*.75,H*.13,W/22);
+    // 가운데 줄: 이름 있는 제자
+    const mid=[];rest.slice(0,10).forEach((d,i)=>i%2?mid.push(ims[src(d)]):mid.unshift(ims[src(d)]));row(mid,H*.86,H*.155,W/15);
+    // 앞줄: 원로, 장문인, 임영옥
+    const fr=[];if(eld[0])fr.push(ims[src(eld[0])]);if(jin)fr.push(ims[src(jin)]);if(lim)fr.push(ims[src(lim)]);if(eld[1])fr.push(ims[src(eld[1])]);row(fr,H*.985,H*.19,W/9);
+    // 동맹 이름
+    if(allies.length){c.font=`bold ${Math.round(H*.026)}px serif`;c.textAlign='center';c.fillStyle='rgba(255,250,235,.92)';c.strokeStyle='rgba(30,25,20,.8)';c.lineWidth=4;const t='함께 선 문파 · '+allies.join(' · ');c.strokeText(t,W/2,H*.585);c.fillText(t,W/2,H*.585)}
+    // 사진 테두리 글
+    c.textAlign='left';c.fillStyle='rgba(29,26,22,.62)';c.fillRect(W*.02,H*.03,W*.36,H*.12);c.fillStyle='#f3ead6';c.font=`bold ${Math.round(H*.042)}px serif`;c.fillText(G.ending?G.ending.n:'',W*.035,H*.085);c.font=`${Math.round(H*.025)}px serif`;c.fillText(`종남 연무장에서 · ${yr(G.m)} · 제자 ${G.ds.length}명`,W*.035,H*.13)})}
 function power(d){const ms=[],ss=[];for(const a in d.arts){if(ARTS[a].t==='b')continue;(ARTS[a].t==='m'?ms:ss).push(d.arts[a])}ms.sort((a,b)=>b-a);ss.sort((a,b)=>b-a);
   let p=(ms[0]||0)*10+(ms[1]||0)*3+(ss[0]||0)*5+(d.mukryeong?10:0)+(d.arts.muyeom?d.arts.muyeom*8:0);if(d.yukhap)p+=20;if(d.chronic)p*=.9;if(d.id==='jin'){if(G.flags.yongyeong)p+=15;if(G.flags.geomjeong)p+=20;if(G.p2)p+=15*G.p2.relic;if(d.capUp&&d.capUp.cheonha)p+=5}return p}
 // 수련 방향이 없으면 올릴 수 있는 것 중 가장 높은 무공(한 우물)
@@ -1349,7 +1373,7 @@ const TID=()=>G.m*2+G.half;
 function tagAway(){if(typeof G==='undefined'||!G||!G.ds)return;const t=TID();for(const d of G.ds){if(d.pos==='away'){if(!d.awayTag){d.awayTag=1;d.leftT=t}}else d.awayTag=0}}
 function render(){tagAway();
   const app=document.getElementById('app');
-  if(G.over||G.done){app.innerHTML=topBar()+`<div class="wrap"><div class="panel">${(()=>{const good=!G.over&&G.ending&&G.ending.n!=='몰락';return `<img src="img/${good?'bonsan2':'bonsan1'}.webp" alt="" style="width:100%;border-radius:10px;margin-bottom:10px;display:block">`})()}<h2>${G.over?(/멸문/.test(G.over)?'멸문':'몰락'):(G.ending?G.ending.n:'끝')}</h2><p>${G.over||(G.ending?G.ending.p.join(' '):'')}${G.flags.choDone?' 초가보를 무너뜨렸다.':''}${G.flags.geomjeong?' 검정중원을 얻었다.':''}${G.flags.soseon?' 낙일방이 소선의 유진을 얻었다.':''}</p>
+  if(G.over||G.done){app.innerHTML=topBar()+`<div class="wrap"><div class="panel">${(()=>{const good=!G.over&&G.ending&&G.ending.n!=='몰락';if(good){setTimeout(photoDraw,0);return `<canvas id="endphoto" width="1536" height="864" style="width:100%;border-radius:10px;margin-bottom:10px;display:block;background:#c9bfa8"></canvas>`}return `<img src="img/bonsan1.webp" alt="" style="width:100%;border-radius:10px;margin-bottom:10px;display:block">`})()}<h2>${G.over?(/멸문/.test(G.over)?'멸문':'몰락'):(G.ending?G.ending.n:'끝')}</h2><p>${G.over||(G.ending?G.ending.p.join(' '):'')}${G.flags.choDone?' 초가보를 무너뜨렸다.':''}${G.flags.geomjeong?' 검정중원을 얻었다.':''}${G.flags.soseon?' 낙일방이 소선의 유진을 얻었다.':''}</p>
 <p>은자 ${G.eun} · 명성 ${G.fame} · 호감 ${G.fav} · 구파 자격 ${G.qual} · 제자 ${G.ds.length}명</p>${!G.part&&!G.over&&G.ending&&G.ending.n!=='몰락'?'<button class="main" onclick="A.part2()" style="margin-right:8px">2부 「서장전」 시작</button>':''}<button ${G.part||G.over||!G.ending||G.ending.n==='몰락'?'class="main"':''} onclick="A.restart()">처음부터</button></div><div class="panel"><div class="log">${G.log.join('<br>')}</div></div></div>`;return}
   const qn=G.q.length;
   app.innerHTML=topBar()+`<div class="wrap"><div class="tabs">${[['main','본산'],['map','지도'],['disc','제자'],['dev','개발'],['ev',`사건${qn?` (${qn})`:''}`],['cal','일정']].map(([k,n])=>`<button class="${TAB===k?'on':''}" onclick="A.tab('${k}')">${n}</button>`).join('')}
