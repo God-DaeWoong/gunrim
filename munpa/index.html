@@ -1098,7 +1098,7 @@ let TITLE=null;
 const DIFF={easy:{n:'쉬움',k:.9,eun:100,d:'적이 약하다. 처음 해 보는 사람에게'},normal:{n:'보통',k:1,eun:0,d:'기준 난이도'},hard:{n:'어려움',k:1.15,eun:-50,d:'적이 강하다. 놓친 일이 그대로 멸문으로 이어진다'}};
 const dk=()=>(DIFF[G&&G.diff]||DIFF.normal).k;
 function titleHTML(){return `<div class="modal" style="align-items:flex-end;padding-bottom:14vh;background:linear-gradient(rgba(29,26,22,.15),rgba(29,26,22,.55)),url(${BONSAN_ART[TITLE.save&&G?yardStage():0]}) center/cover"><div class="box" style="max-width:380px;text-align:center;padding:26px 22px"><h1 style="font-size:34px;letter-spacing:.2em;margin:0">君臨天下</h1><p class="muted" style="letter-spacing:.3em;margin:4px 0 18px">군림천하 · 문파 경영</p><div class="ch">${TITLE.save?`<button class="main" onclick="A.titleGo(0)">이어하기 <span style="font-size:12px;opacity:.75">(${yr(G.m)} ${HALF[G.half||0]})</span></button>`:''}${TITLE.pick?Object.entries(DIFF).map(([k,v])=>`<button ${k==='normal'?'class="main"':''} onclick="A.titleDiff('${k}')">${v.n} <span style="font-size:12px;opacity:.75">· ${v.d}</span></button>`).join(''):`<button ${TITLE.save?'':'class="main"'} onclick="A.titleGo(1)">게임 시작</button>`}</div></div></div>`}
-function modalHTML(){if(TITLE)return titleHTML();if(WIS)return wisHTML();if(!MODAL)return'';return `<div class="modal"><div class="box">${MODAL.art&&/bonsan/.test(MODAL.art)?`<img src="${MODAL.art}" alt="" style="width:100%;border-radius:8px;margin-bottom:8px;display:block">`:''}<h2>${MODAL.title}</h2>${MODAL.p.map(x=>`<p class="serif">${x}</p>`).join('')}
+function modalHTML(){if(TITLE)return titleHTML();if(WIS)return wisHTML();if(!MODAL)return'';return `<div class="modal"><div class="box">${MODAL.art&&/bonsan|sd_yard/.test(MODAL.art)?`<img src="${MODAL.art}" alt="" style="width:100%;border-radius:8px;margin-bottom:8px;display:block">`:''}<h2>${MODAL.title}</h2>${MODAL.p.map(x=>`<p class="serif">${x}</p>`).join('')}
 <div class="ch">${MODAL.ch.map((c,i)=>`<button onclick="A.choose(${i})">${c[0]}</button>`).join('')}</div></div></div>`}
 function playFx(){document.querySelectorAll?.('.fx[data-fx]').forEach(el=>{const n=el.dataset.fx;el.removeAttribute('data-fx');el.style.backgroundImage=`url(${fxUrl(n)})`;let f=0;const t=setInterval(()=>{const k=Math.min(f,5);el.style.backgroundPosition=`${(k%3)*50}% ${Math.floor(k/3)*100}%`;el.style.opacity=f>6?String(Math.max(0,1-(f-6)/3)):'1';if(++f>=10){clearInterval(t);el.remove()}},140)})}
 /* ================= 연무장(도트) ================= */
@@ -1222,9 +1222,9 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
   c.fillStyle='#5b4636';c.fillRect(PW-3,0,3,H)}
 // 본산 공사를 세 건 마치면 연무장 배경이 가난한 본산에서 다시 세운 본산으로 바뀐다
 const YARD_B=['sanmun','josa','jeongak1','jeongak2','sukso1','sukso2','sukso3','wall1','wall2','yeon','sulyeon'];
-const yardStage=()=>{const dd=G.devDone||[],n=dd.filter(x=>YARD_B.includes(x)).length;return dd.includes('jeongak1')&&n>=4?3:n>=4?2:n>=2?1:0};const yardRebuilt=()=>yardStage()>=2;
-const YARD_IMG=['img/sd_yard_ruin.webp','img/sd_yard.webp','img/sd_yard_a.webp','img/sd_yard_big.webp'],BONSAN_ART=['img/bonsan0.webp','img/bonsan1.webp','img/bonsan2.webp','img/bonsan2.webp'];
-const YARD_TXT4='전각을 늘리고 담장을 넓혔다. 누각이 서고 연무장이 커졌다. 종남의 본산이 옛 위용을 넘보기 시작했다.';const YARD_TXT=['','무너졌던 담장과 산문을 손보기 시작했다. 잡초를 걷어 내고 깨진 기와를 갈았다. 본산에 다시 사람 사는 기척이 돈다.','본산을 다시 세웠다. 새 깃발과 등을 걸고 병기대를 채웠다. 종남이 다시 문파다운 모습을 갖추었다.',YARD_TXT4];
+const yardStage=()=>{const dd=G.devDone||[],n=dd.filter(x=>YARD_B.includes(x)).length;return dd.includes('jeongak1')&&n>=3?2:n>=3?1:0};const yardRebuilt=()=>yardStage()>=2;
+const YARD_IMG=['img/sd_yard_ruin.webp','img/sd_yard_a.webp','img/sd_yard_big.webp'],BONSAN_ART=['img/bonsan0.webp','img/bonsan2.webp','img/sd_yard_big.webp'];
+const YARD_TXT4='전각을 늘리고 담장을 넓혔다. 누각이 서고 연무장이 커졌다. 종남의 본산이 옛 위용을 넘보기 시작했다.';const YARD_TXT=['','무너졌던 담장과 산문을 다시 쌓고 잡초를 걷어 냈다. 새 깃발과 등을 걸고 병기대를 채웠다. 종남이 다시 문파다운 모습을 갖추었다.',YARD_TXT4];
 function initYard(){const cv=document.getElementById('yard');if(!cv||!cv.getContext)return;
   const want=YARD_IMG[yardStage()];
   if(!YARD.bg||YARD.bgSrc!==want){YARD.bgSrc=want;YARD.bg=new Image();const st=YARD_IMG.indexOf(want);YARD.bg.onerror=function(){if(st>0&&this.src.indexOf(YARD_IMG[st-1])<0)this.src=YARD_IMG[st-1]};YARD.bg.src=want}
