@@ -357,6 +357,7 @@ const mImg=s=>{if(typeof Image==='undefined')return{};MIMG[s]=MIMG[s]||Object.as
 const MELEE_BG={hwasan:'img/sd_yard.webp',p2a:'img/bg_sacheon.webp',p2b:'img/bg_geomgak.webp'};
 const mBgOf=(e,L)=>MELEE_BG[e.kind]||(/협곡/.test(L.n)?'img/bg_gorge.webp':'img/bg_road.webp');
 const MFOE_IMG={cho:'img/sd_mook_cho.png'};
+const MALLY_IMG={'소림':'img/sd_ally_sorim.png','점창':'img/sd_ally_jeom.png','청의방':'img/sd_ally_cheong.png','남궁세가':'img/sd_ally_nam.png','경요궁':'img/sd_ally_gyeong.png','무당':'img/sd_ally_mu.png'};
 const MBOSS_IMG={'초일산':'img/sd_choil.png','갈태독':'img/sd_galtae.png','곽태보':'img/sd_gwaktae.png'};
 const MFOE={cho:['초가보','sepia(.9) hue-rotate(-25deg) saturate(1.8)'],hwasan:['화산','sepia(.5) hue-rotate(230deg) saturate(1.5)'],seojang:['서장군','sepia(1) hue-rotate(-40deg) saturate(2.6)']};
 const mFoeOf=e=>e.kind==='hwasan'?'hwasan':e.kind==='p2a'||e.kind==='p2b'?'seojang':'cho';
@@ -367,7 +368,7 @@ function meleeInit(c){const e=G.q.find(x=>x.id===DUEL.eid),L=LN(e)[c.l],k=e.k||1
   c.ids.forEach((id,i)=>{const d=D(id),P=power(d);U.push({side:0,d:id,n:d.n,sk:mSkillOf(d),hero:1,x:120,y:270+i*110,hp:(90+P)/eqDef(d),max:(90+P)/eqDef(d),atk:(4+P/9)*eqAtk(d),rng:46,spd:62,cd:0,skc:3,f:0})});
   const others=G.ds.filter(d=>!d.elder&&d.id!=='jin'&&!c.ids.includes(d.id)),tm0=Math.max(.7,Math.min(1.6,(others.reduce((s,d)=>s+power(d),0)/Math.max(1,others.length))/110)),tm=tm0*(1+.05*(e.arm||0)),ourB=c.ids.reduce((s,id)=>{const d=D(id);return s+power(d)*(.6+d.st.tong/250)},0)*(1+.1*(G.wall||0)),emR=dk()*(typeof MKM!=='undefined'?MKM:1.35)*Math.pow(L.e*k/Math.max(1,ourB),typeof MKE!=='undefined'?MKE:.5);
   const nt=mTroops()+(e.kind==='p2b'&&G.p2?2*Math.min(5,G.p2.kept.length):0),ne=Math.max(19,Math.min(32,Math.round(L.e*k/10))),em=Math.max(.3,Math.min(3,emR*15/ne*tm0));
-  for(let i=0;i<nt;i++)U.push({side:0,ally:e.kind==='p2b'&&i>=mTroops(),x:rnd(30,200),y:MTOP+10+(i+rnd(.1,.9))*(MBOT-MTOP-10)/nt,hp:90*tm,max:90*tm,atk:9*tm,rng:34,spd:55,cd:rnd(0,1),f:0});
+  for(let i=0;i<nt;i++)U.push({side:0,ally:e.kind==='p2b'&&i>=mTroops(),allyN:e.kind==='p2b'&&i>=mTroops()&&G.p2&&G.p2.kept.length?G.p2.kept[(i-mTroops())%G.p2.kept.length]:null,x:rnd(30,200),y:MTOP+10+(i+rnd(.1,.9))*(MBOT-MTOP-10)/nt,hp:90*tm,max:90*tm,atk:9*tm,rng:34,spd:55,cd:rnd(0,1),f:0});
   for(let i=0;i<ne;i++)U.push({side:1,x:rnd(700,930),y:MTOP+10+(i+rnd(.1,.9))*(MBOT-MTOP-10)/ne,hp:86*em,max:86*em,atk:9*em,rng:34,spd:55,cd:rnd(0,1),f:0});
   const chain=e.kind==='hwasan'||!!(G.p2&&P2BOSS[L.boss.n]);const bp=Math.round(L.boss.pw*k*dk());if(!chain)U.push({side:1,boss:1,n:L.boss.n,x:860,y:330,hp:200+bp*2,max:200+bp*2,atk:8+bp/6,rng:50,spd:45,cd:0,f:0});
   c.m={U,FX:[],TXT:[],COIN:[],T:30,tt:0,eun:0,shake:0,auto:G.mAuto!==false,sel:U[0],foe:mFoeOf(e),bg:mBgOf(e,L),ne,nt,em,tm};c.m.chain=chain;c.msg=[`${L.n}. 종남 ${c.ids.length+nt}명 대 ${MFOE[c.m.foe][0]} ${ne+(chain?0:1)}명.${chain?` 적장 ${L.boss.n}은(는) 뒤에서 지켜본다.`:''}`]}
@@ -403,7 +404,7 @@ function mDraw(M,c){c.save();if(M.shake>0){c.translate((Math.random()-.5)*M.shak
   c.fillStyle='rgba(20,14,10,.4)';c.fillRect(0,0,MW,MH);
   const mook=mImg('img/sd_mook_jn.png'),order=M.U.slice().sort((a,b)=>(a.hp>0)-(b.hp>0)||a.y-b.y);
   for(const u of order){const dead=u.hp<=0;if(dead&&u.dead>3)continue;c.globalAlpha=dead?Math.max(0,1-u.dead/3):1;
-    const hi=u.hero?mImg('img/sd_'+u.d+'.png'):null,fi=u.side&&(u.boss?MBOSS_IMG[u.n]:MFOE_IMG[M.foe])?mImg(u.boss?MBOSS_IMG[u.n]:MFOE_IMG[M.foe]):null,own=fi&&fi.naturalWidth,im=hi&&hi.naturalWidth?hi:own?fi:mook;
+    const hi=u.hero?mImg('img/sd_'+u.d+'.png'):null,fi=u.allyN&&MALLY_IMG[u.allyN]?mImg(MALLY_IMG[u.allyN]):u.side&&(u.boss?MBOSS_IMG[u.n]:MFOE_IMG[M.foe])?mImg(u.boss?MBOSS_IMG[u.n]:MFOE_IMG[M.foe]):null,own=fi&&fi.naturalWidth,im=hi&&hi.naturalWidth?hi:own?fi:mook;
     if(im.naturalWidth){const h=u.hero?66:u.boss?72:52,w=h*im.naturalWidth/im.naturalHeight,bob=u.mv?Math.abs(Math.sin(M.tt*14))*4:0;c.save();
       if(!u.hero&&!own&&(u.side||u.ally))c.filter=u.ally?'hue-rotate(90deg) saturate(1.4)':u.boss?'sepia(1) hue-rotate(-40deg) saturate(3) brightness(.85)':MFOE[M.foe][1];
       c.translate(u.x+24,u.y+16-bob);if(dead){c.rotate(u.side?1.45:-1.45);c.translate(10,-6)}if(!u.face)c.scale(-1,1);c.rotate(u.f>0?.22:0);c.translate(u.f>0?6:0,0);c.drawImage(im,-w/2,-h,w,h);c.restore()}
