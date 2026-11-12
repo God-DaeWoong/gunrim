@@ -155,7 +155,7 @@ const MOVES={
 const RLEN={'감종간':['gamjong',['대라섬요','색탈혼','허무보']],'두기춘':['dugichun',['검세','연검','운기']],'고진':['gojin',['대라궁해(반쪽)','백락심연','검막']],'유중악':['yujung',['뇌신파황','낙뢰구검','신뢰하격']],'백모란':['baekmo',['구주홍염화','월녀검법','음양화벽']],'조익현':['joik',['대라궁해','대라섬요','현음진기']],'야율척':['yayul',['항룡금강권','불광만천','금강항마']],'백대행':['baekdae',['천룡번공','천개유룡','백원적과']],'복양수':['bokyang',null],'당각':['danggak',null],'매장원':['maejang',null],'운자추':['unjachu',null]};
 const ENIMG={'남궁연':'img/namgungyeon.webp','곽존해':'img/gwakjon.webp','백리장손':'img/baekri.webp','정화':'img/jeonghwa.webp','검단현':'img/geomdan.webp','점창 제자':'img/sd_ally_jeom.png','소림 무승':'img/sd_ally_sorim.png','화산 고수':'img/sd_mook_hs.png','서장 선봉장':'img/sd_sj_boss.png','서장 철기대장':'img/sd_sj_boss.png','서장 대장':'img/sd_sj_boss.png','석동':'img/seokdong.webp','용 선생':'img/yongseon.webp','초일산':'img/choil.webp','갈태독':'img/galtae.webp','곽태보':'img/gwaktae.webp'};
 const enemyImg=bn=>ENIMG[bn]||(RLEN[bn]&&RLEN[bn][0]?rlImg(RLEN[bn][0]):null);
-RLEN['서장 무승']=['sadae',null];RLEN['석동']=['',['대라장천','천양신공','구양신공']];
+RLEN['서장 무승']=['sadae',null];RLEN['풍도']=['pungdo',null];RLEN['동휘']=['donghwi',null];RLEN['쾌의당 살수 두령']=['kwaesal',null];RLEN['석동']=['',['대라장천','천양신공','구양신공']];
 const emvName=(bn,em)=>{const r=RLEN[bn];return r&&r[1]?r[1][['kang','kwae','su'].indexOf(em)]:MV[em]};
 const ENEMY_FX=['b_noesin','b_biryong','b_baekhwa','b_hyeolhwa','b_paewang','b_samji'];
 // 초식 이름 → 이펙트(로그라이크 짝 + 문파경영)
@@ -332,8 +332,8 @@ function fight(eid,lanes,mods){const e=G.q.find(x=>x.id===eid);if(!e)return;cons
   G.q=G.q.filter(x=>x!==e);
   const txt=res.map(r=>`${LN(e)[r.l].n}: ${r.duel?r.duel+' / ':''}${r.ds.map(d=>d.n).join('·')||'아무도 없음'} ${r.our} 대 ${r.en} → ${r.win?'승':'패'}`);
   if(P2FIGHT[e.kind]){P2FIGHT[e.kind](ok,txt,e,res);save();render();return}
-  if(e.kind==='hwasan'&&wins===0){G.q=G.q.filter(x=>x!==e);gameOver('화산의 습격에 산문·연무장·장경각이 모두 무너졌다. 본산이 불타고, 종남은 멸문했다.');return}
-  if(e.kind==='hwasan'){if(ok){G.fame+=10;G.qual+=5;MODAL={title:'화산의 습격',p:[...txt,'본산을 지켜 냈다.'],ch:[['좋다.',()=>log('화산의 본산 습격을 막았다. 명성 +10, 구파 자격 +5')]]}}else{G.income.sang=Math.max(25,G.income.sang-15);G.qual=Math.max(0,G.qual-8);MODAL={title:'화산의 습격',p:[...txt,'본산이 크게 상했다.'],ch:[['……',()=>log('화산의 습격에 본산이 상했다. 상권 수입 -15, 구파 자격 -8')]]}}save();render();return}
+  if(e.kind==='hwasan'&&wins===0){G.q=G.q.filter(x=>x!==e);gameOver(e.title+'에 산문·연무장·장경각이 모두 무너졌다. 본산이 불타고, 종남은 멸문했다.');return}
+  if(e.kind==='hwasan'){if(ok){G.fame+=10;G.qual+=5;MODAL={title:e.title,p:[...txt,'본산을 지켜 냈다.'],ch:[['좋다.',()=>log(e.title+'을(를) 막았다. 명성 +10, 구파 자격 +5')]]}}else{G.income.sang=Math.max(25,G.income.sang-15);G.qual=Math.max(0,G.qual-8);MODAL={title:e.title,p:[...txt,'본산이 크게 상했다.'],ch:[['……',()=>log(e.title+'에 본산이 상했다. 상권 수입 -15, 구파 자격 -8')]]}}save();render();return}
   if(ok){G.flags.choDone=1;G.flags.choM=G.m;G.fame+=15;G.qual+=10;G.flags.jeonM=G.m+1;
     MODAL={title:'초가보 멸망',p:['초가보가 세 갈래로 종남산을 쳤다. 종남은 미리 흘린 정보로 고관담에서 거꾸로 매복했다.',...txt,'본진이 빈 초가보는 같은 날 무너졌다. 관중에서 종남의 이름이 다시 오르내렸다.'],ch:[['산문으로 돌아간다.',()=>{log(`종남혈사 승리, 초가보 멸망. 명성 +15, 구파 자격 +10`);revealIlbi()}]]}}
   else{G.income.sang=Math.max(25,G.income.sang-10);
@@ -356,11 +356,11 @@ const MW=960,MH=540,MTOP=230,MBOT=500;
 const mImg=s=>{if(typeof Image==='undefined')return{};MIMG[s]=MIMG[s]||Object.assign(new Image(),{src:s});return MIMG[s]};const MIMG={};
 const MELEE_BG={hwasan:'img/sd_yard.webp',p2a:'img/bg_sacheon.webp',p2b:'img/bg_geomgak.webp'};
 const mBgOf=(e,L)=>MELEE_BG[e.kind]||(/협곡/.test(L.n)?'img/bg_gorge.webp':'img/bg_road.webp');
-const MFOE_IMG={cho:'img/sd_mook_cho.png',hwasan:'img/sd_mook_hs.png',seojang:'img/sd_mook_sj.png'};
+const MFOE_IMG={kwae:'img/sd_mook_kw.png',cho:'img/sd_mook_cho.png',hwasan:'img/sd_mook_hs.png',seojang:'img/sd_mook_sj.png'};
 const MALLY_IMG={'소림':'img/sd_ally_sorim.png','점창':'img/sd_ally_jeom.png','청의방':'img/sd_ally_cheong.png','남궁세가':'img/sd_ally_nam.png','경요궁':'img/sd_ally_gyeong.png','무당':'img/sd_ally_mu.png'};
 const MBOSS_IMG={'서장 선봉장':'img/sd_sj_boss.png','서장 철기대장':'img/sd_sj_boss.png','서장 대장':'img/sd_sj_boss.png','서장 무승':'img/sd_mook_sj.png','초일산':'img/sd_choil.png','갈태독':'img/sd_galtae.png','곽태보':'img/sd_gwaktae.png'};
-const MFOE={cho:['초가보','sepia(.9) hue-rotate(-25deg) saturate(1.8)'],hwasan:['화산','sepia(.5) hue-rotate(230deg) saturate(1.5)'],seojang:['서장군','sepia(1) hue-rotate(-40deg) saturate(2.6)']};
-const mFoeOf=e=>e.kind==='hwasan'?'hwasan':e.kind==='p2a'||e.kind==='p2b'?'seojang':'cho';
+const MFOE={kwae:['쾌의당','grayscale(.4) brightness(.8)'],cho:['초가보','sepia(.9) hue-rotate(-25deg) saturate(1.8)'],hwasan:['화산','sepia(.5) hue-rotate(230deg) saturate(1.5)'],seojang:['서장군','sepia(1) hue-rotate(-40deg) saturate(2.6)']};
+const mFoeOf=e=>e.foe||(e.kind==='hwasan'?'hwasan':e.kind==='p2a'||e.kind==='p2b'?'seojang':'cho');
 const mTroops=()=>Math.max(13,Math.min(24,8+Math.round(dsCount()*.45)));
 function mSkillOf(d){const a=duelArt(d)||'yuun';if((d.arts.wolnyeo||0)>=(d.arts[a]||0)&&d.arts.wolnyeo!=null)return{n:'월녀검법',t:'ring',fx:'wolnyeo'};
   const t=['janggwae','nakroe','guban','pungroe','yeomhwa'].includes(a)?'cone':'line',mf=MOVES[a]&&MOVES[a][0][1];return{n:ARTS[a].n,t,fx:mf||(t==='cone'?'cheonjeon':'geombong')}}
@@ -699,7 +699,8 @@ function scheduled(m){
   if(m===33)E.push({t:'match',id:'hoeram',title:'화산과의 회람연',due:35,need:2,fx:'hoeram',opp:[{n:'송인혁',pw:140},{n:'단우진',pw:150},{n:'검단현',pw:170}],text:'화산이 회람연을 열어 종남과 세 판을 겨루자고 한다. 이기면 화산이 서안 상권에서 손을 뗀다.',winTxt:'화산이 물러섰다.',loseTxt:'화산의 기세가 올랐다.'});
   if(m===38){if((G.bimuWins||0)>=3)E.push({t:'match',id:'hyeongsan',title:'무당 집회 — 형산과의 5대5 비무',due:39,need:3,fx:'hyeongsan',opp:[{n:'형산 제자',pw:130},{n:'형산 제자',pw:140},{n:'고진',pw:160},{n:'형산 장로',pw:170},{n:'용 선생',pw:190}],text:'서장의 위협 앞에 구대문파가 무당에 모여 무림연맹을 세운다. 종남의 자리를 걸고 형산과 다섯 판을 겨룬다. 세 판을 이기면 승리.',winTxt:'종남이 연맹의 한 축이 되었다.',loseTxt:'종남은 연맹의 말석에 앉았다.'});
     else{G.qual=Math.max(0,G.qual-10);G.flags.league='none';E.push({t:'event',id:'mudang',info:1,title:'무당 집회',text:`비무행에서 ${G.bimuWins||0}곳밖에 이기지 못해 발언할 자격을 얻지 못했다. 구대문파는 종남을 외면했다. (구파 자격 -10)`})}}
-  if(m===40)E.push({t:'quest',id:'hwasanraid',kind:'hwasan',title:'화산의 본산 습격',due:41,k:G.flags.hwasanPeace?.95:1.2,lanes:[{n:'산문',e:300,boss:{n:'검단현',pw:190}},{n:'연무장',e:270,boss:{n:'장병기',pw:175}},{n:'장경각',e:280,boss:{n:G.flags.duEnemy?'두기춘':'화산 고수',pw:170}}],text:'화산이 서장과 손잡았다는 소문 속에 본산을 친다. 갈래마다 둘까지, 두 갈래를 지키면 막아 낸다. 본산을 지키는 싸움이라 수비 자리 제자가 먼저 추천된다(진산월은 직접 넣어야 나선다).'});
+  if(m===40&&G.flags.hwasanPeace)E.push({t:'quest',id:'hwasanraid',kind:'hwasan',foe:'kwae',title:'쾌의당의 야습',due:41,k:1.1,lanes:[{n:'산문',e:280,boss:{n:'풍도',pw:185}},{n:'연무장',e:260,boss:{n:'쾌의당 살수 두령',pw:170}},{n:'장경각',e:270,boss:{n:'동휘',pw:180}}],text:'회람연 뒤 화산은 서안에서 손을 뗐다. 그러자 서장과 손잡은 쾌의당이 그 틈을 노려 살수들을 보냈다. 갈래마다 둘까지, 두 갈래를 지키면 막아 낸다. 본산을 지키는 싸움이라 수비 자리 제자가 먼저 추천된다(진산월은 직접 넣어야 나선다).'});
+  else if(m===40)E.push({t:'quest',id:'hwasanraid',kind:'hwasan',title:'화산의 본산 습격',due:41,k:1.2,lanes:[{n:'산문',e:300,boss:{n:'검단현',pw:190}},{n:'연무장',e:270,boss:{n:'장병기',pw:175}},{n:'장경각',e:280,boss:{n:G.flags.duEnemy?'두기춘':'화산 고수',pw:170}}],text:'화산이 서장과 손잡았다는 소문 속에 본산을 친다. 갈래마다 둘까지, 두 갈래를 지키면 막아 낸다. 본산을 지키는 싸움이라 수비 자리 제자가 먼저 추천된다(진산월은 직접 넣어야 나선다).'});
   if(m===42)E.push({t:'match',id:'gamjong',title:'공가장 — 쾌의당주',due:43,need:1,onlyJin:1,fx:'gamjong',opp:[{n:'감종간',pw:225}],text:'노해광의 첩보로 공가장에 숨은 쾌의당주의 정체를 알아냈다. 진산월이 직접 맞선다.',winTxt:'쾌의당이 무너졌다.',loseTxt:'감종간이 달아났다.'});
   wisEvents(m,E);
   if(G.part===2)p2Events(m,E);
