@@ -1221,7 +1221,8 @@ function drawYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
   c.fillStyle='rgba(29,26,22,.72)';c.fillRect(6,6,58,20);c.fillStyle='#f1e9d8';c.font='bold 12px sans-serif';c.fillText('산문 밖',13,20);c.restore();
   c.fillStyle='#5b4636';c.fillRect(PW-3,0,3,H)}
 // 본산 공사를 세 건 마치면 연무장 배경이 가난한 본산에서 다시 세운 본산으로 바뀐다
-const YARD_B=['sanmun','josa','jeongak1','jeongak2','sukso1','sukso2','sukso3','wall1','wall2','yeon','sulyeon'];
+// 개발 탭 「문파 공사」에 있는 공사를 센다
+const YARD_B=DEV.filter(x=>x.big).map(x=>x.id);
 const yardStage=()=>{const dd=G.devDone||[],n=dd.filter(x=>YARD_B.includes(x)).length;return dd.includes('jeongak1')&&n>=3?2:n>=3?1:0};const yardRebuilt=()=>yardStage()>=2;
 const YARD_IMG=['img/sd_yard_ruin.webp','img/sd_yard_a.webp','img/sd_yard_big.webp'],BONSAN_ART=['img/bonsan0.webp','img/bonsan2.webp','img/sd_yard_big.webp'];
 const YARD_TXT4='전각을 늘리고 담장을 넓혔다. 누각이 서고 연무장이 커졌다. 종남의 본산이 옛 위용을 넘보기 시작했다.';const YARD_TXT=['','무너졌던 담장과 산문을 다시 쌓고 잡초를 걷어 냈다. 새 깃발과 등을 걸고 병기대를 채웠다. 종남이 다시 문파다운 모습을 갖추었다.',YARD_TXT4];
