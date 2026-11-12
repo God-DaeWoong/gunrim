@@ -687,7 +687,7 @@ function scheduled(m){
   if(m===10)E.push({t:'quest',id:'gorge',title:'협곡 정찰',due:17,text:'초가보 척후들이 종남산 뒤 절벽 쪽 협곡으로 숨어들었다는 소문이다. 한 사람을 보내 살핀다. 길이 험하다.'+(META.noYuk?' (지난 판의 기억: 기한까지 아무도 보내지 않으면 낙일방이 자청해서 나선다. 절벽 아래에 무언가 있다)':''),btn:'보낸다'});
   if(m===12&&G.ilbi==='early'){addArt('jin','chileum');E.push({t:'event',id:'ilbiteach',title:'사백의 가르침',info:1,text:'강일비가 진산월을 불렀다. "이제 너도 칠음진기의 첫머리를 알아 두어라. 태음신맥이 아니니 깊이 들어가지는 못할 것이다."'})}
   if(m===18&&!G.flags.raided&&!G.flags.choDone){raid();0}
-  if(m===20)E.push({t:'quest',id:'hyeolsa',title:'종남혈사',due:21,k:1.2,text:'초가보가 세 갈래로 종남산을 치려 한다. 갈래마다 제자를 둘까지 세운다. 진산월도 한 갈래에 설 수 있다. 두 갈래를 이기면 초가보를 무너뜨린다. 세 갈래를 모두 잃으면 종남은 멸문한다.'});
+  if(m===20)E.push({t:'quest',id:'hyeolsa',title:'종남혈사',due:21,k:(G.diff&&G.diff!=='normal'?1.2:1.1),text:'초가보가 세 갈래로 종남산을 치려 한다. 갈래마다 제자를 둘까지 세운다. 진산월도 한 갈래에 설 수 있다. 두 갈래를 이기면 초가보를 무너뜨린다. 세 갈래를 모두 잃으면 종남은 멸문한다.'});
   if(G.flags.hyeolsaRetry===m)E.push({t:'quest',id:'hyeolsa2',title:'종남혈사 (두 번째)',due:m+1,k:1,retry:1,text:'물러갔던 초가보가 전열을 가다듬어 다시 세 갈래로 온다. 이번에도 막지 못하면 종남은 끝이다.'});
   if(G.flags.jeonM===m){for(const r of [{id:'jeonp',n:'전풍개',r:'사숙조(원로)',img:'img/jeonp.webp',st:{tong:70,ji:60,jeong:45,ma:55,geom:85,gwon:60,oseong:70},ch:90,arts:{yuun:8,cheonha:7,taeeul:7,guyang:3,hyeoncheong:3}},{id:'jeonh',n:'전흠',r:'사숙(전풍개의 아들)',img:'img/jeonh.webp',st:{tong:45,ji:55,jeong:40,ma:55,geom:75,gwon:55,oseong:65},ch:85,arts:{yuun:5,nakha:5,taeeul:4,guyang:1,hyeoncheong:1}}])
     if(!has(r.id))G.ds.push({...r,xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null});
