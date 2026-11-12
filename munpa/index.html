@@ -684,7 +684,7 @@ function scheduled(m){
     30:[{id:'danri',n:'단리상',img:'img/danri.webp',r:'진산월의 제자',st:{tong:40,ji:75,jeong:35,ma:55,geom:90,gwon:70,oseong:90},ch:85,arts:{punghan:3,pungroe:2,taeeul:0,guyang:0,hyeoncheong:0},t:()=>'아홉 살 단리상이 입문했다. 가전무공을 펼쳐 보이자 '+(has('jeonp')?'전풍개가 "강일비 같은 놈이 또 있었군" 하고 중얼거렸다.':'진산월이 한참 말없이 그 검로를 지켜보았다.')},
         {id:'sonp',n:'손풍',img:'img/sonp.webp',r:'진산월의 제자',st:{tong:45,ji:60,jeong:70,ma:60,geom:55,gwon:70,oseong:60},ch:80,arts:{taeeul:0,guyang:0,hyeoncheong:0},t:'손가장의 손풍이 입문했다.'}]};
   for(const r of [].concat(JOIN[m]||[]))if(!has(r.id)){G.ds.push(starter({...r,arts:{...r.arts},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null}));E.push({t:'event',id:'join_'+r.id,info:1,title:r.n+' 합류',text:typeof r.t==='function'?r.t():r.t})}
-  if(m===10)E.push({t:'quest',id:'gorge',title:'협곡 정찰',due:17,text:'초가보 척후들이 종남산 뒤 절벽 쪽 협곡으로 숨어들었다는 소문이다. 한 사람을 보내 살핀다. 길이 험하다.'+(META.noYuk?' (지난 판의 기억: 기한까지 아무도 보내지 않으면 낙일방이 자청해서 나선다. 절벽 아래에 무언가 있다)':''),btn:'보낸다'});
+  if(m===10)E.push({t:'quest',id:'gorge',title:'협곡 정찰',due:17,text:'초가보 척후들이 종남산 뒤 절벽 쪽 협곡으로 숨어들었다는 소문이다. 한 사람을 보내 살핀다. 길이 험하다. (종남혈사 전까지)'+(META.noYuk?' (지난 판의 기억: 기한까지 아무도 보내지 않으면 낙일방이 자청해서 나선다. 절벽 아래에 무언가 있다)':''),btn:'보낸다'});
   if(m===12&&G.ilbi==='early'){addArt('jin','chileum');E.push({t:'event',id:'ilbiteach',title:'사백의 가르침',info:1,text:'강일비가 진산월을 불렀다. "이제 너도 칠음진기의 첫머리를 알아 두어라. 태음신맥이 아니니 깊이 들어가지는 못할 것이다."'})}
   if(m===18&&!G.flags.raided&&!G.flags.choDone){raid();0}
   if(m===20)E.push({t:'quest',id:'hyeolsa',title:'종남혈사',due:21,k:(G.diff&&G.diff!=='normal'?1.2:1.1),text:'초가보가 세 갈래로 종남산을 치려 한다. 갈래마다 제자를 둘까지 세운다. 진산월도 한 갈래에 설 수 있다. 두 갈래를 이기면 초가보를 무너뜨린다. 세 갈래를 모두 잃으면 종남은 멸문한다.'});
@@ -841,9 +841,10 @@ const A={
   dev(id){G.dev=G.dev||[];const x=DEV.find(v=>v.id===id);if(!x||G.dev.length>=3||(x.req&&!x.req())||G.eun<x.c||!useAct())return;G.eun-=x.c;G.dev.push({id,left:x.t});log(`문파 개발을 시작했다: ${x.n} (${x.t}순)`);save();render()},
   findIlbi(eid){const sel=document.getElementById('fi_'+eid);const d=sel&&D(sel.value);if(!d)return;G.q=G.q.filter(x=>x.id!==eid);d.pos='away';d.away=2;d.job=null;
     if(Math.random()*100<chanceK(d,60,'ma'))G.flags.ilbiComing=G.m+1;else{G.flags.ilbiSearch=G.m+2;log(`${d.n}이(가) 낙양까지 갔지만 사내는 이미 떠난 뒤였다. 두 달쯤 뒤 다시 소문이 들어올 것이다.`)}save();render()},
-  gorge(eid,did){const sel=document.getElementById('gs_'+eid);const d=did?D(did):sel&&D(sel.value);if(!d)return;G.q=G.q.filter(x=>x.id!==eid);
+  gorge(eid,did){const sel=document.getElementById('gs_'+eid);const d=did?D(did):sel&&D(sel.value);if(!d)return;const ge=G.q.find(x=>x.id===eid);G.q=G.q.filter(x=>x.id!==eid);
     if(d.id==='nak'){d.pos='away';d.away=12;d.job={nak:1};log('낙일방이 협곡 정찰을 나갔다가 돌아오지 않았다. 절벽 아래로 떨어졌다는 말이 돈다.')}
-    else{d.pos='away';d.away=1;d.job=null;G.fame+=2;log(`${d.n}이(가) 협곡을 살피고 돌아왔다. 초가보 척후를 쫓아냈다. 명성 +2`)}save();render()},
+    else if(ge&&ge.clue){d.pos='away';d.away=1;d.job=null;log(`${d.n}이(가) 절벽 아래를 다시 살폈지만 내려갈 길을 끝내 찾지 못했다. 동굴은 다시 안개에 묻혔다.`)}
+    else{d.pos='away';d.away=1;d.job=null;G.fame+=2;log(`${d.n}이(가) 협곡을 살피고 돌아왔다. 초가보 척후를 쫓아냈다. 명성 +2`);G.q.push({t:'quest',id:'gorge',clue:1,title:'절벽 아래 동굴',due:21,btn:'보낸다',text:`${d.n}이(가) 돌아와 말했다. 협곡 절벽 아래로 동굴 같은 것이 보였지만, 내려갈 길을 찾지 못했다고 한다. 몸이 날래고 겁 없는 사람이라면 내려가 볼지도 모른다. 종남혈사가 끝나면 협곡도 다시 초가보 손에 들어간다.`})}save();render()},
   bsug(eid){const p=battleSuggest(G.q.find(x=>x.id===eid));for(let l=0;l<3;l++)for(let i=0;i<2;i++){const el=document.getElementById(`bl_${l}_${i}`);if(el)el.value=p[l][i]||''}},
   battle(eid){startDuels(eid,readLanes())},
   match(eid){startMatch(eid)},
@@ -934,6 +935,7 @@ function endMonth(){
   // 미룬 위기는 기한이 지나면 둘 다 잃는다
   for(const e of G.q.filter(x=>x.t==='crisis'&&x.due<=G.m)){for(const o of e.opts)lose(o);log('초가보의 압박을 막지 못했다.')}
   G.q=G.q.filter(x=>!(x.kind==='wis'&&x.due<=G.m));
+  if(G.m>=21&&G.q.some(x=>x.id==='gorge')){G.q=G.q.filter(x=>x.id!=='gorge');log('종남혈사가 지나자 협곡은 다시 발길이 끊겼다.')}
   for(const e of G.q.filter(x=>x.t==='job'&&x.p2&&x.due<=G.m))P2JOB[e.sp.split(':')[0]]({sp:e.sp,title:e.title},false,1);
   G.q=G.q.filter(x=>!(x.t==='crisis'&&x.due<=G.m)&&!(x.t==='job'&&x.due<=G.m)&&x.t!=='appl');
   // 해독 기한
