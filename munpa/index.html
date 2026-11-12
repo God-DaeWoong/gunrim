@@ -629,7 +629,7 @@ const MATCH_FX={
 // 육합귀진신공: 여섯 심법을 기준 이상 익히면 이루고 곧바로 탈태환골(성이 없다)
 const YUK={taeeul:4,guyang:2,hyeoncheong:2,taejin:2,cheondan:2,chileum:2};
 function checkYukhap(){for(const d of G.ds)if(d.yukhap&&!d.yhv){d.yhv=1;d.capUp=d.capUp||{};for(const a in d.arts)if(ARTS[a].t!=='b'&&a!=='chileum')d.capUp[a]=1;d.wis=(d.wis||0)+2;log(`${d.n}의 탈태환골이 몸에 자리 잡았다. 모든 무공의 상한이 풀렸다(10성), 깨달음 +2.`)}
-  for(const d of G.ds){if(d.yukhap||d.elder)continue;if(Object.keys(YUK).every(a=>(d.arts[a]||0)>=YUK[a])){d.yukhap=1;d.yhv=1;d.capUp=d.capUp||{};for(const a in d.arts)if(ARTS[a].t!=='b'&&a!=='chileum')d.capUp[a]=1;for(const a in d.arts)d.arts[a]=Math.min(capOf(d,a),d.arts[a]+1);d.wis=(d.wis||0)+2;
+  for(const d of G.ds){if(d.yukhap||d.n==='삿갓 쓴 사내')continue;if(Object.keys(YUK).every(a=>(d.arts[a]||0)>=YUK[a])){d.yukhap=1;d.yhv=1;d.capUp=d.capUp||{};for(const a in d.arts)if(ARTS[a].t!=='b'&&a!=='chileum')d.capUp[a]=1;for(const a in d.arts)d.arts[a]=Math.min(capOf(d,a),d.arts[a]+1);d.wis=(d.wis||0)+2;
   if(d.id==='jin'&&G.flags.geomjeong)G.flags.geomjeong2=1;
   MODAL={title:'육합귀진',p:[`${d.n}의 몸 안에서 여섯 갈래 기운이 하나로 돌기 시작했다. 육합귀진신공을 이루었다.`,'뼈마디가 울리고 묵은 상처가 지워졌다. 탈태환골이다.'+(d.id==='jin'&&G.flags.geomjeong?' 유운검결 열여덟 초가 비로소 하나로 꿰였다. 진산월의 검정중원이 완성되었다.':'')],ch:[['……',()=>log(`${d.n}이(가) 육합귀진신공을 이루었다(탈태환골: 모든 무공 +1, 상한이 10성으로 풀림, 깨달음 +2, 전력 +20).${d.id==='jin'&&G.flags.geomjeong?' 검정중원 완성.':''}`)]]};return}}}
 // 엔딩
