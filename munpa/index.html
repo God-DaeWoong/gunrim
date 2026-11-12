@@ -198,11 +198,11 @@ function dangInit(){if(G&&!G.dang)G.dang={h:{},a:{oe:2,sang:2,haeng:2},rot:1}}
 const dHead=k=>{const id=G.dang&&G.dang.h[k],d=id&&D(id);return d&&!['away','hurt'].includes(d.pos)?d:null};
 const headOf=d=>G.dang?Object.keys(G.dang.h).find(k=>G.dang.h[k]===d.id):null;
 const topMain=d=>Math.max(0,...Object.keys(d.arts).filter(a=>ARTS[a].t==='m').map(a=>d.arts[a]));
-const yeonB=()=>{const h=dHead('yeon');return h?Math.max(0,Math.min(.45,(h.st.oseong-50)/150+topMain(h)/60)):0};
-const sangMul=()=>{const h=dHead('sang');return h?.9+h.st.jeong/250:.85};
+const yeonB=()=>{const h=dHead('yeon');return (h?Math.max(0,Math.min(.45,(h.st.oseong-50)/150+topMain(h)/60)):0)*(G.flags.brC==='elite'?1.5:1)};
+const sangMul=()=>{const h=dHead('sang');return (h?.9+h.st.jeong/250:.85)*(G.flags.brB==='sang'?1.3:G.flags.brB==='clean'?.8:1)};
 const oeMul=()=>{const h=dHead('oe');return h?1+(h.st.tong-50)/150:.9};
 const haengB=()=>{const h=dHead('haeng');return h?Math.round((h.st.ji-50)/3):-5};
-const homeTroops=()=>Math.max(6,Math.min(24,6+Math.round(G.ds.filter(d=>d.pos==='guard'&&d.id!=='jin').length*1.6)));
+const homeTroops=()=>Math.max(6,Math.min(G.flags.brC==='big'?30:24,6+Math.round(G.ds.filter(d=>d.pos==='guard'&&d.id!=='jin').length*1.6)));
 const munAll=()=>G.ds.filter(isMun);
 const munFree=()=>munAll().filter(d=>!['away','hurt','seclude','study','rest'].includes(d.pos)&&!headOf(d));
 function dangAssign(){dangInit();for(const d of munAll()){if(['away','hurt','seclude','study'].includes(d.pos))continue;if(d.mind>=80&&d.pos!=='rest'){d.pos='rest';d.dg='rest'}else if(d.pos==='rest'&&d.mind<30)d.pos='train'}
@@ -218,6 +218,24 @@ function dangHTML(){dangInit();const M=munAll(),A=G.dang.a,rest=Math.max(0,munFr
   return `<div class="panel"><h3>당과 문도 <span class="muted" style="font-size:13px">문도 ${M.length}명</span></h3><p class="muted" style="font-size:12px;margin:0 0 4px">당주는 사숙·중견 제자가 맡는다(원로는 맡지 않는다). 당주는 일을 보느라 자기 수련이 줄어든다(×0.6). 문도(새로 받은 이름 없는 제자)는 정한 인원대로 각 당에 들어가고, 남는 문도는 연무당에서 수련한다. 이름 있는 제자는 아래 카드에서 따로 배치한다.</p>${Object.keys(DANG).map(row).join('')}
 <label style="font-size:13px;display:block;margin-top:6px"><input type="checkbox" ${G.dang.rot?'checked':''} onchange="A.dangRot(this.checked)"> 반년마다 문도를 당끼리 교대시킨다</label> <button style="margin-top:6px" onclick="A.dangRec()">당주 추천대로</button>
 ${M.length?`<details style="margin-top:8px"><summary>문도 목록</summary><table class="cal" style="margin-top:6px"><tr><th>이름</th><th>전력</th><th>당·상태</th><th>주무공</th></tr>${M.slice().sort((a,b)=>power(b)-power(a)).map(d=>{const m=Object.keys(d.arts).filter(a=>ARTS[a].t==='m').sort((x,y)=>d.arts[y]-d.arts[x])[0];return `<tr><td>${d.n}</td><td>${Math.round(power(d))}</td><td>${ST(d)}</td><td>${m?ARTS[m].n+' '+d.arts[m]+'성':''}</td></tr>`}).join('')}</table></details>`:''}</div>`}
+// 갈림길: 직접 골라야 넘어간다. 사건 탭에 뜨고, 고르지 않고 「다음」을 누르면 생긴 순서대로 창이 뜬다
+const BRANCH={
+  brA:{title:'갈림길 — 화산을 어떻게 할 것인가',text:'회람연에서 화산을 꺾었다. 화산의 장로들이 사람을 보내 왔다. 서안에서 서로 손을 잡자는 말이다. 한편 서안 상인들은 이참에 화산을 서안에서 몰아내 달라고 한다.',
+    o:[['화산과 손을 잡는다','화산이 상권을 넘보지 않고, 쾌의당이 대신 움직인다. 구파 자격 +10. 2부에서 화산이 원군으로 온다'],
+       ['화산을 서안에서 몰아낸다','서안 상권 수입 +20. 그러나 화산이 본산을 치러 오고, 2부 사천 싸움 한 갈래에 화산 병력이 섞인다']],
+    f:i=>{if(i===0){G.flags.hsSide='ally';G.flags.hwasanPeace=1;G.qual+=10;log('화산과 손을 잡았다. 구파 자격 +10')}else{G.flags.hsSide='foe';G.flags.hsOut=1;G.income.sang+=20;log('화산을 서안에서 몰아냈다. 상권 수입 +20. 화산이 이를 갈고 있다')}}},
+  brB:{title:'갈림길 — 문파의 돈줄',text:'서안의 큰 상단들이 종남과 손을 잡고 싶어 한다. 주루와 상권에 돈을 대 주겠다고 한다. 그러나 문파가 장사꾼과 얽히면 강호의 눈이 곱지 않다.',
+    o:[['상단과 손잡는다','상단(주루) 수입 ×1.3. 그러나 명성 시주가 절반이 되고, 해마다 구파 자격 -5'],
+       ['청빈하게 간다','상단(주루) 수입 ×0.8. 대신 매달 명성 +1, 해마다 구파 자격 +4, 모든 제자 충성 +10']],
+    f:i=>{if(i===0){G.flags.brB='sang';log('상단과 손을 잡았다. 주루 수입이 늘었다.')}else{G.flags.brB='clean';for(const d of G.ds)d.ch=Math.min(100,(d.ch||70)+10);log('청빈을 지키기로 했다. 제자들의 충성 +10')}}},
+  brC:{title:'갈림길 — 어떤 문파를 만들 것인가',text:'숙소를 두 번 늘렸다. 입문하겠다는 젊은이들이 줄을 선다. 문을 더 열지, 지금 사람들을 깊이 기를지 정해야 한다.',
+    o:[['정예로 간다','정원은 27명에서 멈춘다. 연무당 효과 1.5배, 떼싸움에서 장수 힘 +15%'],
+       ['대문파로 간다','「숙소 증축 4」(정원 50)가 열리고 떼싸움 병력 상한 24 → 30. 대신 문도 유지비 1명당 4 → 6냥']],
+    f:i=>{if(i===0){G.flags.brC='elite';log('정예의 길을 가기로 했다.')}else{G.flags.brC='big';log('대문파의 길을 가기로 했다. 숙소 증축 4가 열렸다.')}}}};
+const brItem=id=>({t:'branch',id,title:BRANCH[id].title,due:999});
+function branchModal(b){const B=BRANCH[b.id];MODAL={title:B.title,p:[B.text,...B.o.map(o=>'· <b>'+o[0]+'</b>: '+o[1]),'<span class="muted">이 선택은 되돌릴 수 없다.</span>'],ch:B.o.map((o,i)=>[o[0],()=>{A.branch(b.id,i)}])}}
+const brLine=()=>{const f=G.flags,a=[];if(f.hsSide)a.push(f.hsSide==='ally'?'화산과 손을 잡았고':'화산을 서안에서 몰아냈고');if(f.brB)a.push(f.brB==='sang'?'상단과 손잡아 재물을 모았으며':'청빈을 지켰으며');if(f.brC)a.push(f.brC==='elite'?'정예의 길을 걸었다':'문을 넓게 열어 대문파가 되었다');return a.length?'— 종남은 '+a.join(', ')+'.':''};
+const upkeepDs=()=>G.ds.filter(d=>!d.elder&&d.id!=='jeonp').reduce((s,d)=>s+(G.flags.brC==='big'&&isMun(d)?6:4),0);
 function power(d){const ms=[],ss=[];for(const a in d.arts){if(ARTS[a].t==='b')continue;(ARTS[a].t==='m'?ms:ss).push(d.arts[a])}ms.sort((a,b)=>b-a);ss.sort((a,b)=>b-a);
   let p=(ms[0]||0)*10+(ms[1]||0)*3+(ss[0]||0)*5+(d.mukryeong?10:0)+(d.arts.muyeom?d.arts.muyeom*8:0);if(d.yukhap)p+=20;if(d.chronic)p*=.9;if(d.id==='jin'){if(G.flags.yongyeong)p+=15;if(G.flags.geomjeong)p+=20;if(G.p2)p+=15*G.p2.relic;if(d.capUp&&d.capUp.cheonha)p+=5}return p}
 // 수련 방향이 없으면 올릴 수 있는 것 중 가장 높은 무공(한 우물)
@@ -308,7 +326,8 @@ const DEV=[
   {id:'land',n:'초가보 옛 땅 흡수',c:50,t:2,d:'초가보가 쥐던 관중 상권과 주루. 수입 +30, 주루 관리 자리 +2',req:()=>G.flags.choDone,rq:'초가보 멸망'},
   {id:'sukso1',n:'숙소 증축 1',c:150,t:4,d:'제자 정원 15 → 20',big:1},
   {id:'sukso2',n:'숙소 증축 2',c:250,t:6,d:'제자 정원 20 → 27',req:()=>(G.devDone||[]).includes('sukso1'),rq:'숙소 증축 1',big:1},
-  {id:'sukso3',n:'숙소 증축 3',c:500,t:8,d:'제자 정원 27 → 35',req:()=>(G.devDone||[]).includes('sukso2'),rq:'숙소 증축 2',big:1},
+  {id:'sukso3',n:'숙소 증축 3',c:500,t:8,d:'제자 정원 27 → 35',req:()=>(G.devDone||[]).includes('sukso2')&&G.flags.brC!=='elite',rq:'숙소 증축 2 (정예를 고르면 막힘)',big:1},
+{id:'sukso4',n:'숙소 증축 4',c:800,t:10,d:'제자 정원 35 → 50 (대문파)',req:()=>(G.devDone||[]).includes('sukso3')&&G.flags.brC==='big',rq:'숙소 증축 3, 대문파를 골랐을 때'},
   {id:'sanmun',n:'산문 중건',c:200,t:6,d:'무너진 산문을 다시 세운다. 명성 +10, 지원자가 더 온다',big:1},
   {id:'josa',n:'조사전 복원',c:400,t:8,d:'역대 조사의 위패를 다시 모신다. 구파 자격 +10, 모든 제자 심마 -20',req:()=>G.fame>=30,rq:'명성 30',big:1},
   {id:'jeongak1',n:'전각 증축 1',c:300,t:6,d:'시설을 4단계까지 올릴 수 있다',big:1},
@@ -316,7 +335,7 @@ const DEV=[
   {id:'sulyeon',n:'후산 수련동',c:250,t:6,d:'폐관 자리 +1, 폐관 수련 3배, 석실 폐관 1.2배, 직접 지도의 깨달음 확률 +10%',big:1},
   {id:'wall1',n:'성벽·망루 1',c:200,t:6,d:'본산 방어 +40, 큰 싸움에서 아군 +10%',big:1},
   {id:'wall2',n:'성벽·망루 2',c:450,t:8,d:'본산 방어 +40, 큰 싸움에서 아군 +10% 더',req:()=>(G.devDone||[]).includes('wall1'),rq:'성벽·망루 1',big:1}];
-const capOfDs=()=>[15,20,27,35][G.fac.sukso||0];
+const capOfDs=()=>Math.min(G.flags.brC==='elite'?27:99,[15,20,27,35,50][G.fac.sukso||0]);
 const dsCount=()=>G.ds.filter(d=>!d.elder&&d.id!=='jin'&&d.id!=='jeonp').length;
 function devDone(id){G.devDone=G.devDone||[];const st0=yardStage();G.devDone.push(id);{const st=yardStage();if(st>st0){log('<b>본산의 모습이 달라졌다.</b> '+YARD_TXT[st]);if(!MODAL)MODAL={title:'본산의 모습이 달라졌다',art:BONSAN_ART[st],p:[YARD_TXT[st]],ch:[['둘러본다.',()=>{}]]}}}const x=DEV.find(v=>v.id===id);
   if(id==='sang')G.income.sang+=15;if(id==='yak')G.income.yak+=10;if(id==='ju')G.income.ju=25;if(id==='pyo'){G.flags.pyo=1;G.income.pyo=10}if(id==='yeon')G.flags.yeongong=1;if(id==='land')G.income.land=30;
@@ -388,17 +407,17 @@ const mImg=s=>{if(typeof Image==='undefined')return{};MIMG[s]=MIMG[s]||Object.as
 const MELEE_BG={hwasan:'img/sd_yard.webp',raid:'img/sd_yard.webp',p2a:'img/bg_sacheon.webp',p2b:'img/bg_geomgak.webp'};
 const mBgOf=(e,L)=>MELEE_BG[e.kind]||(/협곡/.test(L.n)?'img/bg_gorge.webp':'img/bg_road.webp');
 const MFOE_IMG={kwae:'img/sd_mook_kw.png',cho:'img/sd_mook_cho.png',hwasan:'img/sd_mook_hs.png',seojang:'img/sd_mook_sj.png'};
-const MALLY_IMG={'소림':'img/sd_ally_sorim.png','점창':'img/sd_ally_jeom.png','청의방':'img/sd_ally_cheong.png','남궁세가':'img/sd_ally_nam.png','경요궁':'img/sd_ally_gyeong.png','무당':'img/sd_ally_mu.png'};
+const MALLY_IMG={'화산':'img/sd_mook_hs.png','소림':'img/sd_ally_sorim.png','점창':'img/sd_ally_jeom.png','청의방':'img/sd_ally_cheong.png','남궁세가':'img/sd_ally_nam.png','경요궁':'img/sd_ally_gyeong.png','무당':'img/sd_ally_mu.png'};
 const MBOSS_IMG={'서장 선봉장':'img/sd_sj_boss.png','서장 철기대장':'img/sd_sj_boss.png','서장 대장':'img/sd_sj_boss.png','서장 무승':'img/sd_mook_sj.png','초일산':'img/sd_choil.png','갈태독':'img/sd_galtae.png','곽태보':'img/sd_gwaktae.png'};
 const MFOE={kwae:['쾌의당','grayscale(.4) brightness(.8)'],cho:['초가보','sepia(.9) hue-rotate(-25deg) saturate(1.8)'],hwasan:['화산','sepia(.5) hue-rotate(230deg) saturate(1.5)'],seojang:['서장군','sepia(1) hue-rotate(-40deg) saturate(2.6)']};
 const mFoeOf=e=>e.foe||(e.kind==='hwasan'?'hwasan':e.kind==='p2a'||e.kind==='p2b'?'seojang':'cho');
 const facBuff=()=>{const dd=G.devDone||[],h=x=>dd.includes(x)?1:0,y=Math.max(0,(G.fac.yeon||1)-1);const K=typeof MFB!=='undefined'?MFB:1;return{a:1+K*(.08*y+.07*h('wpn1')+.07*h('wpn2')+.08*h('wpn3')),h:1+K*(.06*y+.08*h('arm1')+.08*h('arm2'))}};
 const foeYear=()=>Math.floor(Math.max(0,G.m-13)/12),foeUp=()=>1+(typeof MEG!=='undefined'?MEG:.12)*(G.diff==='easy'?.5:1)*foeYear();
-const mTroops=()=>Math.max(13,Math.min(24,8+Math.round(dsCount()*.45)));
+const mTroops=()=>Math.max(13,Math.min(G.flags.brC==='big'?30:24,8+Math.round(dsCount()*.45)));
 function mSkillOf(d){const a=duelArt(d)||'yuun';if((d.arts.wolnyeo||0)>=(d.arts[a]||0)&&d.arts.wolnyeo!=null)return{n:'월녀검법',t:'ring',fx:'wolnyeo'};
   const t=['janggwae','nakroe','guban','pungroe','yeomhwa'].includes(a)?'cone':'line',mf=MOVES[a]&&MOVES[a][0][1];return{n:ARTS[a].n,t,fx:mf||(t==='cone'?'cheonjeon':'geombong')}}
 function meleeInit(c){const e=G.q.find(x=>x.id===DUEL.eid),L=LN(e)[c.l],k=e.k||1,rnd=(a,b)=>a+Math.random()*(b-a),U=[];
-  c.ids.forEach((id,i)=>{const d=D(id),late=isHome(e)&&d.pos!=='guard'&&headOf(d)!=='oe',P=power(d)*(late?.6:1);U.push({side:0,d:id,n:d.n,sk:mSkillOf(d),hero:1,wait:late?10:0,x:late?-60:120,y:270+i*110,hp:(90+P)/eqDef(d)*(d.yukhap?1.2:1),max:(90+P)/eqDef(d)*(d.yukhap?1.2:1),atk:(4+P/9)*eqAtk(d),rng:46,spd:62,cd:0,skc:3,f:0})});
+  c.ids.forEach((id,i)=>{const d=D(id),late=isHome(e)&&d.pos!=='guard'&&headOf(d)!=='oe',P=power(d)*(late?.6:1)*(G.flags.brC==='elite'?1.15:1);U.push({side:0,d:id,n:d.n,sk:mSkillOf(d),hero:1,wait:late?10:0,x:late?-60:120,y:270+i*110,hp:(90+P)/eqDef(d)*(d.yukhap?1.2:1),max:(90+P)/eqDef(d)*(d.yukhap?1.2:1),atk:(4+P/9)*eqAtk(d),rng:46,spd:62,cd:0,skc:3,f:0})});
   const others=G.ds.filter(d=>!d.elder&&d.id!=='jin'&&!c.ids.includes(d.id)),tm0=Math.max(.7,Math.min(1.6,(others.reduce((s,d)=>s+power(d),0)/Math.max(1,others.length))/110)),tm=tm0*(1+.05*(e.arm||0))*(isHome(e)?oeMul():1),ourB=Math.max(isHome(e)?140:1,c.ids.reduce((s,id)=>{const d=D(id);return s+power(d)*(.6+d.st.tong/250)},0))*(1+.1*(G.wall||0))*(isHome(e)?1+.08*G.fac.oe:1),emR=(isHome(e)?(typeof MHK!=='undefined'?MHK:.9)*(G.diff==='easy'?.7:1):1)*dk()*(typeof MKM!=='undefined'?MKM:1.35)*Math.pow(L.e*k/Math.max(1,ourB),typeof MKE!=='undefined'?MKE:.5);
   const nt=(isHome(e)?homeTroops():mTroops())+(e.kind==='p2b'&&G.p2?2*Math.min(5,G.p2.kept.length):0),ne=Math.max(19,Math.min(32,Math.round(L.e*k/10))),em=Math.max(.3,Math.min(3.5,emR*15/ne*tm0*foeUp())),FB=facBuff();
   for(let i=0;i<nt;i++)U.push({side:0,ally:e.kind==='p2b'&&i>=mTroops(),allyN:e.kind==='p2b'&&i>=mTroops()&&G.p2&&G.p2.kept.length?G.p2.kept[(i-mTroops())%G.p2.kept.length]:null,x:rnd(30,200),y:MTOP+10+(i+rnd(.1,.9))*(MBOT-MTOP-10)/nt,hp:90*tm*FB.h,max:90*tm*FB.h,atk:9*tm*FB.a,rng:34,spd:55,cd:rnd(0,1),f:0});
@@ -652,7 +671,7 @@ const MATCH_FX={
   bimu:(ok,w,e)=>{G.bimuDone=(G.bimuDone||0)+1;if(ok){G.bimuWins=(G.bimuWins||0)+1;G.allies=(G.allies||0)+1;G.allyN=(G.allyN||[]).concat(e.who);G.fame+=8;G.qual+=6;log(`${e.title} 승리. 명성 +8, 구파 자격 +6, ${e.who}와(과) 가까워졌다.`)}else{G.fame+=2;log(`${e.title}에서 졌다.`)}
     if(G.bimuDone===2&&!G.flags.hs1)G.flags.hs1=G.m+1},
   hs1:(ok)=>{if(ok){G.fame+=5;G.qual+=5;log('형산의 도발을 꺾었다. 명성 +5, 구파 자격 +5')}else{G.qual=Math.max(0,G.qual-5);log('형산의 도발에 밀렸다. 구파 자격 -5')}},
-  hoeram:(ok)=>{if(ok){G.fame+=8;G.qual+=8;G.flags.hwasanPeace=1;log('회람연에서 화산을 꺾었다. 화산이 서안 상권에서 손을 뗀다. 명성 +8, 구파 자격 +8')}else{G.income.sang=Math.max(25,G.income.sang-10);log('회람연에서 화산에 졌다. 상권 수입 -10')}},
+  hoeram:(ok)=>{if(ok){G.fame+=8;G.qual+=8;G.q.push(brItem('brA'));log('회람연에서 화산을 꺾었다. 명성 +8, 구파 자격 +8. <b>화산을 어떻게 할지 정해야 한다.</b>')}else{G.income.sang=Math.max(25,G.income.sang-10);log('회람연에서 화산에 졌다. 상권 수입 -10')}},
   hyeongsan:(ok)=>{if(ok){G.qual+=25;G.flags.league='lead';G.fame+=10;log('무당 집회에서 형산을 꺾었다. 종남이 무림연맹의 한 축이 되었다. 구파 자격 +25')}else{G.qual=Math.max(0,G.qual-10);G.flags.league='member';log('무당 집회에서 형산에 졌다. 구파 자격 -10')}},
   gamjong:(ok)=>{if(ok){G.fame+=15;G.qual+=10;G.flags.kwaeDone=1;log('쾌의당주 감종간을 꺾었다. 명성 +15, 구파 자격 +10')}else{G.qual=Math.max(0,G.qual-5);const j=D('jin');log('감종간을 놓쳤다. 구파 자격 -5')}},
   final:(ok)=>{G.flags.finalWin=ok?1:0;G.flags.finalDone=1;log(ok?'야율척을 꺾었다.':'야율척에게 졌다.');G.endNow=1}};
@@ -690,6 +709,8 @@ function addArt(id,a){const d=D(id);if(d&&d.arts[a]==null){d.arts[a]=0;d.xp[a]=0
 // 이달 시작에 들어오는 정해진 사건
 function scheduled(m){
   const E=[];
+  if(m===12&&!G.flags.brB&&!G.q.some(x=>x.id==='brB'))E.push(brItem('brB'));
+  if(m>=13&&!G.flags.brC&&!G.q.some(x=>x.id==='brC')&&(G.devDone||[]).includes('sukso2'))E.push(brItem('brC'));
   if(m===1)E.push({t:'event',id:'sam',title:'만년삼정',due:2,text:'만년삼정을 복용하려면 길일을 골라 몸을 다스려야 한다. 3월 초하루로 날을 잡았다. 그때까지 영약은 장문인 거처의 옥함에 있다.',info:1});
   if(m===2)E.push(theft());
   if(m===2)E.push({t:'event',id:'sign',title:'임영옥의 징조',text:'임영옥이 차를 따르다 찻잔을 떨어뜨렸다. 손끝이 얼음처럼 차다.',info:1});
@@ -757,7 +778,7 @@ function p2Events(m,E){const P=G.p2;
     for(const a of rest)E.push(p2Job('p2j_keep',a+' 붙잡기','ma',60,'keep:'+a,60,a+'에 제자를 보내 연맹에 남아 달라고 청한다. 제자 대신 군자금 300냥을 보내도 된다. 붙잡은 문파는 검각 결전에 원군을 보낸다.'))}
   if(m===58)E.push(p2Match('p2baek','유중악과 백모란',[{n:'유중악',pw:235},{n:'백모란',pw:245}],2,'p2v2',60,'유중악의 뒤에 기산취악을 꾸민 백모란이 있었다. 낙양에서 두 사람을 막아선다. 둘 다 꺾어야 한다. 놓친 사람은 서장군에 붙는다.'+(has('ilbi')?' 기산취악과 얽힌 자들이다. 강일비에게 맡길 수도 있다(원로는 추천 출전에 들지 않으니 직접 고른다).':'')));
   if(m===61)E.push({t:'event',id:'p2south',info:1,title:'서장의 남하',text:'야율척의 서장군이 설산을 넘어 사천으로 내려왔다. 연맹이 소집령을 내렸다. 사천에서 한 번 막고, 검각에서 마지막으로 막는다.'+(P.esc.length?` 달아났던 ${P.esc.join('·')}이(가) 서장군의 앞줄에 섰다는 소식이다.`:'')});
-  if(m===62)E.push({t:'quest',id:'p2sacheon',kind:'p2a',title:'사천 방어전',due:64,k:1,lanes:p2Lanes([['검문관',360,'서장 선봉장',215],['성도 북문',330,'서장 무승',205],['민강 나루',380,'서장 철기대장',230]],0),text:'서장군이 세 갈래로 사천을 친다. 갈래마다 둘까지 세운다. 두 갈래를 지키면 막아 낸다. 지면 서장군이 기세를 타고 검각으로 온다.'});
+  if(m===62)E.push({t:'quest',id:'p2sacheon',kind:'p2a',title:'사천 방어전',due:64,k:1,lanes:p2Lanes([['검문관',G.flags.hsSide==='foe'?430:360,'서장 선봉장',215],['성도 북문',330,'서장 무승',205],['민강 나루',380,'서장 철기대장',230]],0),text:'서장군이 세 갈래로 사천을 친다. 갈래마다 둘까지 세운다. 두 갈래를 지키면 막아 낸다. 지면 서장군이 기세를 타고 검각으로 온다.'});
   if(m===66){const k=+((P.sacheonLost?1.1:1)*(1-.06*Math.min(5,P.kept.length))).toFixed(2);
     E.push({t:'quest',id:'p2geomgak',kind:'p2b',title:'검각 앞 결전',due:68,k,lanes:p2Lanes([['검각 잔도',420,'서장 대장',240],['검문 협곡',400,'서장 무승',230],['검각 성루',440,'서장 철기대장',250]],15),text:`서장군의 본대가 검각 앞에 섰다. ${P.kept.length?`${P.kept.join('·')}의 원군이 와서 적의 기세가 꺾였다(적 전력 ×${k}).`:'원군이 오지 않았다. 종남 혼자 선다.'}${P.sacheonLost?' 사천에서 밀린 탓에 적의 기세가 높다.':''} 두 갈래를 지키면 야율척이 직접 나선다.`})}
   if(m===69)E.push(p2Match('p2final','검각 정상 — 야율척',[{n:'야율척',pw:P.yayul}],1,'final',71,'검각 정상에서 야율척이 진산월을 기다린다. 진산월만 나설 수 있다. 이 싸움이 2부의 끝이다. (폐관 중이면 나설 수 없다)',{onlyJin:1}))}
@@ -902,12 +923,13 @@ const A={
   dangN(k,v){dangInit();const A=G.dang.a;if(v>0&&A.oe+A.sang+A.haeng>=munFree().length)return;A[k]=Math.max(0,A[k]+v);dangAssign();save();render()},
   dangRot(v){dangInit();G.dang.rot=v?1:0;save()},
   dangRec(quiet){dangInit();for(const k of ['sang','haeng','yeon','oe']){if(dHead(k))continue;const c=G.ds.filter(d=>!d.elder&&!isMun(d)&&d.id!=='jin'&&d.id!=='lim'&&!headOf(d)&&!['away','hurt'].includes(d.pos)).sort((a,b)=>(b.st[DANG[k].k]-power(b)/8)-(a.st[DANG[k].k]-power(a)/8))[0];if(c){G.dang.h[k]=c.id;if(!quiet)log(c.n+'을(를) '+DANG[k].n+'주로 앉혔다.')}}if(!quiet){save();render()}},
+  branch(id,i){const B=BRANCH[id];if(!B)return;G.q=G.q.filter(x=>x.id!==id);B.f(i);save();render()},
   autoNext(v){G.autoNext=v;save()},
   next(){if(DUEL)return;if(G.autoNext&&!MODAL)A.auto();endHalf()},
   titleGo(n){if(n){TITLE.pick=1;TITLE.rec=0;render();return}TITLE=null;render()},
   titleDiff(k){if(TITLE.save&&!confirm('지금 하던 판을 지우고 「'+DIFF[k].n+'」으로 처음부터 시작할까요?'))return;localStorage.removeItem(SAVE);TITLE=null;newGame();G.diff=k;G.eun+=DIFF[k].eun;save();render()},
   part2(){if(!G.done||G.part||G.over||!G.ending||G.ending.n==='몰락')return;G.ending1=G.ending.n;G.part=2;G.done=false;G.ending=null;G.endNow=0;G.flags.finalWin=0;G.flags.finalDone=0;
-    const al=G.allyN&&G.allyN.length?G.allyN.slice():['점창','소림','청의방','남궁세가'].slice(0,G.bimuWins||0).concat(G.flags.gyeongyo?['경요궁']:[]);if(G.flags.league==='lead'&&!al.includes('무당'))al.push('무당');
+    const al=G.allyN&&G.allyN.length?G.allyN.slice():['점창','소림','청의방','남궁세가'].slice(0,G.bimuWins||0).concat(G.flags.gyeongyo?['경요궁']:[]);if(G.flags.league==='lead'&&!al.includes('무당'))al.push('무당');if(G.flags.hsSide==='ally'&&!al.includes('화산'))al.push('화산');
     G.p2={allies:[...new Set(al)],kept:[],lost:[],esc:[],beat:[],relic:0,yayul:380};log('<b>2부 「서장전」</b>이 시작되었다.');TAB='main';nextMonth()},
   restart(){A.toMain()},
   toMain(){if(DUEL)return;save();TITLE={save:!G.over&&!(G.done&&G.part===2),fin:!!(G.over||(G.done&&G.part===2))};render()},
@@ -956,6 +978,7 @@ function metaSave(){try{localStorage.setItem('munpa-meta',JSON.stringify(META))}
 function autoGorge(){if(!META.noYuk)return;const gq=G.q.find(e=>e.id==='gorge'),nk=D('nak');if(!gq||!nk||['away','hurt','seclude'].includes(nk.pos))return;if(G.autoNext||G.m>=gq.due){log(G.m>=gq.due?'협곡 정찰 기한이 되어 낙일방이 자청해 나섰다.':'(남은 일 자동) 낙일방을 협곡 정찰에 보냈다.');A.gorge('gorge','nak')}}
 function endHalf(){
   if(MODAL||DUEL)return;
+  {const b=G.q.find(x=>x.t==='branch');if(b){branchModal(b);render();return}}
   if(G.half===1){const due=G.q.find(x=>(x.lanes||x.id==='hyeolsa'||x.id==='hyeolsa2')&&x.due<=G.m);if(due){log(`${due.title}: 기한이 되어 추천 배치로 출진한다.`);startDuels(due.id,battleSuggest(due));return}
     const mt=G.q.find(x=>x.t==='match'&&x.due<=G.m);if(mt){const ids=matchSuggest(mt);if(ids.length>=mt.opp.length){log(`${mt.title}: 기한이 되어 추천한 제자들이 나선다.`);startMatch(mt.id,ids);return}}}
   autoGorge();autoJin();if(MODAL||DUEL)return;
@@ -1007,13 +1030,14 @@ function endMonth(){
     if(G.retreat===1&&!G.flags.raided&&!G.flags.choDone)raid();
     if(G.retreat===0)endRetreat()}
   // 돈
-  const up=G.ds.filter(d=>!d.elder&&d.id!=='jeonp').length*4+Object.values(G.fac).reduce((s,v)=>s+v*3,0);const sh=shopEarn(),gift=Math.floor(Math.max(0,G.fame)/5),inc=Object.values(G.income).reduce((s,v)=>s+v,0)+sh+gift;
+  const up=upkeepDs()+Object.values(G.fac).reduce((s,v)=>s+v*3,0);const sh=shopEarn(),gift=Math.floor(Math.max(0,G.fame)/(G.flags.brB==='sang'?10:5)),inc=Object.values(G.income).reduce((s,v)=>s+v,0)+sh+gift;
   G.eun+=inc-up;log(`월말 정산: 수입 ${inc}${sh||gift?` (${[sh?`주루 관리 ${sh}`:'',gift?`명성 시주 ${gift}`:''].filter(Boolean).join(', ')} 포함)`:''}, 지출 ${up} → 은자 ${G.eun}`);
   if(G.eun<0){G.broke++;if(G.broke>=3){gameOver('은자가 바닥난 채 석 달이 지났다. 제자들이 하나둘 산을 내려갔다.');return}}else G.broke=0;
+  if(G.flags.brB==='clean'){G.fame+=1;if(G.m%12===0){G.qual+=4;log('청빈한 종남의 이름이 강호에 퍼진다. 구파 자격 +4')}}if(G.flags.brB==='sang'&&G.m%12===0){G.qual=Math.max(0,G.qual-5);log('장사꾼 문파라는 뒷말이 돈다. 구파 자격 -5')}
   // 라이벌
   const hsBite=!G.flags.league&&G.m%2===0;if(hsBite)G.qual=Math.max(0,G.qual-1);
   if(G.patrol)log('서안을 순찰한 덕에 이달은 화산이 상권에 손대지 못했다.');
-  else if(!G.flags.hwasanPeace&&G.m>=4&&G.income.sang>25&&Math.random()<.35){G.income.sang=Math.max(25,G.income.sang-5);log('화산이 서안 상권을 넘본다. 상권 수입 -5')}
+  else if(!G.flags.hwasanPeace&&!G.flags.hsOut&&G.m>=4&&G.income.sang>25&&Math.random()<.35){G.income.sang=Math.max(25,G.income.sang-5);log('화산이 서안 상권을 넘본다. 상권 수입 -5')}
   else if(hsBite&&G.m>=2)log('형산이 종남의 구파 자격을 문제 삼는다. 구파 자격 -1');
   // 임영옥 점검
   if((G.m===36||G.m===44)&&has('lim')){const l=D('lim'),need=(G.m===36?9:10)-(G.flags.taeumSlow?1:0),v=l.arts.chileum||0;
@@ -1023,7 +1047,7 @@ function endMonth(){
     if(v<need){l.pos='hurt';l.away=G.m===12?2:6;log(`임영옥이 ${G.m===12?'발작을 일으켰다':'위독해졌다'}. 칠음진기 ${v}성 (기준 ${need}성). ${G.m===12?'한':'석'} 달 요양`)}else log(`임영옥의 칠음진기 ${v}성. 이번 해는 넘겼다. (기준 ${need}성)`)}
   {const n=dsCount();if(n>=20&&!G.flags.size20){G.flags.size20=1;G.qual+=5;log('제자가 스무 명을 넘었다. 구파 자격 +5')}if(n>=30&&!G.flags.size30){G.flags.size30=1;G.qual+=5;log('제자가 서른 명을 넘었다. 구파 자격 +5')}}
   checkYukhap();
-  if(G.part===2?(G.m>=72||G.endNow):G.m>=48){G.ending=G.part===2?ending2():endingOf();G.done=true;recEnd((G.part===2?'2부 ':'1부 ')+G.ending.n);if(G.part===2){META.ends=(META.ends||[]).concat(G.ending.n).slice(-30);if(!G.flags.geomjeong2)META.noYuk=1;metaSave()}save();render();return}
+  if(G.part===2?(G.m>=72||G.endNow):G.m>=48){G.ending=G.part===2?ending2():endingOf();if(brLine())G.ending.p=[...G.ending.p,brLine()];G.done=true;recEnd((G.part===2?'2부 ':'1부 ')+G.ending.n);if(G.part===2){META.ends=(META.ends||[]).concat(G.ending.n).slice(-30);if(!G.flags.geomjeong2)META.noYuk=1;metaSave()}save();render();return}
   nextMonth()}
 function nextMonth(){
   G.m++;G.half=0;G.act=1;G.jinFocus=false;G.jinBusy=false;G.patrol=false;if(G.jinSec){G.act=0;G.jinBusy=true}
@@ -1089,7 +1113,7 @@ ${(()=>{const lib=LIB.filter(a=>!knows(j,a)&&teacher(a,'jin'));return lib.length
  심법 <select onchange="A.jdir('s',this.value)"><option value="">자동</option>${Object.keys(j.arts).filter(a=>ARTS[a].t==='s').map(a=>`<option value="${a}" ${j.focusS===a?'selected':''} ${j.arts[a]>=capOf(j,a)?'disabled':''}>${ARTS[a].n}${j.arts[a]>=capOf(j,a)?(j.arts[a]>=10?' (대성)':' (상한)'):''}</option>`).join('')}</select></div></div>
 <div class="panel"><h3>시설</h3><div class="grid">${Object.keys(FAC).map(k=>{const lv=G.fac[k],c=80*(lv+1);return `<div class="d"><b>${FAC[k].n}</b> ${lv}단계<br><span class="muted">${FAC[k].d}</span><br>
 <button style="margin-top:6px" onclick="A.build('${k}')" ${lv>=(G.facCap||3)||G.eun<c?'disabled':''}>${lv>=(G.facCap||3)?'최고 단계':`${lv?'올리기':'짓기'} (${c}냥)`}</button></div>`}).join('')}</div></div>
-<div class="panel"><h3>수입과 지출</h3><p>${Object.entries(G.income).map(([k,v])=>`${INCN[k]||k} ${v}`).join(' · ')} ${shopEarn()?` · 주루 관리 ${shopEarn()}`:''}${G.fame>=5?` · 명성 시주 ${Math.floor(G.fame/5)}`:''} / 제자 유지비 ${G.ds.filter(d=>!d.elder&&d.id!=='jeonp').length*4} · 시설 유지비 ${Object.values(G.fac).reduce((s,v)=>s+v*3,0)}</p></div>
+<div class="panel"><h3>수입과 지출</h3><p>${Object.entries(G.income).map(([k,v])=>`${INCN[k]||k} ${v}`).join(' · ')} ${shopEarn()?` · 주루 관리 ${shopEarn()}`:''}${G.fame>=5?` · 명성 시주 ${Math.floor(G.fame/5)}`:''} / 제자 유지비 ${upkeepDs()} · 시설 유지비 ${Object.values(G.fac).reduce((s,v)=>s+v*3,0)}</p></div>
 <div class="panel"><h3>기록</h3><div class="log">${G.log.join('<br>')}</div></div>`;
 }
 function discTab(){
@@ -1122,6 +1146,7 @@ function evTab(only){
   const fr=freeDs(1),sg=suggest();
   const opt=(need,eid,k)=>fr.map(d=>`<option value="${d.id}" ${sg[eid]&&sg[eid].d===d.id?'selected':''}>${d.n} (${!k||k==='mu'?`전력 ${power(d)}`:`${STN[k]} ${d.st[k]}`}, 승률 ${chanceK(d,need,k)}%${d.mind>=70?', 심마':''})</option>`).join('');
   const body=G.q.filter(e=>!only||only(e)).map(e=>{
+    if(e.t==='branch'){const B=BRANCH[e.id];return `<div class="panel ev" style="border:2px solid #b8892e"><b>${B.title}</b> <span class="muted">· 직접 골라야 한다</span><p>${B.text}</p>${B.o.map((o,i)=>`<div style="margin:6px 0"><button class="main" onclick="A.branch('${e.id}',${i})">${o[0]}</button> <span class="muted" style="font-size:13px">${o[1]}</span></div>`).join('')}</div>`}
     if(e.t==='job')return `<div class="panel ev job"><b>${e.title}</b> <span class="muted">· ${yr(e.due)}까지</span><p>${e.text} 필요 ${!e.k||e.k==='mu'?'전력':STN[e.k]} ${e.need}</p>
 <select id="js_${e.id}">${opt(e.need,e.id,e.k)}</select> <button onclick="A.sendJob('${e.id}')" ${!fr.length?'disabled':''}>보내기</button>${e.sp&&e.sp.startsWith('keep:')?` <button onclick="A.keepPay('${e.id}')" ${G.eun<300?'disabled':''}>군자금 300냥으로 붙잡기</button>`:''} <button onclick="A.decline('${e.id}')">거절</button></div>`;
     if(e.t==='crisis')return `<div class="panel ev crisis"><b>${e.title}</b> <span class="muted">· ${yr(e.due)}까지, 미루면 둘 다 잃는다</span><p>${e.text}</p>
