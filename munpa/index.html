@@ -529,7 +529,7 @@ function scheduled(m){
     30:[{id:'danri',n:'단리상',img:'img/danri.webp',r:'진산월의 제자',st:{tong:40,ji:75,jeong:35,ma:55,geom:90,gwon:70,oseong:90},ch:85,arts:{punghan:3,pungroe:2,taeeul:0,guyang:0,hyeoncheong:0},t:()=>'아홉 살 단리상이 입문했다. 가전무공을 펼쳐 보이자 '+(has('jeonp')?'전풍개가 "강일비 같은 놈이 또 있었군" 하고 중얼거렸다.':'진산월이 한참 말없이 그 검로를 지켜보았다.')},
         {id:'sonp',n:'손풍',img:'img/sonp.webp',r:'진산월의 제자',st:{tong:45,ji:60,jeong:70,ma:60,geom:55,gwon:70,oseong:60},ch:80,arts:{taeeul:0,guyang:0,hyeoncheong:0},t:'손가장의 손풍이 입문했다.'}]};
   for(const r of [].concat(JOIN[m]||[]))if(!has(r.id)){G.ds.push(starter({...r,arts:{...r.arts},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null}));E.push({t:'event',id:'join_'+r.id,info:1,title:r.n+' 합류',text:typeof r.t==='function'?r.t():r.t})}
-  if(m===10)E.push({t:'quest',id:'gorge',title:'협곡 정찰',due:17,text:'초가보 척후들이 종남산 뒤 절벽 쪽 협곡으로 숨어들었다는 소문이다. 한 사람을 보내 살핀다. 길이 험하다.',btn:'보낸다'});
+  if(m===10)E.push({t:'quest',id:'gorge',title:'협곡 정찰',due:17,text:'초가보 척후들이 종남산 뒤 절벽 쪽 협곡으로 숨어들었다는 소문이다. 한 사람을 보내 살핀다. 길이 험하다. (기한까지 아무도 보내지 않으면 낙일방이 자청해서 나선다)',btn:'보낸다'});
   if(m===12&&G.ilbi==='early'){addArt('jin','chileum');E.push({t:'event',id:'ilbiteach',title:'사백의 가르침',info:1,text:'강일비가 진산월을 불렀다. "이제 너도 칠음진기의 첫머리를 알아 두어라. 태음신맥이 아니니 깊이 들어가지는 못할 것이다."'})}
   if(m===18&&!G.flags.raided&&!G.flags.choDone){raid();E.push({t:'event',id:'raid18',title:'초가보의 기습',info:1,text:'초가보가 본산을 쳤다. 결과는 기록에 남았다.'})}
   if(m===20)E.push({t:'quest',id:'hyeolsa',title:'종남혈사',due:21,k:1,text:'초가보가 세 갈래로 종남산을 치려 한다. 갈래마다 제자를 둘까지 세운다. 진산월도 한 갈래에 설 수 있다. 두 갈래를 이기면 초가보를 무너뜨린다.'});
@@ -661,11 +661,11 @@ const A={
     log(`${n}을(를) 새 제자로 받았다. (검재 ${st.geom}, 권재 ${st.gwon}, 오성 ${st.oseong})`);save();render()},
   pos(id,v){const d=D(id);if(!d||d.pos==='away'||d.pos==='hurt')return;d.home=v;if(v==='seclude'&&d.pos!=='seclude'&&G.ds.filter(x=>x.pos==='seclude').length>=secSlots()){alertMsg(`폐관 자리가 없다. (연공실 1자리, 후산 수련동 +1자리 · 지금 ${secSlots()}자리)`);return}d.pos=v;save();render()},
   seclude(){if(!G.flags.yeongong||G.jinSec||G.jinBusy||G.retreat||!useAct())return;G.jinSec=2;G.jinBusy=true;log(`진산월이 연공실에 들어 폐관한다. 한 달 동안 장문인 행동과 출전을 할 수 없다. (수련 ${secMul()}배)`);save();render()},
-  teach(id){const sel=document.getElementById('tc_'+id);const a=sel&&sel.value,d=D(id),t=a&&teacher(a,id);if(!a||!t||(id!=='jin'&&SECRET[a]&&d.ch<SECRET[a])||!useAct()){render();return}
+  teach(id,a0){const sel=document.getElementById('tc_'+id);const a=a0||sel&&sel.value,d=D(id),t=a&&teacher(a,id);if(!a||!t||(id!=='jin'&&SECRET[a]&&d.ch<SECRET[a])||!useAct()){render();return}
     d.arts[a]=1;d.xp[a]=0;if(ARTS[a].t==='s')d.focusS=a;else if(ARTS[a].t==='m')d.focusM=a;t.teachHalf=true;log(`${t.n}이(가) ${d.n}에게 ${ARTS[a].n}을(를) 가르쳤다. (${t.n}은 이달 수련이 절반)`);save();render()},
   jdir(t,v){const j=D('jin');if(t==='m')j.focusM=v||null;else j.focusS=v||null;save();render()},
   dir(id,t,v){const d=D(id);if(t==='m')d.focusM=v||null;else d.focusS=v||null;save();render()},
-  auto(){const p=suggest();for(const id in p){const e=G.q.find(x=>x.id===id);if(!e)continue;
+  auto(){{const gq=G.q.find(e=>e.id==='gorge'),nk=D('nak');if(gq&&nk&&!['away','hurt','seclude'].includes(nk.pos))A.gorge('gorge','nak')}const p=suggest();for(const id in p){const e=G.q.find(x=>x.id===id);if(!e)continue;
     if(e.t==='crisis')A.defend(id,p[id].o,p[id].d);else A.sendJob(id,p[id].d)}render()},
   sendJob(eid,did){const e=G.q.find(x=>x.id===eid);const sel=document.getElementById('js_'+eid);const d=did?D(did):sel&&D(sel.value);if(!e||!d)return;
     d.pos='away';d.away=(e.mon||1)===1?1:Math.max(2,e.mon*2-boV(d,'biyeon'));d.job={need:e.need,k:e.k,pay:e.pay,fame:e.fame,fav:e.fav,sp:e.sp,title:e.title};G.q=G.q.filter(x=>x!==e);log(`${d.n}을(를) ${e.title}에 보냈다. (승률 ${chanceK(d,e.need,e.k)}%)`);save();render()},
@@ -684,7 +684,7 @@ const A={
   dev(id){G.dev=G.dev||[];const x=DEV.find(v=>v.id===id);if(!x||G.dev.length>=3||(x.req&&!x.req())||G.eun<x.c||!useAct())return;G.eun-=x.c;G.dev.push({id,left:x.t});log(`문파 개발을 시작했다: ${x.n} (${x.t}순)`);save();render()},
   findIlbi(eid){const sel=document.getElementById('fi_'+eid);const d=sel&&D(sel.value);if(!d)return;G.q=G.q.filter(x=>x.id!==eid);d.pos='away';d.away=2;d.job=null;
     if(Math.random()*100<chanceK(d,60,'ma'))G.flags.ilbiComing=G.m+1;else{G.flags.ilbiSearch=G.m+2;log(`${d.n}이(가) 낙양까지 갔지만 사내는 이미 떠난 뒤였다. 두 달쯤 뒤 다시 소문이 들어올 것이다.`)}save();render()},
-  gorge(eid){const sel=document.getElementById('gs_'+eid);const d=sel&&D(sel.value);if(!d)return;G.q=G.q.filter(x=>x.id!==eid);
+  gorge(eid,did){const sel=document.getElementById('gs_'+eid);const d=did?D(did):sel&&D(sel.value);if(!d)return;G.q=G.q.filter(x=>x.id!==eid);
     if(d.id==='nak'){d.pos='away';d.away=12;d.job={nak:1};log('낙일방이 협곡 정찰을 나갔다가 돌아오지 않았다. 절벽 아래로 떨어졌다는 말이 돈다.')}
     else{d.pos='away';d.away=1;d.job=null;G.fame+=2;log(`${d.n}이(가) 협곡을 살피고 돌아왔다. 초가보 척후를 쫓아냈다. 명성 +2`)}save();render()},
   bsug(eid){const p=battleSuggest();for(let l=0;l<3;l++)for(let i=0;i<2;i++){const el=document.getElementById(`bl_${l}_${i}`);if(el)el.value=p[l][i]||''}},
@@ -724,17 +724,19 @@ function autoJin(){if(G.noAutoJin||G.act<1||G.retreat||G.jinBusy||G.jinFocus||MO
   try{if(r[0]==='sortie'){const h=G.q.find(e=>e.t==='crisis');if(h&&set('jin_sortie',h.id))A.sortie();else A.focus()}
     else if(r[0]==='meet'){const t=G.ds.filter(d=>d.id!=='jin').sort((a,b)=>b.mind-a.mind)[0];if(t&&set('jin_meet',t.id))A.meet();else A.focus()}
     else if(r[0]==='meetak'){if(set('jin_meet','ak'))A.meet();else A.focus()}
+    else if(r[0]==='learnyuk'){const j=D('jin'),a=Object.keys(YUK).find(a=>j.arts[a]==null&&teacher(a,'jin'));if(a)A.teach('jin',a);else A.focus()}
     else if(r[0]==='limfocus'){D('lim').focusS='chileum';A.focus()}
     else if(r[0]==='tq'){if((D('jin').arts.cheonha||0)>=5&&G.half===0)A.quest('taeeul');else A.focus()}
     else if(r[0]==='sq'){freeDs().filter(d=>d.id!=='lim').sort((a,b)=>power(b)-power(a)).slice(0,3).forEach(d=>A.pos(d.id,'guard'));A.quest('seokshil')}
     else if(r[0]!=='money'&&typeof A[r[0]]==='function')A[r[0]]();else A.focus()}catch(e){}
   if(G.act===n0&&G.act>0&&!G.jinFocus&&!G.jinBusy)A.focus();
   if(G.act<n0||G.jinFocus||G.retreat)log('(고르지 않아 추천대로) '+String(r[1]||'수련 전념').replace(/<[^>]+>/g,'').split('. ').pop())}
+function autoGorge(){const gq=G.q.find(e=>e.id==='gorge'),nk=D('nak');if(!gq||!nk||['away','hurt','seclude'].includes(nk.pos))return;if(G.autoNext||G.m>=gq.due){log(G.m>=gq.due?'협곡 정찰 기한이 되어 낙일방이 자청해 나섰다.':'(남은 일 자동) 낙일방을 협곡 정찰에 보냈다.');A.gorge('gorge','nak')}}
 function endHalf(){
   if(MODAL||DUEL)return;
   if(G.half===1){const due=G.q.find(x=>(x.lanes||x.id==='hyeolsa'||x.id==='hyeolsa2')&&x.due<=G.m);if(due){log(`${due.title}: 기한이 되어 추천 배치로 출진한다.`);startDuels(due.id,battleSuggest());return}
     const mt=G.q.find(x=>x.t==='match'&&x.due<=G.m);if(mt){const ids=matchSuggest(mt);if(ids.length>=mt.opp.length){log(`${mt.title}: 기한이 되어 추천한 제자들이 나선다.`);startMatch(mt.id,ids);return}}}
-  autoJin();if(MODAL||DUEL)return;
+  autoGorge();autoJin();if(MODAL||DUEL)return;
   // 태음신맥 한기
   {const l=D('lim');if(l&&l.pos!=='away'&&l.pos!=='hurt'){const v=l.arts.chileum;const p=v==null?.35:v<4?.25:v<7?.12:0;if(Math.random()<p){l.cold=1;log(`임영옥에게 한기가 올라 이번 순은 몸을 녹이며 쉬었다.${v==null?' (칠음진기를 모른다)':` (칠음진기 ${v}성, 7성부터는 한기가 잡힌다)`}`)}}}
   // 수련(순)
@@ -824,6 +826,7 @@ function recs(){const r=[];if(G.eun<0)r.push(['money',`<b style="color:var(--red
   if(G.eun<80&&G.m>=4)r.push(['patrol','은자가 적다. 서안 순찰로 상권을 지킨다']);
   if(G.fame>=15&&G.eun>=300&&dsCount()<capOfDs())r.push(['recruit','명성과 은자가 넉넉하다. 제자 모집']);
   if(G.q.some(e=>e.id==='taeeul')&&!G.retreat)r.unshift(['tq',(D('jin').arts.cheonha||0)>=5?'태을선거로 떠날 수 있다(사건 탭)':'태을선거에 가려면 천하삼십육검 5성이 필요하다. 수련 전념']);
+  {const j=D('jin'),a=j&&Object.keys(YUK).find(a=>j.arts[a]==null&&teacher(a,'jin'));if(a)r.unshift(['learnyuk',`진산월이 ${ARTS[a].n}을(를) 배울 수 있다. 육합귀진에 필요하다(배운다)`])}
   if(G.q.some(e=>e.id==='seokshil'))r.push(['sq','석실 폐관은 수비를 갖춘 뒤에(사건 탭)']);
   if(!r.length)r.push(['focus','급한 일이 없다. 수련 전념']);return r.slice(0,2)}
 function evBar(){if(!G.q.length)return '';const n=Object.keys(suggest()).length,work=G.q.filter(e=>e.t==='job'||e.t==='crisis').length,news=G.q.filter(e=>e.t==='event'&&e.info).length,rest=G.q.length-work-news;
