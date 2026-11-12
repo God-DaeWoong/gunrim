@@ -352,6 +352,7 @@ const MW=960,MH=540,MTOP=230,MBOT=500;
 const mImg=s=>{if(typeof Image==='undefined')return{};MIMG[s]=MIMG[s]||Object.assign(new Image(),{src:s});return MIMG[s]};const MIMG={};
 const MELEE_BG={hwasan:'img/sd_yard.webp'};
 const MFOE_IMG={cho:'img/sd_mook_cho.png'};
+const MBOSS_IMG={'초일산':'img/sd_choil.png','갈태독':'img/sd_galtae.png','곽태보':'img/sd_gwaktae.png'};
 const MFOE={cho:['초가보','sepia(.9) hue-rotate(-25deg) saturate(1.8)'],hwasan:['화산','sepia(.5) hue-rotate(230deg) saturate(1.5)'],seojang:['서장군','sepia(1) hue-rotate(-40deg) saturate(2.6)']};
 const mFoeOf=e=>e.kind==='hwasan'?'hwasan':e.kind==='p2a'||e.kind==='p2b'?'seojang':'cho';
 const mTroops=()=>Math.max(13,Math.min(24,8+Math.round(dsCount()*.45)));
@@ -396,7 +397,7 @@ function mDraw(M,c){c.save();if(M.shake>0){c.translate((Math.random()-.5)*M.shak
   c.fillStyle='rgba(20,14,10,.4)';c.fillRect(0,0,MW,MH);
   const mook=mImg('img/sd_mook_jn.png'),order=M.U.slice().sort((a,b)=>(a.hp>0)-(b.hp>0)||a.y-b.y);
   for(const u of order){const dead=u.hp<=0;if(dead&&u.dead>3)continue;c.globalAlpha=dead?Math.max(0,1-u.dead/3):1;
-    const hi=u.hero?mImg('img/sd_'+u.d+'.png'):null,fi=u.side&&!u.boss&&MFOE_IMG[M.foe]?mImg(MFOE_IMG[M.foe]):null,own=fi&&fi.naturalWidth,im=hi&&hi.naturalWidth?hi:own?fi:mook;
+    const hi=u.hero?mImg('img/sd_'+u.d+'.png'):null,fi=u.side&&(u.boss?MBOSS_IMG[u.n]:MFOE_IMG[M.foe])?mImg(u.boss?MBOSS_IMG[u.n]:MFOE_IMG[M.foe]):null,own=fi&&fi.naturalWidth,im=hi&&hi.naturalWidth?hi:own?fi:mook;
     if(im.naturalWidth){const h=u.hero?66:u.boss?72:52,w=h*im.naturalWidth/im.naturalHeight,bob=u.mv?Math.abs(Math.sin(M.tt*14))*4:0;c.save();
       if(!u.hero&&!own&&(u.side||u.ally))c.filter=u.ally?'hue-rotate(90deg) saturate(1.4)':u.boss?'sepia(1) hue-rotate(-40deg) saturate(3) brightness(.85)':MFOE[M.foe][1];
       c.translate(u.x+24,u.y+16-bob);if(dead){c.rotate(u.side?1.45:-1.45);c.translate(10,-6)}if(!u.face)c.scale(-1,1);c.rotate(u.f>0?.22:0);c.translate(u.f>0?6:0,0);c.drawImage(im,-w/2,-h,w,h);c.restore()}
