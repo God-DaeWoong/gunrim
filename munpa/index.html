@@ -24,7 +24,7 @@ h1,h2,h3{font-family:'Nanum Myeongjo',serif;margin:.4em 0}
 .top b{color:#e7c77a}
 .bar{display:inline-block;width:110px;height:8px;background:#4a443b;border-radius:4px;vertical-align:middle;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--gold)}
-.tabs{display:flex;gap:6px;margin:12px 0}
+.tabs{display:flex;gap:6px;margin:12px 0}.tabs button{white-space:nowrap;flex:none}@media (max-width:600px){.tabs{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}.tabs::-webkit-scrollbar{display:none}.tabs button{padding:6px 10px}}
 .tabs button.on{background:var(--ink);color:var(--paper)}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
@@ -266,9 +266,9 @@ const DEV=[
   {id:'pyo',n:'표국 설립',c:200,t:6,d:'의뢰 보수 +20%, 수입 +10',req:()=>G.fame>=15,rq:'명성 15'},
   {id:'yeon',n:'연공실',c:180,t:6,d:'제자 폐관 1자리·진산월 폐관(한 달, 수련 2.5배), 석실 폐관 1.3배, 직접 지도의 깨달음 확률 +20%'},
   {id:'land',n:'초가보 옛 땅 흡수',c:50,t:2,d:'초가보가 쥐던 관중 상권과 주루. 수입 +30, 주루 관리 자리 +2',req:()=>G.flags.choDone,rq:'초가보 멸망'},
-  {id:'sukso1',n:'숙소 증축 1',c:150,t:4,d:'제자 정원 12 → 18',big:1},
-  {id:'sukso2',n:'숙소 증축 2',c:250,t:6,d:'제자 정원 18 → 25',req:()=>(G.devDone||[]).includes('sukso1'),rq:'숙소 증축 1',big:1},
-  {id:'sukso3',n:'숙소 증축 3',c:500,t:8,d:'제자 정원 25 → 35',req:()=>(G.devDone||[]).includes('sukso2'),rq:'숙소 증축 2',big:1},
+  {id:'sukso1',n:'숙소 증축 1',c:150,t:4,d:'제자 정원 15 → 20',big:1},
+  {id:'sukso2',n:'숙소 증축 2',c:250,t:6,d:'제자 정원 20 → 27',req:()=>(G.devDone||[]).includes('sukso1'),rq:'숙소 증축 1',big:1},
+  {id:'sukso3',n:'숙소 증축 3',c:500,t:8,d:'제자 정원 27 → 35',req:()=>(G.devDone||[]).includes('sukso2'),rq:'숙소 증축 2',big:1},
   {id:'sanmun',n:'산문 중건',c:200,t:6,d:'무너진 산문을 다시 세운다. 명성 +10, 지원자가 더 온다',big:1},
   {id:'josa',n:'조사전 복원',c:400,t:8,d:'역대 조사의 위패를 다시 모신다. 구파 자격 +10, 모든 제자 심마 -20',req:()=>G.fame>=30,rq:'명성 30',big:1},
   {id:'jeongak1',n:'전각 증축 1',c:300,t:6,d:'시설을 4단계까지 올릴 수 있다',big:1},
@@ -276,7 +276,7 @@ const DEV=[
   {id:'sulyeon',n:'후산 수련동',c:250,t:6,d:'폐관 자리 +1, 폐관 수련 3배, 석실 폐관 1.2배, 직접 지도의 깨달음 확률 +10%',big:1},
   {id:'wall1',n:'성벽·망루 1',c:200,t:6,d:'본산 방어 +40, 큰 싸움에서 아군 +10%',big:1},
   {id:'wall2',n:'성벽·망루 2',c:450,t:8,d:'본산 방어 +40, 큰 싸움에서 아군 +10% 더',req:()=>(G.devDone||[]).includes('wall1'),rq:'성벽·망루 1',big:1}];
-const capOfDs=()=>[12,18,25,35][G.fac.sukso||0];
+const capOfDs=()=>[15,20,27,35][G.fac.sukso||0];
 const dsCount=()=>G.ds.filter(d=>!d.elder&&d.id!=='jin'&&d.id!=='jeonp').length;
 function devDone(id){G.devDone=G.devDone||[];G.devDone.push(id);const x=DEV.find(v=>v.id===id);
   if(id==='sang')G.income.sang+=15;if(id==='yak')G.income.yak+=10;if(id==='ju')G.income.ju=25;if(id==='pyo'){G.flags.pyo=1;G.income.pyo=10}if(id==='yeon')G.flags.yeongong=1;if(id==='land')G.income.land=30;
@@ -646,7 +646,8 @@ const A={
   choose(i){const c=MODAL.ch[i];MODAL=null;const keep=c[1]();if(!keep)MODAL=MODAL||null;save();render()},
   autoNext(v){G.autoNext=v;save()},
   next(){if(DUEL)return;if(G.autoNext&&!MODAL)A.auto();endHalf()},
-  restart(){if(confirm('처음부터 다시 할까요?')){localStorage.removeItem(SAVE);newGame()}}
+  titleGo(n){if(n&&TITLE.save){if(!confirm('저장된 판을 지우고 처음부터 시작할까요?'))return;localStorage.removeItem(SAVE);TITLE=null;newGame();return}TITLE=null;render()},
+  restart(){if(confirm('처음부터 다시 할까요?')){TITLE=null;localStorage.removeItem(SAVE);newGame()}}
 };
 // 가르칠 사람: 그 무공 5성 이상, 배우는 사람 말고. 요양·파견 중이면 못 가르친다
 function teacher(a,not){return G.ds.filter(x=>x.id!==not&&x.n!=='삿갓 쓴 사내'&&(x.arts[a]||0)>=(ARTS[a].t==='b'?1:a==='chileum'?2:5)&&x.pos!=='away'&&x.pos!=='hurt').sort((x,y)=>y.arts[a]-x.arts[a])[0]}
@@ -861,7 +862,9 @@ function calTab(){
   rows.push(['4년 12월','구파 자격 시한',`${G.qual}`]);
   return `<table class="cal"><tr><th>기한</th><th>일</th><th>상태</th></tr>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</table>`;
 }
-function modalHTML(){if(!MODAL)return'';return `<div class="modal"><div class="box"><h2>${MODAL.title}</h2>${MODAL.p.map(x=>`<p class="serif">${x}</p>`).join('')}
+let TITLE=null;
+function titleHTML(){return `<div class="modal" style="align-items:flex-end;padding-bottom:14vh;background:rgba(29,26,22,.3)"><div class="box" style="max-width:380px;text-align:center;padding:26px 22px"><h1 style="font-size:34px;letter-spacing:.2em;margin:0">君臨天下</h1><p class="muted" style="letter-spacing:.3em;margin:4px 0 18px">군림천하 · 문파 경영</p><div class="ch">${TITLE.save?`<button class="main" onclick="A.titleGo(0)">이어하기 <span style="font-size:12px;opacity:.75">(${yr(G.m)} ${HALF[G.half||0]})</span></button>`:''}<button ${TITLE.save?'':'class="main"'} onclick="A.titleGo(1)">게임 시작</button></div></div></div>`}
+function modalHTML(){if(TITLE)return titleHTML();if(!MODAL)return'';return `<div class="modal"><div class="box"><h2>${MODAL.title}</h2>${MODAL.p.map(x=>`<p class="serif">${x}</p>`).join('')}
 <div class="ch">${MODAL.ch.map((c,i)=>`<button onclick="A.choose(${i})">${c[0]}</button>`).join('')}</div></div></div>`}
 function playFx(){document.querySelectorAll?.('.fx[data-fx]').forEach(el=>{const n=el.dataset.fx;el.removeAttribute('data-fx');el.style.backgroundImage=`url(${rlFx(n)})`;let f=0;const t=setInterval(()=>{const k=Math.min(f,5);el.style.backgroundPosition=`${(k%3)*50}% ${Math.floor(k/3)*100}%`;el.style.opacity=f>6?String(Math.max(0,1-(f-6)/3)):'1';if(++f>=10){clearInterval(t);el.remove()}},140)})}
 /* ================= 연무장(도트) ================= */
@@ -1066,7 +1069,7 @@ if(/[?&]gallery=1/.test(location.search)){const rows=[];
   for(const n in RLEN)add('로그라이크 적',n,rlImg(RLEN[n][0]),RLEN[n][1]?RLEN[n][1].join('·'):'');
   document.getElementById('app').innerHTML=`<div class="wrap"><h2>초상 점검</h2><p class="muted">✕는 파일이 있어야 하는데 안 열린 것, 글자는 아직 그림이 없는 것이다.</p><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${rows.join('')}</div></div>`}
 else if(BOT){save=()=>{};newGame();TAB="main";setInterval(botMonth,1500)}
-else if(load()){boMigrate();if(G.ds.some(d=>d.id==='nohae')){G.devDone=G.devDone||[];if(!G.devDone.includes('ju')){G.devDone.push('ju');G.income.ju=25;G.dev=(G.dev||[]).filter(v=>v.id!=='ju')}}{const ib=G.ds.find(d=>d.id==='ilbi');if(ib&&!ib.reArm){ib.reArm=1;ib.st.geom=70;ib.st.gwon=95;Object.assign(ib.arts,{yuun:2,cheonha:2,nanhwa:Math.max(8,ib.arts.nanhwa||0),yeomhwa:Math.max(8,ib.arts.yeomhwa||0)});if(ib.focusM==='yuun'||ib.focusM==='cheonha')ib.focusM=null}}{const nh=G.ds.find(d=>d.id==='nohae');if(nh){delete nh.elder;Object.assign(nh.st,{tong:60,geom:85,gwon:80,oseong:65});for(const [k,v] of [['cheonha',7],['yuun',6],['taeeul',6]])if((nh.arts[k]||0)<v){nh.arts[k]=v;nh.xp[k]=0}}}for(const d of G.ds){if(!d.taeum&&d.arts.chileum>2){d.arts.chileum=2;d.xp.chileum=0}if(!d.taeum&&d.focusS==='chileum'&&(d.arts.chileum||0)>=2)d.focusS=null}const RN={jeonp:'사숙조(원로)',jeonh:'사숙(전풍개의 아들)',seongrak:'사숙',hadong:'사숙',dong:'진산월의 제자',danri:'진산월의 제자',sonp:'진산월의 제자',seomun:'빈객(검보)',nohae:'파문된 사숙'};for(const d of G.ds){if(RN[d.id])d.r=RN[d.id];if(d.id==='nohae')d.img='img/nohae.webp';if(d.id==='hadong')d.img='img/hadong.webp';if(d.id==='sonp')d.img='img/sonp.webp';if(d.id==='seongrak')d.img='img/seongrak.webp';if(d.id==='seomun')d.img='img/seomun.webp';if(d.id==='danri')d.img='img/danri.webp';if(d.id==='yuso')d.img='img/yuso.webp';if(d.id==='ak')d.img='img/ak.webp';if(d.id==='dong')d.img='img/dong.webp';if(d.id==='lim')d.img='img/lim.webp';if(d.id==='mae')d.img='img/mae.webp';if(d.id==='so')d.img='img/so.webp';if(d.id==='eung')d.img='img/eung.webp';if(d.id==='jeong')d.img='img/jeong.webp';if(d.id==='bang')d.img='img/bang.webp';if(d.id==='jeonp')d.img='img/jeonp.webp';if(d.id==='jeonh')d.img='img/jeonh.webp';if(d.id==='ilbi')d.img=d.n==='강일비'?'img/ilbi.webp':'img/ilbi_hat.webp';if(d.id==='nak')d.img=d.mukryeong?'img/nak2.webp':'img/nak.webp';if(d.id==='ilbi'){d.arts.muyeom=d.arts.muyeom||8;d.arts.nanhwa=d.arts.nanhwa||7;d.arts.yeomhwa=d.arts.yeomhwa||6}if(d.id==='jin'){d.rl='player';delete d.img;if(d.arts.nakha==null){d.arts.nakha=5;d.xp.nakha=0}if(d.arts.yakryu==null){d.arts.yakryu=3;d.xp.yakryu=0}}if(d.id==='du'){delete d.rl;d.img='img/du.webp'}}for(const d of G.ds){if(d.st&&d.st.mugol!=null&&d.st.geom==null){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{...d.st,geom:d.st.mugol,gwon:d.st.mugol}}}for(const d of G.ds)if(!d.st){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{tong:50,ji:50,jeong:50,ma:50,geom:60,gwon:60,oseong:60}}if(G.ilbi==='early')addIlbi(false);if(G.half==null){G.half=0;G.act=Math.min(G.act,1)}if(!G.ilbi)MODAL=prologue();if(G.flags.seongsim&&!G.flags.taeeul&&!G.q.some(e=>e.id==='taeeul'))openTaeeul();render()}else newGame();
+else if(load()){boMigrate();if(G.ds.some(d=>d.id==='nohae')){G.devDone=G.devDone||[];if(!G.devDone.includes('ju')){G.devDone.push('ju');G.income.ju=25;G.dev=(G.dev||[]).filter(v=>v.id!=='ju')}}{const ib=G.ds.find(d=>d.id==='ilbi');if(ib&&!ib.reArm){ib.reArm=1;ib.st.geom=70;ib.st.gwon=95;Object.assign(ib.arts,{yuun:2,cheonha:2,nanhwa:Math.max(8,ib.arts.nanhwa||0),yeomhwa:Math.max(8,ib.arts.yeomhwa||0)});if(ib.focusM==='yuun'||ib.focusM==='cheonha')ib.focusM=null}}{const nh=G.ds.find(d=>d.id==='nohae');if(nh){delete nh.elder;Object.assign(nh.st,{tong:60,geom:85,gwon:80,oseong:65});for(const [k,v] of [['cheonha',7],['yuun',6],['taeeul',6]])if((nh.arts[k]||0)<v){nh.arts[k]=v;nh.xp[k]=0}}}for(const d of G.ds){if(!d.taeum&&d.arts.chileum>2){d.arts.chileum=2;d.xp.chileum=0}if(!d.taeum&&d.focusS==='chileum'&&(d.arts.chileum||0)>=2)d.focusS=null}const RN={jeonp:'사숙조(원로)',jeonh:'사숙(전풍개의 아들)',seongrak:'사숙',hadong:'사숙',dong:'진산월의 제자',danri:'진산월의 제자',sonp:'진산월의 제자',seomun:'빈객(검보)',nohae:'파문된 사숙'};for(const d of G.ds){if(RN[d.id])d.r=RN[d.id];if(d.id==='nohae')d.img='img/nohae.webp';if(d.id==='hadong')d.img='img/hadong.webp';if(d.id==='sonp')d.img='img/sonp.webp';if(d.id==='seongrak')d.img='img/seongrak.webp';if(d.id==='seomun')d.img='img/seomun.webp';if(d.id==='danri')d.img='img/danri.webp';if(d.id==='yuso')d.img='img/yuso.webp';if(d.id==='ak')d.img='img/ak.webp';if(d.id==='dong')d.img='img/dong.webp';if(d.id==='lim')d.img='img/lim.webp';if(d.id==='mae')d.img='img/mae.webp';if(d.id==='so')d.img='img/so.webp';if(d.id==='eung')d.img='img/eung.webp';if(d.id==='jeong')d.img='img/jeong.webp';if(d.id==='bang')d.img='img/bang.webp';if(d.id==='jeonp')d.img='img/jeonp.webp';if(d.id==='jeonh')d.img='img/jeonh.webp';if(d.id==='ilbi')d.img=d.n==='강일비'?'img/ilbi.webp':'img/ilbi_hat.webp';if(d.id==='nak')d.img=d.mukryeong?'img/nak2.webp':'img/nak.webp';if(d.id==='ilbi'){d.arts.muyeom=d.arts.muyeom||8;d.arts.nanhwa=d.arts.nanhwa||7;d.arts.yeomhwa=d.arts.yeomhwa||6}if(d.id==='jin'){d.rl='player';delete d.img;if(d.arts.nakha==null){d.arts.nakha=5;d.xp.nakha=0}if(d.arts.yakryu==null){d.arts.yakryu=3;d.xp.yakryu=0}}if(d.id==='du'){delete d.rl;d.img='img/du.webp'}}for(const d of G.ds){if(d.st&&d.st.mugol!=null&&d.st.geom==null){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{...d.st,geom:d.st.mugol,gwon:d.st.mugol}}}for(const d of G.ds)if(!d.st){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{tong:50,ji:50,jeong:50,ma:50,geom:60,gwon:60,oseong:60}}if(G.ilbi==='early')addIlbi(false);if(G.half==null){G.half=0;G.act=Math.min(G.act,1)}if(!G.ilbi)MODAL=prologue();if(G.flags.seongsim&&!G.flags.taeeul&&!G.q.some(e=>e.id==='taeeul'))openTaeeul();TITLE=G.done||G.over?null:{save:true};render()}else{TITLE={save:false};newGame()}
 </script>
 </body>
 </html>
