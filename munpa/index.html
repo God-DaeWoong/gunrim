@@ -859,7 +859,7 @@ const A={
   forge(id,s){const d=D(id),lv=forgeLv(s);if(!d||!lv)return;const cur=s==='w'?(d.wpn||0):(d.arm||0),x=(s==='w'?GEAR.w:GEAR.a)[lv];if(lv<=cur||G.eun<x.c)return;G.eun-=x.c;if(s==='w')d.wpn=lv;else d.arm=lv;log(`대장간에서 ${d.n}에게 ${s==='w'&&gwonOf(d)?x.gn:x.n}을(를) 벼려 주었다. 은자 -${x.c}`);save();render()},
   arm(eid){const e=G.q.find(x=>x.id===eid);if(!e||(e.arm||0)>=3||G.eun<200)return;G.eun-=200;e.arm=(e.arm||0)+1;log(`${e.title}에 대비해 병장기와 군량을 정비했다. (${e.arm}/3, 종남 병사 +${e.arm*5}%) 은자 -200`);save();render()},
   keepPay(eid){const e=G.q.find(x=>x.id===eid);if(!e||!e.sp||!e.sp.startsWith('keep:')||G.eun<300)return;G.eun-=300;G.q=G.q.filter(x=>x!==e);log('군자금 300냥을 보냈다.'+(P2JOB.keep({sp:e.sp},true)||''));save();render()},
-  infoAll(){G.q=G.q.filter(x=>!(x.t==='event'&&x.info));save();render()},
+  infoAll(){const ns=G.q.filter(x=>x.t==='event'&&x.info);if(!ns.length)return;G.q=G.q.filter(x=>!(x.t==='event'&&x.info));MODAL={title:`소식 ${ns.length}건`,p:ns.map(e=>`<b>${e.title}</b> — ${typeof e.text==='function'?e.text():e.text}`),ch:[['모두 읽었다.',()=>{}]]};save();render()},
   choose(i){const c=MODAL.ch[i];MODAL=null;const keep=c[1]();if(!keep)MODAL=MODAL||null;save();render()},
   autoNext(v){G.autoNext=v;save()},
   next(){if(DUEL)return;if(G.autoNext&&!MODAL)A.auto();endHalf()},
