@@ -322,17 +322,19 @@ const LN=e=>(e&&e.lanes)||LANES;
 const LANES=[{n:'소량산로',e:180,boss:{n:'초일산',pw:110}},{n:'태평곡로',e:150,boss:{n:'갈태독',pw:100}},{n:'협곡로',e:230,boss:{n:'곽태보',pw:135}}];
 const canOut=d=>!d.elder||(d.id==='ilbi'&&d.n!=='삿갓 쓴 사내');
 function laneCands(){return G.ds.filter(d=>canOut(d)&&d.pos!=='away'&&d.pos!=='hurt'&&d.pos!=='seclude'&&!(d.id==='jin'&&(G.retreat||G.jinBusy)))}
-function battleSuggest(e){const home=e&&e.kind==='hwasan';const c=laneCands().filter(d=>!d.elder&&!(home&&d.id==='jin')).sort((a,b)=>home&&(a.pos==='guard')!==(b.pos==='guard')?(b.pos==='guard')-(a.pos==='guard'):power(b)-power(a)),pick=[[],[],[]];const order=[2,0,1];let i=0;for(const d of c.slice(0,6)){pick[order[i%3]].push(d.id);i++}return pick}
+const isHome=e=>!!e&&(e.kind==='hwasan'||e.kind==='raid');
+function battleSuggest(e){const home=isHome(e),NL=e?LN(e).length:3;const c=laneCands().filter(d=>!d.elder&&!(home&&d.id==='jin')&&!(home&&d.pos!=='guard')).sort((a,b)=>power(b)-power(a)),pick=[[],[],[]];const order=NL===1?[0,0,0]:[2,0,1];let i=0;for(const d of c.slice(0,6)){pick[order[i%3]].push(d.id);i++}return pick}
 function readLanes(){const used=new Set();return [0,1,2].map(l=>{const ids=[0,1].map(i=>(document.getElementById(`bl_${l}_${i}`)||{}).value).filter(v=>v&&!used.has(v));ids.forEach(v=>used.add(v));return ids})}
 function fight(eid,lanes,mods){const e=G.q.find(x=>x.id===eid);if(!e)return;const k=e.k||1,res=[];lanes=lanes||battleSuggest(e);mods=mods||[];
-  for(let l=0;l<3;l++){const md=mods[l]||{o:1,e:1};
+  const NL=LN(e).length;for(let l=0;l<NL;l++){const md=mods[l]||{o:1,e:1};
     const ds=lanes[l].map(D).filter(Boolean),our=ds.reduce((s,d)=>s+power(d)*(.6+d.st.tong/250),0)*(.85+Math.random()*.3)*md.o*(1+.1*(G.wall||0)),en=Math.round(LN(e)[l].e*k*md.e);res.push({l,boss:LN(e)[l].boss&&LN(e)[l].boss.n,dw:md.dw,ds,win:md.force!=null?md.force:our>=en,our:Math.round(our),en,duel:md.t})}
-  const wins=res.filter(r=>r.win).length,ok=wins>=2;
+  const wins=res.filter(r=>r.win).length,ok=wins>=(NL>=3?2:1);
   for(const r of res){for(const d of r.ds){if(r.win){if(Math.random()<.6)gainWis(d,1,e.title)}else if(d.id!=='jin'&&Math.random()<.5){d.pos='hurt';d.away=4}}}
   G.q=G.q.filter(x=>x!==e);
   const txt=res.map(r=>`${LN(e)[r.l].n}: ${r.duel?r.duel+' / ':''}${r.ds.map(d=>d.n).join('·')||'아무도 없음'} ${r.our} 대 ${r.en} → ${r.win?'승':'패'}`);
   if(P2FIGHT[e.kind]){P2FIGHT[e.kind](ok,txt,e,res);save();render();return}
-  if(e.kind==='hwasan'&&wins===0){G.q=G.q.filter(x=>x!==e);gameOver(e.title+'에 산문·연무장·장경각이 모두 무너졌다. 본산이 불타고, 종남은 멸문했다.');return}
+  if(e.kind==='raid'){if(ok){G.fame+=6;G.qual+=3;MODAL={title:e.title,p:[...txt,'본산을 지켜 냈다.'],ch:[['좋다.',()=>log('초가보의 기습을 막았다. 명성 +6, 구파 자격 +3')]]}}else{G.income.sang=Math.max(25,G.income.sang-10);for(const d of G.ds.filter(d=>d.pos==='guard'))if(Math.random()<.5){d.pos='hurt';d.away=4}MODAL={title:e.title,p:[...txt,'막지 못했다. 초가보가 서안의 상권까지 휩쓸고 갔다.'],ch:[['……',()=>log('초가보의 기습을 막지 못했다. 서안 상권 수입 -10, 수비하던 제자 일부 부상')]]}}save();render();return}
+  if(e.kind==='hwasan'&&wins===0){G.income.sang=Math.max(25,G.income.sang-25);G.qual=Math.max(0,G.qual-15);G.eun=Math.max(0,G.eun-150);for(const d of G.ds.filter(d=>d.id!=='jin'&&!d.elder&&d.pos!=='away'&&d.pos!=='hurt'))if(Math.random()<.35){d.pos='hurt';d.away=4}MODAL={title:e.title,p:[...txt,'산문·연무장·장경각이 모두 무너졌다. 본산이 불타고 제자들이 크게 다쳤다. 수비 자리에 사람을 세워 두지 않은 탓이다.'],ch:[['……',()=>log(e.title+'에 본산이 무너졌다. 상권 수입 -25, 구파 자격 -15, 은자 -150, 제자 여럿 부상')]]};save();render();return}
   if(e.kind==='hwasan'){if(ok){G.fame+=10;G.qual+=5;MODAL={title:e.title,p:[...txt,'본산을 지켜 냈다.'],ch:[['좋다.',()=>log(e.title+'을(를) 막았다. 명성 +10, 구파 자격 +5')]]}}else{G.income.sang=Math.max(25,G.income.sang-15);G.qual=Math.max(0,G.qual-8);MODAL={title:e.title,p:[...txt,'본산이 크게 상했다.'],ch:[['……',()=>log(e.title+'에 본산이 상했다. 상권 수입 -15, 구파 자격 -8')]]}}save();render();return}
   if(ok){G.flags.choDone=1;G.flags.choM=G.m;G.fame+=15;G.qual+=10;G.flags.jeonM=G.m+1;
     MODAL={title:'초가보 멸망',p:['초가보가 세 갈래로 종남산을 쳤다. 종남은 미리 흘린 정보로 고관담에서 거꾸로 매복했다.',...txt,'본진이 빈 초가보는 같은 날 무너졌다. 관중에서 종남의 이름이 다시 오르내렸다.'],ch:[['산문으로 돌아간다.',()=>{log(`종남혈사 승리, 초가보 멸망. 명성 +15, 구파 자격 +10`);revealIlbi()}]]}}
@@ -354,7 +356,7 @@ const TELL={kang:['상대가 검을 높이 치켜든다.','상대의 어깨에 �
 // 갈래마다 한 판. 적 병사 수는 그 갈래 적 병력에서, 종남 병사 수는 문파원 수에서 나온다. 장수·적장의 강함은 전력에서
 const MW=960,MH=540,MTOP=230,MBOT=500;
 const mImg=s=>{if(typeof Image==='undefined')return{};MIMG[s]=MIMG[s]||Object.assign(new Image(),{src:s});return MIMG[s]};const MIMG={};
-const MELEE_BG={hwasan:'img/sd_yard.webp',p2a:'img/bg_sacheon.webp',p2b:'img/bg_geomgak.webp'};
+const MELEE_BG={hwasan:'img/sd_yard.webp',raid:'img/sd_yard.webp',p2a:'img/bg_sacheon.webp',p2b:'img/bg_geomgak.webp'};
 const mBgOf=(e,L)=>MELEE_BG[e.kind]||(/협곡/.test(L.n)?'img/bg_gorge.webp':'img/bg_road.webp');
 const MFOE_IMG={kwae:'img/sd_mook_kw.png',cho:'img/sd_mook_cho.png',hwasan:'img/sd_mook_hs.png',seojang:'img/sd_mook_sj.png'};
 const MALLY_IMG={'소림':'img/sd_ally_sorim.png','점창':'img/sd_ally_jeom.png','청의방':'img/sd_ally_cheong.png','남궁세가':'img/sd_ally_nam.png','경요궁':'img/sd_ally_gyeong.png','무당':'img/sd_ally_mu.png'};
@@ -366,7 +368,7 @@ function mSkillOf(d){const a=duelArt(d)||'yuun';if((d.arts.wolnyeo||0)>=(d.arts[
   const t=['janggwae','nakroe','guban','pungroe','yeomhwa'].includes(a)?'cone':'line',mf=MOVES[a]&&MOVES[a][0][1];return{n:ARTS[a].n,t,fx:mf||(t==='cone'?'cheonjeon':'geombong')}}
 function meleeInit(c){const e=G.q.find(x=>x.id===DUEL.eid),L=LN(e)[c.l],k=e.k||1,rnd=(a,b)=>a+Math.random()*(b-a),U=[];
   c.ids.forEach((id,i)=>{const d=D(id),P=power(d);U.push({side:0,d:id,n:d.n,sk:mSkillOf(d),hero:1,x:120,y:270+i*110,hp:(90+P)/eqDef(d),max:(90+P)/eqDef(d),atk:(4+P/9)*eqAtk(d),rng:46,spd:62,cd:0,skc:3,f:0})});
-  const others=G.ds.filter(d=>!d.elder&&d.id!=='jin'&&!c.ids.includes(d.id)),tm0=Math.max(.7,Math.min(1.6,(others.reduce((s,d)=>s+power(d),0)/Math.max(1,others.length))/110)),tm=tm0*(1+.05*(e.arm||0)),ourB=c.ids.reduce((s,id)=>{const d=D(id);return s+power(d)*(.6+d.st.tong/250)},0)*(1+.1*(G.wall||0)),emR=dk()*(typeof MKM!=='undefined'?MKM:1.35)*Math.pow(L.e*k/Math.max(1,ourB),typeof MKE!=='undefined'?MKE:.5);
+  const others=G.ds.filter(d=>!d.elder&&d.id!=='jin'&&!c.ids.includes(d.id)),tm0=Math.max(.7,Math.min(1.6,(others.reduce((s,d)=>s+power(d),0)/Math.max(1,others.length))/110)),tm=tm0*(1+.05*(e.arm||0)),ourB=Math.max(isHome(e)?140:1,c.ids.reduce((s,id)=>{const d=D(id);return s+power(d)*(.6+d.st.tong/250)},0))*(1+.1*(G.wall||0))*(isHome(e)?1+.08*G.fac.oe:1),emR=(isHome(e)?(typeof MHK!=='undefined'?MHK:.5):1)*dk()*(typeof MKM!=='undefined'?MKM:1.35)*Math.pow(L.e*k/Math.max(1,ourB),typeof MKE!=='undefined'?MKE:.5);
   const nt=mTroops()+(e.kind==='p2b'&&G.p2?2*Math.min(5,G.p2.kept.length):0),ne=Math.max(19,Math.min(32,Math.round(L.e*k/10))),em=Math.max(.3,Math.min(3,emR*15/ne*tm0));
   for(let i=0;i<nt;i++)U.push({side:0,ally:e.kind==='p2b'&&i>=mTroops(),allyN:e.kind==='p2b'&&i>=mTroops()&&G.p2&&G.p2.kept.length?G.p2.kept[(i-mTroops())%G.p2.kept.length]:null,x:rnd(30,200),y:MTOP+10+(i+rnd(.1,.9))*(MBOT-MTOP-10)/nt,hp:90*tm,max:90*tm,atk:9*tm,rng:34,spd:55,cd:rnd(0,1),f:0});
   for(let i=0;i<ne;i++)U.push({side:1,vimg:mFoeOf(e)==='seojang'?(i%4===1?'img/sd_mook_kw.png':i%4===3?'img/sd_mook_hg.png':null):null,x:rnd(700,930),y:MTOP+10+(i+rnd(.1,.9))*(MBOT-MTOP-10)/ne,hp:86*em,max:86*em,atk:9*em,rng:34,spd:55,cd:rnd(0,1),f:0});
@@ -482,10 +484,10 @@ function wisEnd(){const W=WIS,d=D(W.d),h=W.res.filter(Boolean).length,got=h===3|
   else{d.mind=Math.min(120,d.mind+10);W.msg=`<b style="color:#ff8a6a">초식이 엉켰다. ${d.n}의 마음이 어지럽다. (심마 +10)</b>`;log(`${d.n}의 초식이 엉켰다. 심마 +10`)}save()}
 function wisAutoRes(eid){const e=G.q.find(x=>x.id===eid),d=e&&D(e.did);if(!d)return;WIS={eid,d:d.id,art:e.art,lv:d.arts[e.art],mv:wisMoves(d,e.art),i:3,res:[],msg:''};const w=Math.min(.17,.07+WIS.lv*.008);for(let k=0;k<3;k++)WIS.res.push(Math.random()<Math.max(.1,w-k*.02)*3.2);wisEnd();const r=WIS;WIS=null;return r}
 function startDuels(eid,lanes){const e=G.q.find(x=>x.id===eid);const list=[];
-  lanes.forEach((ids,l)=>{const ds=ids.map(D).filter(Boolean);const b=LN(e)[l].boss;if(ds.length&&b)list.push({l,t:LN(e)[l].n,d:ds[0].id,ids:ds.map(d=>d.id),bn:b.n,bpw:Math.round(b.pw*(e.k||1)),melee:1})});
+  lanes.forEach((ids,l)=>{if(!LN(e)[l])return;const ds=ids.map(D).filter(Boolean).slice(0,2);const b=LN(e)[l].boss;if((ds.length||isHome(e))&&b)list.push({l,t:LN(e)[l].n,d:ds[0]?ds[0].id:null,ids:ds.map(d=>d.id),bn:b.n,bpw:Math.round(b.pw*(e.k||1)),melee:1})});
   DUEL={kind:'lane',eid,lanes,list,i:0,mods:[{o:1,e:1},{o:1,e:1},{o:1,e:1}]};nextDuel()}
 function nextDuel(){const c=DUEL.list[DUEL.i];if(!c){const X=DUEL;DUEL=null;if(X.kind==='match')matchEnd(X);else fight(X.eid,X.lanes,X.mods);return}
-  const d=D(c.d);DUEL.cur={...c,hp:[100,100],r:0,msg:[`${c.t}. ${c.bn}이(가) 앞으로 나섰다. ${d.n}이(가) 검을 뽑았다.`],emv:pickMove(),hit:null};if(c.melee){meleeInit(DUEL.cur);render();meleeKick()}else{cardInit(DUEL.cur);render()}}
+  const d=D(c.d)||{n:'종남 제자들'};DUEL.cur={...c,hp:[100,100],r:0,msg:[`${c.t}. ${c.bn}이(가) 앞으로 나섰다. ${d.n}이(가) 검을 뽑았다.`],emv:pickMove(),hit:null};if(c.melee){meleeInit(DUEL.cur);render();meleeKick()}else{cardInit(DUEL.cur);render()}}
 function pickMove(){const ks=['kang','kwae','su'];return ks[Math.floor(Math.random()*3)]}
 function tellOf(c){if(c.fake==null||c.fakeR!==c.r){c.fakeR=c.r;c.fake=Math.random()<(.5-Math.max(boV(D(c.d),'waseon'),0))?['kang','kwae','su'].filter(k=>k!==c.emv)[Math.floor(Math.random()*2)]:c.emv}return TELL[c.fake][c.r%2]}
 // 일기토에 쓰는 무공: 수련 중인 초식, 없으면 가장 높은 초식
@@ -684,7 +686,7 @@ function scheduled(m){
   for(const r of [].concat(JOIN[m]||[]))if(!has(r.id)){G.ds.push(starter({...r,arts:{...r.arts},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null}));E.push({t:'event',id:'join_'+r.id,info:1,title:r.n+' 합류',text:typeof r.t==='function'?r.t():r.t})}
   if(m===10)E.push({t:'quest',id:'gorge',title:'협곡 정찰',due:17,text:'초가보 척후들이 종남산 뒤 절벽 쪽 협곡으로 숨어들었다는 소문이다. 한 사람을 보내 살핀다. 길이 험하다.'+(META.noYuk?' (지난 판의 기억: 기한까지 아무도 보내지 않으면 낙일방이 자청해서 나선다. 절벽 아래에 무언가 있다)':''),btn:'보낸다'});
   if(m===12&&G.ilbi==='early'){addArt('jin','chileum');E.push({t:'event',id:'ilbiteach',title:'사백의 가르침',info:1,text:'강일비가 진산월을 불렀다. "이제 너도 칠음진기의 첫머리를 알아 두어라. 태음신맥이 아니니 깊이 들어가지는 못할 것이다."'})}
-  if(m===18&&!G.flags.raided&&!G.flags.choDone){raid();E.push({t:'event',id:'raid18',title:'초가보의 기습',info:1,text:'초가보가 본산을 쳤다. 결과는 기록에 남았다.'})}
+  if(m===18&&!G.flags.raided&&!G.flags.choDone){raid();0}
   if(m===20)E.push({t:'quest',id:'hyeolsa',title:'종남혈사',due:21,k:1.2,text:'초가보가 세 갈래로 종남산을 치려 한다. 갈래마다 제자를 둘까지 세운다. 진산월도 한 갈래에 설 수 있다. 두 갈래를 이기면 초가보를 무너뜨린다. 세 갈래를 모두 잃으면 종남은 멸문한다.'});
   if(G.flags.hyeolsaRetry===m)E.push({t:'quest',id:'hyeolsa2',title:'종남혈사 (두 번째)',due:m+1,k:1,retry:1,text:'물러갔던 초가보가 전열을 가다듬어 다시 세 갈래로 온다. 이번에도 막지 못하면 종남은 끝이다.'});
   if(G.flags.jeonM===m){for(const r of [{id:'jeonp',n:'전풍개',r:'사숙조(원로)',img:'img/jeonp.webp',st:{tong:70,ji:60,jeong:45,ma:55,geom:85,gwon:60,oseong:70},ch:90,arts:{yuun:8,cheonha:7,taeeul:7,guyang:3,hyeoncheong:3}},{id:'jeonh',n:'전흠',r:'사숙(전풍개의 아들)',img:'img/jeonh.webp',st:{tong:45,ji:55,jeong:40,ma:55,geom:75,gwon:55,oseong:65},ch:85,arts:{yuun:5,nakha:5,taeeul:4,guyang:1,hyeoncheong:1}}])
@@ -870,7 +872,9 @@ const A={
 // 가르칠 사람: 그 무공 5성 이상, 배우는 사람 말고. 요양·파견 중이면 못 가르친다
 function teacher(a,not){return G.ds.filter(x=>x.id!==not&&x.n!=='삿갓 쓴 사내'&&(x.arts[a]||0)>=(ARTS[a].t==='b'?1:a==='chileum'?2:5)&&x.pos!=='away'&&x.pos!=='hurt').sort((x,y)=>y.arts[a]-x.arts[a])[0]}
 // 폐관 중 초가보 기습: 수비는 전력 그대로, 수련 중은 절반, 외당 단계마다 +25
-function raid(){G.flags.raided=1;const def=G.ds.filter(d=>d.id!=='jin'&&!d.elder&&(d.pos==='guard'||d.pos==='train'||d.pos==='rest'||d.pos==='study')).reduce((s,d)=>s+power(d)*(d.pos==='guard'?1:.5)*(.6+d.st.tong/250),0)+25*G.fac.oe+40*(G.wall||0),atk=Math.round(200+5*G.m);
+function raid(){G.flags.raided=1;const atk=Math.round(200+5*G.m);if(G.q.some(x=>x.kind==='raid'))return;
+  G.q.push({t:'quest',id:'raid'+G.m,kind:'raid',foe:'cho',title:'초가보의 기습',due:G.m,k:1,lanes:[{n:'본산',e:Math.round(atk*.75),boss:{n:'초가보 무사장',pw:Math.round(90+2*G.m)}}],text:`${G.retreat?'장문인이 없는 틈에 ':''}초가보가 본산을 친다. 수비 자리에 선 제자가 앞장서고(둘까지), 아무도 없으면 이름 없는 제자들만 맞선다. 외당·성벽이 있으면 유리하다.`});log(`${G.retreat?'장문인이 없는 틈에 ':''}초가보가 본산을 친다! (이번 순 안에 막아야 한다)`)}
+function raidOld(){const def=G.ds.filter(d=>d.id!=='jin'&&!d.elder&&(d.pos==='guard'||d.pos==='train'||d.pos==='rest'||d.pos==='study')).reduce((s,d)=>s+power(d)*(d.pos==='guard'?1:.5)*(.6+d.st.tong/250),0)+25*G.fac.oe+40*(G.wall||0),atk=Math.round(200+5*G.m);
   if(def>=atk){G.fame+=6;G.qual+=3;log(`${G.retreat?'장문인이 없는 틈에 ':''}초가보가 본산을 쳤다. 남은 제자들이 막아 냈다. (방어 ${Math.round(def)} : 공격 ${atk}) 명성 +6`)}
   else{G.income.sang=Math.max(25,G.income.sang-10);for(const d of G.ds.filter(d=>d.pos==='guard'))if(Math.random()<.5){d.pos='hurt';d.away=4}
     log(`${G.retreat?'장문인이 없는 틈에 ':''}초가보가 본산을 쳤다. 막지 못했다. (방어 ${Math.round(def)} : 공격 ${atk}) 서안 상권 수입 -10, 수비하던 제자 일부 부상`)}}
@@ -888,7 +892,7 @@ function autoJin(){if(G.noAutoJin||G.act<1||G.retreat||G.jinBusy||G.jinFocus||MO
     else if(r[0]==='limfocus'){D('lim').focusS='chileum';A.focus()}
     else if(r[0]==='tq'){if((D('jin').arts.cheonha||0)>=5&&G.half===0)A.quest('taeeul');else A.focus()}
     else if(r[0]==='sq'){freeDs().filter(d=>d.id!=='lim').sort((a,b)=>power(b)-power(a)).slice(0,3).forEach(d=>A.pos(d.id,'guard'));A.quest('seokshil')}
-    else if(r[0]!=='money'&&typeof A[r[0]]==='function')A[r[0]]();else A.focus()}catch(e){}
+    else if(r[0]!=='money'&&r[0]!=='guard'&&typeof A[r[0]]==='function')A[r[0]]();else A.focus()}catch(e){}
   if(G.act===n0&&G.act>0&&!G.jinFocus&&!G.jinBusy)A.focus();
   if(G.act<n0||G.jinFocus||G.retreat)log('(고르지 않아 추천대로) '+String(r[1]||'수련 전념').replace(/<[^>]+>/g,'').split('. ').pop())}
 const META=(()=>{try{return JSON.parse(localStorage.getItem('munpa-meta')||'{}')||{}}catch(e){return{}}})();
@@ -990,6 +994,7 @@ function recs(){const r=[];if(G.eun<0)r.push(['money',`<b style="color:var(--red
   if(G.fame>=15&&G.eun>=300&&dsCount()<capOfDs())r.push(['recruit','명성과 은자가 넉넉하다. 제자 모집']);
   if(G.q.some(e=>e.id==='taeeul')&&!G.retreat)r.unshift(['tq',(D('jin').arts.cheonha||0)>=5?'태을선거로 떠날 수 있다(사건 탭)':'태을선거에 가려면 천하삼십육검 5성이 필요하다. 수련 전념']);
   {const j=D('jin'),a=j&&Object.keys(YUK).find(a=>j.arts[a]==null&&teacher(a,'jin'));if(a)r.unshift(['learnyuk',`진산월이 ${ARTS[a].n}을(를) 배울 수 있다. 육합귀진에 필요하다(배운다)`])}
+  if(G.m>=8&&!G.ds.some(d=>d.pos==='guard'&&d.id!=='jin'&&!d.elder))r.push(['guard','수비 자리에 아무도 없다. 본산이 습격당하면 이름 없는 제자들만 맞선다(제자 탭에서 한 명 이상 수비로)']);
   if(G.q.some(e=>e.id==='seokshil'))r.push(['sq','석실 폐관은 수비를 갖춘 뒤에(사건 탭)']);
   if(!r.length)r.push(['focus','급한 일이 없다. 수련 전념']);return r.slice(0,2)}
 function evBar(){if(!G.q.length)return '';const n=Object.keys(suggest()).length,work=G.q.filter(e=>e.t==='job'||e.t==='crisis').length,news=G.q.filter(e=>e.t==='event'&&e.info).length,rest=G.q.length-work-news;
@@ -1068,7 +1073,7 @@ ${e.opts.map(o=>`<div style="margin-top:6px"><button onclick="A.defend('${e.id}'
     if(e.t==='appl'){const s=e.st;return `<div class="panel ev"><b>${e.title}</b> <span class="muted">· 이달 안에</span><p style="font-size:13px">${Object.keys(STN).map(k=>`${STN[k]} <b>${s[k]}</b>`).join(' · ')}<br>${Object.keys(e.arts).filter(a=>e.arts[a]>0).map(a=>`${ARTS[a].n} ${e.arts[a]}성`).join(', ')}</p><button class="main" onclick="A.accept('${e.id}')" ${dsCount()>=capOfDs()?'disabled':''}>받는다</button> <button onclick="A.decline('${e.id}')">돌려보낸다</button> <span class="muted" style="font-size:12px">제자 ${dsCount()}/${capOfDs()}</span></div>`}
     if(e.t==='match'){const c=matchCands(e),sg=matchSuggest(e);return `<div class="panel ev crisis"><b>${e.title}</b> <span class="muted">· ${yr(e.due)}까지</span><p>${e.text}</p>${e.opp.map((o,i)=>`<div style="margin:4px 0">${i+1}판: <b>${o.n}</b> (전력 ${o.pw}) ← <select id="mt_${e.id}_${i}">${c.map(d=>`<option value="${d.id}" ${sg[i]===d.id?'selected':''}>${d.n} (${power(d)})</option>`).join('')}</select></div>`).join('')}<button class="main" onclick="A.match('${e.id}')" ${c.length>=e.opp.length?'':'disabled'}>겨룬다</button></div>`}
     if(e.lanes||e.id==='hyeolsa'||e.id==='hyeolsa2'){const c=laneCands(),sg=battleSuggest(e),see=G.fac.oe>=1||G.flags.nohae;
-      return `<div class="panel ev crisis"><b>${e.title}</b> <span class="muted">· ${yr(e.due)}까지</span><p>${e.text} 장수가 선 갈래마다 떼싸움을 한다. 이름 없는 제자들은 문파원 수만큼 나뉘어 따라 선다(지금 갈래마다 ${mTroops()}명).</p><p style="margin:4px 0">병장기·군량 정비 ${e.arm||0}/3 <span class="muted">(한 번에 종남 병사 +5%)</span> <button onclick="A.arm('${e.id}')" ${(e.arm||0)>=3||G.eun<200?'disabled':''}>정비 (200냥)</button></p>${LN(e).map((L,l)=>`<div style="margin:6px 0"><b>${L.n}</b> 장수 ${L.boss.n} · 적 전력 ${see?Math.round(L.e*(e.k||1)):'? (외당이 있으면 보인다)'} · ${[0,1].map(i=>`<select id="bl_${l}_${i}"><option value="">비움</option>${c.map(d=>`<option value="${d.id}" ${sg[l][i]===d.id?'selected':''}>${d.n} (${power(d)})</option>`).join('')}</select>`).join(' ')}</div>`).join('')}
+      return `<div class="panel ev crisis"><b>${e.title}</b> <span class="muted">· ${yr(e.due)}까지</span>${isHome(e)&&!G.ds.some(d=>d.pos==='guard'&&d.id!=='jin'&&!d.elder)?'<p style="color:var(--red);font-weight:bold">수비 자리에 아무도 없다! 이대로면 이름 없는 제자들만 맞선다. 제자 탭에서 한 명 이상을 수비로 돌려 두라.</p>':''}<p>${e.text} 장수가 선 갈래마다 떼싸움을 한다. 이름 없는 제자들은 문파원 수만큼 나뉘어 따라 선다(지금 갈래마다 ${mTroops()}명).</p><p style="margin:4px 0">병장기·군량 정비 ${e.arm||0}/3 <span class="muted">(한 번에 종남 병사 +5%)</span> <button onclick="A.arm('${e.id}')" ${(e.arm||0)>=3||G.eun<200?'disabled':''}>정비 (200냥)</button></p>${LN(e).map((L,l)=>`<div style="margin:6px 0"><b>${L.n}</b> 장수 ${L.boss.n} · 적 전력 ${see?Math.round(L.e*(e.k||1)):'? (외당이 있으면 보인다)'} · ${[0,1].map(i=>`<select id="bl_${l}_${i}"><option value="">비움</option>${c.map(d=>`<option value="${d.id}" ${sg[l][i]===d.id?'selected':''}>${d.n} (${power(d)})</option>`).join('')}</select>`).join(' ')}</div>`).join('')}
 <button onclick="A.bsug('${e.id}')">추천 배치</button> <button class="main" onclick="A.battle('${e.id}')">싸운다</button></div>`}
     if(e.t==='quest'){// 못 누르는 까닭을 버튼 옆에 적는다
       const why=G.retreat?'진산월이 폐관 중이다':e.id==='taeeul'?(G.half!==0?'상순에만 떠날 수 있다. 다음 달 상순에':G.jinBusy?'진산월이 이번 순 다른 일을 맡았다':G.act<1?'이번 순 장문인 행동을 이미 썼다':''):'';
@@ -1260,7 +1265,13 @@ ${{main:mainTab,map:mapTab,disc:discTab,dev:devTab,ev:()=>evTab(),cal:calTab}[TA
 }
 /* ================= 시작 ================= */
 // 관전 모드(?bot=1): 봇이 한 달씩 두는 것을 보여 준다. 저장은 하지 않는다
-const BOT=/[?&]bot=1/.test(location.search);
+const BOT=/[?&]bot=1/.test(location.search),BVIEW=(location.search.match(/[?&]battle=([a-z]+)/)||[])[1];
+function battleView(k){G.ilbi=G.ilbi||'late';const guards=()=>G.ds.filter(d=>d.id!=='jin'&&!d.elder).sort((a,b)=>power(b)-power(a)).slice(0,2).forEach(d=>d.pos='guard');
+  const grow=n=>{for(const d of G.ds)for(const a in d.arts)if(ARTS[a].t!=='b')d.arts[a]=Math.min(capOf(d,a),d.arts[a]+n)};
+  if(k==='raid'){G.m=18;guards();raid()}else if(k==='hyeolsa'){G.m=20;for(const e of scheduled(20))G.q.push(e)}
+  else if(k==='hwasan'||k==='kwae'){G.m=40;grow(2);G.flags.hwasanPeace=k==='kwae'?1:0;guards();for(const e of scheduled(40))G.q.push(e)}
+  else{G.m=k==='sacheon'?62:66;grow(3);G.part=2;G.p2={allies:['소림','점창','청의방','남궁세가','경요궁','무당'],kept:['소림','점창','청의방','남궁세가','경요궁','무당'],lost:[],esc:['석동'],beat:[],relic:0,yayul:380};const E=[];p2Events(G.m,E);G.q.push(...E)}
+  const e=G.q.find(x=>x.lanes);if(!e){render();return}TITLE=null;startDuels(e.id,battleSuggest(e))}
 function botMonth(){
   if(MODAL){A.choose(Math.floor(Math.random()*MODAL.ch.length));return}
   if(G.over||G.done)return;
@@ -1300,6 +1311,7 @@ if(/[?&]gallery=1/.test(location.search)){const rows=[];
   for(const L of LANES)add('종남혈사 장수',L.boss.n,enemyImg(L.boss.n),enemyImg(L.boss.n)?'':'그림요청 14~15번');
   for(const n in RLEN)add('로그라이크 적',n,rlImg(RLEN[n][0]),RLEN[n][1]?RLEN[n][1].join('·'):'');
   document.getElementById('app').innerHTML=`<div class="wrap"><h2>초상 점검</h2><p class="muted">✕는 파일이 있어야 하는데 안 열린 것, 글자는 아직 그림이 없는 것이다.</p><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${rows.join('')}</div></div>`}
+else if(BVIEW){save=()=>{};newGame();MODAL=null;battleView(BVIEW)}
 else if(BOT){save=()=>{};newGame();TAB="main";setInterval(botMonth,1500)}
 else if(load()){boMigrate();if(G.ds.some(d=>d.id==='nohae')){G.devDone=G.devDone||[];if(!G.devDone.includes('ju')){G.devDone.push('ju');G.income.ju=25;G.dev=(G.dev||[]).filter(v=>v.id!=='ju')}}{const ib=G.ds.find(d=>d.id==='ilbi');if(ib&&!ib.reArm){ib.reArm=1;ib.st.geom=70;ib.st.gwon=95;Object.assign(ib.arts,{yuun:2,cheonha:2,nanhwa:Math.max(8,ib.arts.nanhwa||0),yeomhwa:Math.max(8,ib.arts.yeomhwa||0)});if(ib.focusM==='yuun'||ib.focusM==='cheonha')ib.focusM=null}}{const nh=G.ds.find(d=>d.id==='nohae');if(nh){delete nh.elder;Object.assign(nh.st,{tong:60,geom:85,gwon:80,oseong:65});for(const [k,v] of [['cheonha',7],['yuun',6],['taeeul',6]])if((nh.arts[k]||0)<v){nh.arts[k]=v;nh.xp[k]=0}}}for(const d of G.ds){if(!d.taeum&&d.arts.chileum>2){d.arts.chileum=2;d.xp.chileum=0}if(!d.taeum&&d.focusS==='chileum'&&(d.arts.chileum||0)>=2)d.focusS=null}const RN={jeonp:'사숙조(원로)',jeonh:'사숙(전풍개의 아들)',seongrak:'사숙',hadong:'사숙',dong:'진산월의 제자',danri:'진산월의 제자',sonp:'진산월의 제자',seomun:'빈객(검보)',nohae:'파문된 사숙'};for(const d of G.ds){if(RN[d.id])d.r=RN[d.id];if(d.id==='nohae')d.img='img/nohae.webp';if(d.id==='hadong')d.img='img/hadong.webp';if(d.id==='sonp')d.img='img/sonp.webp';if(d.id==='seongrak')d.img='img/seongrak.webp';if(d.id==='seomun')d.img='img/seomun.webp';if(d.id==='danri')d.img='img/danri.webp';if(d.id==='yuso')d.img='img/yuso.webp';if(d.id==='ak')d.img='img/ak.webp';if(d.id==='dong')d.img='img/dong.webp';if(d.id==='lim')d.img='img/lim.webp';if(d.id==='mae')d.img='img/mae.webp';if(d.id==='so')d.img='img/so.webp';if(d.id==='eung')d.img='img/eung.webp';if(d.id==='jeong')d.img='img/jeong.webp';if(d.id==='bang')d.img='img/bang.webp';if(d.id==='jeonp')d.img='img/jeonp.webp';if(d.id==='jeonh')d.img='img/jeonh.webp';if(d.id==='ilbi')d.img=d.n==='강일비'?'img/ilbi.webp':'img/ilbi_hat.webp';if(d.id==='nak')d.img=d.mukryeong?'img/nak2.webp':'img/nak.webp';if(d.id==='ilbi'){d.arts.muyeom=d.arts.muyeom||8;d.arts.nanhwa=d.arts.nanhwa||7;d.arts.yeomhwa=d.arts.yeomhwa||6}if(d.id==='jin'){d.rl='player';delete d.img;if(d.arts.nakha==null){d.arts.nakha=5;d.xp.nakha=0}if(d.arts.yakryu==null){d.arts.yakryu=3;d.xp.yakryu=0}}if(d.id==='du'){delete d.rl;d.img='img/du.webp'}}for(const d of G.ds){if(d.st&&d.st.mugol!=null&&d.st.geom==null){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{...d.st,geom:d.st.mugol,gwon:d.st.mugol}}}for(const d of G.ds)if(!d.st){const r=ROSTER.find(x=>x.id===d.id);d.st=r?{...r.st}:{tong:50,ji:50,jeong:50,ma:50,geom:60,gwon:60,oseong:60}}if(G.ilbi==='early')addIlbi(false);if(G.half==null){G.half=0;G.act=Math.min(G.act,1)}if(!G.ilbi)MODAL=prologue();if(G.flags.seongsim&&!G.flags.taeeul&&!G.q.some(e=>e.id==='taeeul'))openTaeeul();TITLE=G.done||G.over?null:{save:true};render()}else{TITLE={save:false};newGame()}
 </script>
