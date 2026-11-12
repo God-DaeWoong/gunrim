@@ -350,7 +350,8 @@ const TELL={kang:['상대가 검을 높이 치켜든다.','상대의 어깨에 �
 // 갈래마다 한 판. 적 병사 수는 그 갈래 적 병력에서, 종남 병사 수는 문파원 수에서 나온다. 장수·적장의 강함은 전력에서
 const MW=960,MH=540,MTOP=230,MBOT=500;
 const mImg=s=>{if(typeof Image==='undefined')return{};MIMG[s]=MIMG[s]||Object.assign(new Image(),{src:s});return MIMG[s]};const MIMG={};
-const MELEE_BG={hwasan:'img/sd_yard.webp'};
+const MELEE_BG={hwasan:'img/sd_yard.webp',p2a:'img/bg_sacheon.webp',p2b:'img/bg_geomgak.webp'};
+const mBgOf=(e,L)=>MELEE_BG[e.kind]||(/협곡/.test(L.n)?'img/bg_gorge.webp':'img/bg_road.webp');
 const MFOE_IMG={cho:'img/sd_mook_cho.png'};
 const MBOSS_IMG={'초일산':'img/sd_choil.png','갈태독':'img/sd_galtae.png','곽태보':'img/sd_gwaktae.png'};
 const MFOE={cho:['초가보','sepia(.9) hue-rotate(-25deg) saturate(1.8)'],hwasan:['화산','sepia(.5) hue-rotate(230deg) saturate(1.5)'],seojang:['서장군','sepia(1) hue-rotate(-40deg) saturate(2.6)']};
@@ -365,7 +366,7 @@ function meleeInit(c){const e=G.q.find(x=>x.id===DUEL.eid),L=LN(e)[c.l],k=e.k||1
   for(let i=0;i<nt;i++)U.push({side:0,ally:e.kind==='p2b'&&i>=mTroops(),x:rnd(30,200),y:MTOP+10+(i+rnd(.1,.9))*(MBOT-MTOP-10)/nt,hp:90*tm,max:90*tm,atk:9*tm,rng:34,spd:55,cd:rnd(0,1),f:0});
   for(let i=0;i<ne;i++)U.push({side:1,x:rnd(700,930),y:MTOP+10+(i+rnd(.1,.9))*(MBOT-MTOP-10)/ne,hp:86*em,max:86*em,atk:9*em,rng:34,spd:55,cd:rnd(0,1),f:0});
   const chain=e.kind==='hwasan'||!!(G.p2&&P2BOSS[L.boss.n]);const bp=Math.round(L.boss.pw*k*dk());if(!chain)U.push({side:1,boss:1,n:L.boss.n,x:860,y:330,hp:200+bp*2,max:200+bp*2,atk:8+bp/6,rng:50,spd:45,cd:0,f:0});
-  c.m={U,FX:[],TXT:[],COIN:[],T:30,tt:0,eun:0,shake:0,auto:G.mAuto!==false,sel:U[0],foe:mFoeOf(e),bg:MELEE_BG[e.kind]||'img/gorge.webp',ne,nt,em,tm};c.m.chain=chain;c.msg=[`${L.n}. 종남 ${c.ids.length+nt}명 대 ${MFOE[c.m.foe][0]} ${ne+(chain?0:1)}명.${chain?` 적장 ${L.boss.n}은(는) 뒤에서 지켜본다.`:''}`]}
+  c.m={U,FX:[],TXT:[],COIN:[],T:30,tt:0,eun:0,shake:0,auto:G.mAuto!==false,sel:U[0],foe:mFoeOf(e),bg:mBgOf(e,L),ne,nt,em,tm};c.m.chain=chain;c.msg=[`${L.n}. 종남 ${c.ids.length+nt}명 대 ${MFOE[c.m.foe][0]} ${ne+(chain?0:1)}명.${chain?` 적장 ${L.boss.n}은(는) 뒤에서 지켜본다.`:''}`]}
 const mAlive=(M,s)=>M.U.filter(u=>u.side===s&&u.hp>0);
 const mMorale=(M,s)=>{const a=M.U.filter(u=>u.side===s);return a.reduce((t,u)=>t+Math.max(0,u.hp)*(u.boss||u.hero?1.6:1),0)/a.reduce((t,u)=>t+u.max*(u.boss||u.hero?1.6:1),0)};
 function mHit(M,v,d,col){if(v.hp<=0)return;v.hp-=d;M.TXT.push({x:v.x,y:v.y-56,t:0,s:String(Math.round(d)),col:col||(v.side?'#ffd36a':'#ff6a5a')});
