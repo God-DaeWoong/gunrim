@@ -151,10 +151,10 @@ const MOVES={
   guban:[['서우망월',null],['낭아선륜',null],['마면배심',null]],
   nakroe:[['뇌정만균',null],['낙뢰신권',null],['낙뢰신권',null]]};
 // 로그라이크 적: 이름 → [초상 파일, 강공·쾌검·수비 때 쓰는 초식 이름]
-const RLEN={'감종간':['gamjong',['대라섬요','색탈혼','허무보']],'두기춘':['dugichun',['검세','연검','운기']],'고진':['gojin',null],'유중악':['yujung',['뇌신파황','낙뢰구검','신뢰하격']],'백모란':['baekmo',['구주홍염화','월녀검법','음양화벽']],'조익현':['joik',['대라장천','대라섬요','현음진기']],'야율척':['yayul',null],'백대행':['baekdae',['천룡번공','천개유룡','백원적과']],'복양수':['bokyang',null],'당각':['danggak',null],'매장원':['maejang',null],'운자추':['unjachu',null]};
+const RLEN={'감종간':['gamjong',['대라섬요','색탈혼','허무보']],'두기춘':['dugichun',['검세','연검','운기']],'고진':['gojin',null],'유중악':['yujung',['뇌신파황','낙뢰구검','신뢰하격']],'백모란':['baekmo',['구주홍염화','월녀검법','음양화벽']],'조익현':['joik',['대라장천','대라섬요','현음진기']],'야율척':['yayul',['항룡금강권','불광만천','금강항마']],'백대행':['baekdae',['천룡번공','천개유룡','백원적과']],'복양수':['bokyang',null],'당각':['danggak',null],'매장원':['maejang',null],'운자추':['unjachu',null]};
 const ENIMG={'초일산':'img/choil.webp','갈태독':'img/galtae.webp','곽태보':'img/gwaktae.webp'};
 const enemyImg=bn=>ENIMG[bn]||(RLEN[bn]&&RLEN[bn][0]?rlImg(RLEN[bn][0]):null);
-RLEN['서장 무승']=['sadae',null];RLEN['석동']=['',['천양신공 일장','미인상 검법','천양신공 호신']];
+RLEN['서장 무승']=['sadae',null];RLEN['석동']=['',['구양신공','음양쌍반진','음양화벽']];
 const emvName=(bn,em)=>{const r=RLEN[bn];return r&&r[1]?r[1][['kang','kwae','su'].indexOf(em)]:MV[em]};
 const ENEMY_FX=['b_noesin','b_biryong','b_baekhwa','b_hyeolhwa','b_paewang','b_samji'];
 const RLFX=[...new Set([...Object.values(MOVES).flat().map(x=>x[1]).filter(Boolean),...ENEMY_FX,'cheonha_mugung'])];
@@ -705,7 +705,7 @@ function p2Lanes(names,base){const esc=G.p2.esc.filter(n=>!G.p2.used||!G.p2.used
 function p2Events(m,E){const P=G.p2;
   if(m===49)E.push({t:'event',id:'p2open',info:1,title:'서장의 사신',text:(G.ending1==='구파 복귀'?'구파 복귀를 알리는 잔치가 끝난 이튿날':'네 번째 겨울이 지난 이른 봄')+', 서장의 사신이 무림연맹에 서신을 내밀었다. 야율척의 이름으로 화친을 청하는 글이었다. 같은 날 종남산 뒤편을 살피던 제자가 돌아왔다. 매종도의 무덤이 파헤쳐져 있었고, 함께 묻혀 있던 비급이 없어졌다. (2부는 6년 12월까지. 1년 차에는 매종도의 유산을 가로챈 자들을 찾아내고, 2년 차에는 서장군을 막는다)'});
   if(m===50)E.push(p2Job('p2j_joik','모용단죽의 행적 캐기','ji',70,'joik',53,'연맹 회의에 모용단죽이라는 노인이 나타나 서장과 화친하자고 문파들을 설득하고 있다. 노해광은 그가 진짜 모용단죽이 아니라고 본다. 지력 높은 제자를 보내 뒤를 캔다. '+yr(53)+'까지 정체를 밝히지 못하면 그는 연맹에서 빠져나간다.'));
-  if(m===54)E.push(p2Job('p2j_seok','천양신공의 흔적 추적','mu',150,'seok',57,'매종도의 무덤 근처 마을에서 가슴이 불에 덴 듯 검게 탄 시체가 나왔다. 천양신공에 맞은 자국이다. 무공 높은 제자를 보내 흔적을 쫓는다. '+yr(57)+'까지 찾지 못하면 놓친다.'));
+  if(m===54)E.push(p2Job('p2j_seok','구양신공의 흔적 추적','mu',150,'seok',57,'매종도의 무덤 근처 마을에서 가슴이 불에 덴 듯 검게 탄 시체가 나왔다. 종남의 구양신공과 같은 뿌리의 장력이다. 무공 높은 제자를 보내 흔적을 쫓는다. '+yr(57)+'까지 찾지 못하면 놓친다.'));
   if(m===57){let auto='';if(P.beat.includes('조익현')&&P.allies.length){P.kept.push(P.allies[0]);auto=` 조익현의 정체가 드러난 덕에 ${P.allies[0]}은(는) 흔들리지 않았다.`}
     const rest=P.allies.filter(a=>!P.kept.includes(a));
     E.push({t:'event',id:'p2yu',info:1,title:'창봉 유중악',text:'무림구봉의 창봉 유중악이 연맹 문파들을 차례로 찾아다닌다. 서장과 싸우면 문파가 먼저 망한다는 말이다. '+(P.allies.length?`종남과 가까운 문파는 ${P.allies.join('·')}이다.${auto}${rest.length?` 나머지는 매력 높은 제자를 보내 붙잡아야 한다(${yr(60)}까지).`:''}`:'종남과 가까운 문파가 없다. 검각에는 종남 혼자 서야 한다.')});
@@ -718,15 +718,15 @@ function p2Events(m,E){const P=G.p2;
   if(m===69)E.push(p2Match('p2final','검각 정상 — 야율척',[{n:'야율척',pw:P.yayul}],1,'final',71,'검각 정상에서 야율척이 진산월을 기다린다. 진산월만 나설 수 있다. 이 싸움이 2부의 끝이다. (폐관 중이면 나설 수 없다)',{onlyJin:1}))}
 function p2Beat(n){const P=G.p2;if(P.beat.includes(n))return;P.beat.push(n);P.esc=P.esc.filter(x=>x!==n);const j=D('jin');
   if(n==='조익현'){G.fame+=10;G.qual+=5;log('가짜 모용단죽 조익현을 꺾었다. 연맹이 종남의 말을 믿기 시작했다. 명성 +10, 구파 자격 +5')}
-  if(n==='석동'){P.relic++;G.fame+=10;if(j)gainWis(j,2,'되찾은 매종도의 검결');log('석동을 꺾고 매종도의 검결 한 권을 되찾았다. 진산월 전력 +15, 명성 +10')}
+  if(n==='석동'){P.relic++;G.fame+=10;if(j)gainWis(j,2,'되찾은 구양신공 원본');log('석동을 꺾고 매종도의 구양신공 원본을 되찾았다. 진산월 전력 +15, 명성 +10')}
   if(n==='유중악'){G.fame+=10;const back=P.lost.filter(()=>Math.random()<.5);P.lost=P.lost.filter(a=>!back.includes(a));P.kept.push(...back);log('창봉 유중악을 꺾었다. 명성 +10'+(back.length?`. ${back.join('·')}이(가) 다시 연맹으로 돌아왔다.`:''))}
-  if(n==='백모란'){P.relic++;G.fame+=10;if(j)gainWis(j,1,'되찾은 매종도의 유산');log('백모란을 꺾고 그가 감춰 둔 매종도의 유산을 되찾았다. 진산월 전력 +15, 명성 +10')}}
+  if(n==='백모란'){P.relic++;G.fame+=10;if(j)gainWis(j,1,'되찾은 매종도의 유산');log('백모란을 꺾고 그가 감춰 둔 매종도의 낙뢰구검 비급을 되찾았다. 진산월 전력 +15, 명성 +10')}}
 function p2Esc(n){const P=G.p2;if(P.beat.includes(n)||P.esc.includes(n))return;P.esc.push(n);log(`${n}이(가) 달아났다. 서장군에 붙었다는 소문이 돈다.`)}
 const P2JOB={
   joik:(j,ok,exp)=>{if(ok){G.q.push(p2Match('p2joik','조익현 — 가짜 모용단죽',[{n:'조익현',pw:210}],1,'p2v',G.m+1,'모용단죽 행세를 하던 자는 조익현이었다. 정체가 드러나자 검을 뽑았다.'));return ' 가짜 모용단죽의 정체가 조익현임을 밝혀냈다.'}
     if(!exp&&G.m<53){G.q.push(p2Job('p2j_joik',j.title,'ji',70,'joik',53,'다시 사람을 보내 모용단죽의 뒤를 캔다. '+yr(53)+'까지.'));return}p2Esc('조익현')},
-  seok:(j,ok,exp)=>{if(ok){G.q.push(p2Match('p2seok','석동 — 천양신공',[{n:'석동',pw:230}],1,'p2v',G.m+1,'흔적 끝에 석동이 있었다. 매종도의 무덤에서 가져간 비급으로 천양신공을 익힌 자다.'));return ' 석동의 은신처를 찾았다.'}
-    if(!exp&&G.m<57){G.q.push(p2Job('p2j_seok',j.title,'mu',150,'seok',57,'다시 사람을 보내 천양신공의 흔적을 쫓는다. '+yr(57)+'까지.'));return}p2Esc('석동')},
+  seok:(j,ok,exp)=>{if(ok){G.q.push(p2Match('p2seok','석동 — 구양신공',[{n:'석동',pw:230}],1,'p2v',G.m+1,'흔적 끝에 석동이 있었다. 매종도의 석실에서 구양신공 원본을 가져가 되살린 자다. 백모란과 음양쌍반진을 이루려고 익혔다는 말이 돈다.'));return ' 석동의 은신처를 찾았다.'}
+    if(!exp&&G.m<57){G.q.push(p2Job('p2j_seok',j.title,'mu',150,'seok',57,'다시 사람을 보내 구양신공의 흔적을 쫓는다. '+yr(57)+'까지.'));return}p2Esc('석동')},
   keep:(j,ok)=>{const a=j.sp.split(':')[1],P=G.p2;if(ok){if(!P.kept.includes(a))P.kept.push(a);return ` ${a}이(가) 연맹에 남기로 했다.`}if(!P.lost.includes(a))P.lost.push(a);log(`${a}이(가) 유중악의 말에 넘어가 연맹에서 발을 뺐다.`)}};
 MATCH_FX.p2v=(ok,w,e)=>{ok?p2Beat(e.who):p2Esc(e.who)};
 MATCH_FX.p2v2=(ok,w,e,X)=>{for(const o of e.opp){const b=X&&X.list.find(x=>x.bn===o.n);b&&b.win?p2Beat(o.n):p2Esc(o.n)}};
@@ -738,7 +738,7 @@ const P2FIGHT={
     if(ok){G.fame+=15;G.qual+=5;MODAL={title:'검각 앞 결전',p:[...txt,'서장군의 본대가 검각 앞에서 무너졌다. 야율척이 정상에서 진산월을 부른다.'],ch:[['정상으로 오른다.',()=>log('검각 앞 결전 승리. 명성 +15, 구파 자격 +5')]]}}
     else{P.geomLost=1;P.yayul+=25;MODAL={title:'검각 앞 결전',p:[...txt,'검각 성루가 흔들린다. 기세가 오른 야율척이 정상에서 기다린다.'],ch:[['……',()=>log('검각 앞 결전에서 밀렸다. 야율척의 기세가 높다.')]]}}}};
 function p2Cal(rows){const P=G.p2,st=n=>P.beat.includes(n)?'꺾음':P.esc.includes(n)?'달아남':'';
-  rows.push([yr(53),'조익현 — 가짜 모용단죽',st('조익현')],[yr(57),'석동 — 천양신공',st('석동')],[yr(60),'유중악·백모란, 연맹 흔들기',`붙잡은 문파 ${P.kept.length}/${P.allies.length}`],[yr(64),'사천 방어전',P.sacheonLost?'밀림':''],[yr(68),'검각 앞 결전',P.geomLost?'밀림':''],[yr(71),'검각 정상 — 야율척',`매종도 유산 ${P.relic}권`])}
+  rows.push([yr(53),'조익현 — 가짜 모용단죽',st('조익현')],[yr(57),'석동 — 구양신공',st('석동')],[yr(60),'유중악·백모란, 연맹 흔들기',`붙잡은 문파 ${P.kept.length}/${P.allies.length}`],[yr(64),'사천 방어전',P.sacheonLost?'밀림':''],[yr(68),'검각 앞 결전',P.geomLost?'밀림':''],[yr(71),'검각 정상 — 야율척',`매종도 유산 ${P.relic}권`])}
 function ending2(){const f=G.flags,P=G.p2,lim=has('lim'),k=P.kept.length;
   const tail=(P.relic?` 되찾은 매종도의 유산 ${P.relic}권이 장경각에 들어갔다.`:' 매종도의 유산은 끝내 돌아오지 않았다.')+(lim?'':' 그 자리에 임영옥은 없었다.');
   if(!f.finalWin)return{n:'몰락',p:['야율척을 막지 못했다. 서장의 깃발이 검각을 넘었다. 종남의 이름은 다시 강호에서 흐려졌다.']};
@@ -1218,7 +1218,7 @@ function initYard(){const cv=document.getElementById('yard');if(!cv||!cv.getCont
 const PLACES={seojang:['서장',8,22],geomgak:['검각',20,56],sacheon:['사천',24,74],taebaek:['태백산',30,37],jongnam:['종남산',36,43],hyeopgok:['고관담 협곡',33,51],joam:['조암령',41,52],
   seoan:['서안',45,35],winam:['위남',51,38],hwasan:['화산',57,44],nakyang:['낙양',63,33],sorim:['숭산 소림',66,21],gongga:['공가장',69,40],yeonam:['여남',74,47],
   mudang:['무당산',60,73],hyeongsan:['형산',52,88],hoenam:['회남 남궁세가',80,54],soho:['소호',82,65],gugung:['구궁보',87,77]};
-const JOBPLACE={'모용단죽의 행적 캐기':'mudang','천양신공의 흔적 추적':'hwasan','서안 표행 호위':'seoan','위남 상단 호위':'winam','조암령 산적 소탕':'joam','서안 객잔 난동 정리':'seoan','태백산 약초 채집 호위':'taebaek','화산에 서신 전달':'hwasan','서안 상가 분쟁 중재':'seoan','낙양 원행 호위':'nakyang','폐사 탐방':'jongnam'};
+const JOBPLACE={'모용단죽의 행적 캐기':'mudang','구양신공의 흔적 추적':'hwasan','서안 표행 호위':'seoan','위남 상단 호위':'winam','조암령 산적 소탕':'joam','서안 객잔 난동 정리':'seoan','태백산 약초 채집 호위':'taebaek','화산에 서신 전달':'hwasan','서안 상가 분쟁 중재':'seoan','낙양 원행 호위':'nakyang','폐사 탐방':'jongnam'};
 const QPLACE={taeeul:'hwasan',seokshil:'jongnam',gorge:'hyeopgok',hyeolsa:'hyeopgok',hyeolsa2:'hyeopgok',findilbi:'nakyang',limcold:'jongnam',bm_jeom:'nakyang',bm_so:'sorim',bm_cheong:'yeonam',bm_nam:'hoenam',hs1:'yeonam',hoeram:'hwasan',hyeongsan:'mudang',hwasanraid:'jongnam',gamjong:'gongga',p2joik:'mudang',p2seok:'hwasan',p2baek:'nakyang',p2sacheon:'sacheon',p2geomgak:'geomgak',p2final:'geomgak'};
 function placeOf(e){if(e.t==='job')return JOBPLACE[e.title]||'seoan';if(e.t==='crisis')return 'seoan';return QPLACE[e.id]||'jongnam'}
 function jobPlace(d){const j=d.job;if(!j)return null;if(j.nak)return 'hyeopgok';return JOBPLACE[j.title]||null}
