@@ -442,7 +442,36 @@ function meleeFrame(t){const c=DUEL&&DUEL.cur;if(!c||!c.m){MLOOP=0;return}const 
   M.U.filter(x=>x.hero).forEach((u,i)=>{const b=document.getElementById('msk'+i);if(b){b.style.opacity=u.hp>0?1:.4;const cd=b.querySelector('.mcd');if(cd)cd.style.height=(u.hp>0?Math.round(100*u.skc/10):100)+'%'}});
   if(M.over&&!c.over){meleeEnd(c);save();render()}
   if(M.over&&M.tt>(M.endT=M.endT||M.tt)+2.5){MLOOP=0;return}requestAnimationFrame(meleeFrame)}
-if(typeof addEventListener!=='undefined')addEventListener('keydown',e=>{const c=DUEL&&DUEL.cur;if(!c||!c.m)return;const i='QW'.indexOf(e.key.toUpperCase());if(i>=0)A.mSkill(i)});
+if(typeof addEventListener!=='undefined')addEventListener('keydown',e=>{if(WIS&&e.code==='Space'){e.preventDefault();wisPress();return}const c=DUEL&&DUEL.cur;if(!c||!c.m)return;const i='QW'.indexOf(e.key.toUpperCase());if(i>=0)A.mSkill(i)});
+/* ================= 깨달음 (허수아비 앞의 수련) ================= */
+const wisStuck=d=>Object.keys(d.arts).find(a=>ARTS[a].t!=='b'&&d.arts[a]<capOf(d,a)&&gateOf(d,a)&&(d.wis||0)<gateOf(d,a)&&(d.xp[a]||0)>=costOf(d.arts[a])*.9);
+function wisEvents(m,E){for(const d of G.ds){if(d.elder||d.pos==='away'||d.pos==='hurt'||(d.wisT&&m<d.wisT+4)||G.q.some(e=>e.kind==='wis'&&e.did===d.id))continue;const a=wisStuck(d);if(!a||Math.random()>.35)continue;d.wisT=m;
+  E.push({t:'quest',kind:'wis',id:'wis_'+d.id+m,did:d.id,art:a,due:m+2,title:`${d.n}이(가) 벽 앞에 섰다`,btn:ARTS[a].t==='s'?'운기조식을 시킨다':'허수아비 앞에 세운다',text:`${d.n}의 ${ARTS[a].n}이(가) ${d.arts[a]}성에서 막혀 있다. ${ARTS[a].t==='s'?'조용한 곳에 앉혀 기를 한 바퀴 돌리게 한다. 막힘 없이 돌면 깨달음을 얻는다.':'연무장에서 허수아비를 상대로 초식을 하나씩 다시 짚게 한다. 셋 다 들어가면 깨달음을 얻는다.'} 엉키면 마음이 어지러워진다. (${yr(m+2)}까지, 장문인 행동을 쓰지 않는다)`})}}
+let WIS=null;
+function wisMoves(d,a){if(ARTS[a].t==='s')return[['단전에 기를 모은다','unmu',ARTS[a].n],['임맥을 따라 올린다','unmu',ARTS[a].n],['독맥으로 넘긴다','unmu',ARTS[a].n]];const m=MOVES[a]?a:duelArt(d);return m&&MOVES[m]?MOVES[m].map(x=>[x[0],x[1]||'geombong',ARTS[m].n]):[['내지르기','danak','기본기'],['베어 넘기기','geombong','기본기'],['거두기','chulgok','기본기']]}
+function wisOpen(eid){const e=G.q.find(x=>x.id===eid),d=e&&D(e.did);if(!d)return;WIS={eid,d:d.id,art:e.art,lv:d.arts[e.art],mv:wisMoves(d,e.art),i:0,res:[],pos:0,dir:1,spd:.8,busy:false,last:0,msg:''};wisZone();render();wisKick()}
+function wisZone(){const w=Math.max(.05,Math.min(.17,.07+WIS.lv*.008)-WIS.i*.02);const a=.15+Math.random()*(.7-w);WIS.zone=[a,a+w]}
+function wisHTML(){const W=WIS,d=D(W.d),done=W.i>=3;
+  return `<div class="modal"><div class="box" style="max-width:860px;padding:12px 14px;background:#1d1a16;color:#f1e9d8"><div style="position:relative;border-radius:10px;overflow:hidden;aspect-ratio:16/9;background:#2a241d url(${yardRebuilt()?'img/sd_yard_a.webp':'img/sd_yard.webp'}) center/cover">
+<div style="position:absolute;left:0;right:0;top:0;padding:10px 14px;background:linear-gradient(rgba(0,0,0,.65),transparent);z-index:4"><b style="font-size:18px">${d.n}이(가) 벽 앞에 섰다</b><div style="font-size:13px;color:#d8c8b0">${ARTS[W.art].n} ${W.lv}성. ${ARTS[W.art].t==='s'?'자리에 앉아 기를 한 바퀴 돌린다.':'허수아비 앞에서 초식을 하나씩 다시 짚는다.'}</div></div>
+<img id="wwho" src="img/sd_${d.id}.png" onerror="this.src='img/sd_mook_jn.png'" alt="" style="position:absolute;left:24%;bottom:14%;height:38%;transform:scaleX(-1);z-index:2;transition:transform .08s">
+${ARTS[W.art].t==='s'?'':'<img id="wdum" src="img/sd_dummy.png" alt="" style="position:absolute;left:60%;bottom:14%;height:30%;z-index:2">'}
+<div id="wfx" style="position:absolute;left:${ARTS[W.art].t==='s'?16:52}%;bottom:12%;width:34%;aspect-ratio:3/2;z-index:3;background-size:300% 200%;mix-blend-mode:screen;pointer-events:none;opacity:0;-webkit-mask-image:radial-gradient(ellipse,#000 50%,transparent 75%);mask-image:radial-gradient(ellipse,#000 50%,transparent 75%)"></div></div>
+<div style="display:flex;gap:8px;justify-content:center;margin:10px 0">${W.mv.map((m,k)=>{const r=W.res[k];return `<div style="width:30%;max-width:170px;border:2px solid ${r===true?'#d9b25a':r===false?'#b8423a':'#6b5a43'};border-radius:8px;background:${r===true?'#3a3020':'#2a241d'};padding:8px;text-align:center;${r===false?'opacity:.55':''}"><b style="display:block">${m[0]}</b><span style="font-size:12px;color:#b9ab93">${m[2]}</span></div>`}).join('')}</div>
+<div style="position:relative;height:30px;border-radius:15px;background:#2a241d;border:2px solid #6b5a43;overflow:hidden"><div style="position:absolute;top:0;bottom:0;left:${W.zone[0]*100}%;width:${(W.zone[1]-W.zone[0])*100}%;background:linear-gradient(90deg,rgba(217,178,90,.25),rgba(217,178,90,.85),rgba(217,178,90,.25))"></div><div id="wmark" style="position:absolute;top:-2px;bottom:-2px;width:6px;margin-left:-3px;background:#fff;box-shadow:0 0 8px #fff;border-radius:3px;left:${W.pos*100}%"></div></div>
+<div style="font-size:16px;min-height:24px;margin:8px 0">${W.msg}</div>
+<div style="display:flex;gap:8px">${done?`<button class="main" style="flex:1" onclick="A.wisClose()">돌아간다</button>`:`<button class="main" style="flex:1" onclick="A.wisPress()">친다 (스페이스)</button><button onclick="A.wisAuto()">맡긴다</button>`}</div></div></div>`}
+let WLOOP=0;function wisKick(){if(WLOOP||typeof requestAnimationFrame==='undefined')return;WLOOP=1;requestAnimationFrame(wisFrame)}
+function wisFrame(t){if(!WIS||WIS.i>=3){WLOOP=0;return}const W=WIS,dt=W.last?(t-W.last)/1000:0;W.last=t;if(!W.busy){W.pos+=W.dir*W.spd*dt;if(W.pos>1){W.pos=1;W.dir=-1}if(W.pos<0){W.pos=0;W.dir=1}const m=document.getElementById('wmark');if(m)m.style.left=W.pos*100+'%'}requestAnimationFrame(wisFrame)}
+function wisPress(){const W=WIS;if(!W||W.busy||W.i>=3)return;W.busy=true;const ok=W.pos>=W.zone[0]&&W.pos<=W.zone[1],mv=W.mv[W.i];W.res.push(ok);const sim=ARTS[W.art].t==='s';W.msg=ok?(sim?`${mv[0]}. 기가 막힘 없이 흐른다.`:`「${mv[0]}」이(가) 허수아비에 정확히 들어갔다.`):(sim?`${mv[0]}… 기가 엇나갔다.`:`「${mv[0]}」이(가) 빗나갔다.`);render();
+  const who=document.getElementById('wwho');if(who&&!sim){who.style.transform='scaleX(-1) translateX(-14px) rotate(-8deg)';setTimeout(()=>{const w2=document.getElementById('wwho');if(w2)w2.style.transform='scaleX(-1)'},160)}
+  if(ok){const el=document.getElementById('wfx');if(el){el.style.backgroundImage=`url(${rlFx(mv[1])})`;el.style.opacity=1;let f=0;const iv=setInterval(()=>{const k=Math.min(f,5);el.style.backgroundPosition=`${(k%3)*50}% ${Math.floor(k/3)*100}%`;el.style.opacity=f>6?Math.max(0,1-(f-6)/3):1;if(++f>=10)clearInterval(iv)},70)}}
+  setTimeout(()=>{W.i++;W.busy=false;if(W.i>=3)wisEnd();else{W.spd*=1.3;wisZone()}render();wisKick()},700)}
+function wisEnd(){const W=WIS,d=D(W.d),h=W.res.filter(Boolean).length,got=h===3||(h===2&&Math.random()<.5);G.q=G.q.filter(x=>x.id!==W.eid);
+  if(got){gainWis(d,1,'허수아비 앞의 수련');W.msg=`<b style="color:#ffd36a">${d.n}이(가) 깨달음을 얻었다. (${h}/3)</b>`}
+  else if(h>=2){W.msg=`<b>무언가 잡힐 듯하다가 흩어졌다. (${h}/3)</b>`;log(`${d.n}이(가) 허수아비 앞에서 수련했지만 깨달음에 닿지 못했다.`)}
+  else{d.mind=Math.min(120,d.mind+10);W.msg=`<b style="color:#ff8a6a">초식이 엉켰다. ${d.n}의 마음이 어지럽다. (심마 +10)</b>`;log(`${d.n}의 초식이 엉켰다. 심마 +10`)}save()}
+function wisAutoRes(eid){const e=G.q.find(x=>x.id===eid),d=e&&D(e.did);if(!d)return;WIS={eid,d:d.id,art:e.art,lv:d.arts[e.art],mv:wisMoves(d,e.art),i:3,res:[],msg:''};const w=Math.min(.17,.07+WIS.lv*.008);for(let k=0;k<3;k++)WIS.res.push(Math.random()<Math.max(.1,w-k*.02)*3.2);wisEnd();const r=WIS;WIS=null;return r}
 function startDuels(eid,lanes){const e=G.q.find(x=>x.id===eid);const list=[];
   lanes.forEach((ids,l)=>{const ds=ids.map(D).filter(Boolean);const b=LN(e)[l].boss;if(ds.length&&b)list.push({l,t:LN(e)[l].n,d:ds[0].id,ids:ds.map(d=>d.id),bn:b.n,bpw:Math.round(b.pw*(e.k||1)),melee:1})});
   DUEL={kind:'lane',eid,lanes,list,i:0,mods:[{o:1,e:1},{o:1,e:1},{o:1,e:1}]};nextDuel()}
@@ -663,6 +692,7 @@ function scheduled(m){
     else{G.qual=Math.max(0,G.qual-10);G.flags.league='none';E.push({t:'event',id:'mudang',info:1,title:'무당 집회',text:`비무행에서 ${G.bimuWins||0}곳밖에 이기지 못해 발언할 자격을 얻지 못했다. 구대문파는 종남을 외면했다. (구파 자격 -10)`})}}
   if(m===40)E.push({t:'quest',id:'hwasanraid',kind:'hwasan',title:'화산의 본산 습격',due:41,k:G.flags.hwasanPeace?.95:1.2,lanes:[{n:'산문',e:300,boss:{n:'검단현',pw:190}},{n:'연무장',e:270,boss:{n:'장병기',pw:175}},{n:'장경각',e:280,boss:{n:G.flags.duEnemy?'두기춘':'화산 고수',pw:170}}],text:'화산이 서장과 손잡았다는 소문 속에 본산을 친다. 갈래마다 둘까지, 두 갈래를 지키면 막아 낸다. 본산을 지키는 싸움이라 수비 자리 제자가 먼저 추천된다(진산월은 직접 넣어야 나선다).'});
   if(m===42)E.push({t:'match',id:'gamjong',title:'공가장 — 쾌의당주',due:43,need:1,onlyJin:1,fx:'gamjong',opp:[{n:'감종간',pw:225}],text:'노해광의 첩보로 공가장에 숨은 쾌의당주의 정체를 알아냈다. 진산월이 직접 맞선다.',winTxt:'쾌의당이 무너졌다.',loseTxt:'감종간이 달아났다.'});
+  wisEvents(m,E);
   if(G.part===2)p2Events(m,E);
   return E;
 }
@@ -780,7 +810,7 @@ const A={
     d.arts[a]=1;d.xp[a]=0;if(ARTS[a].t==='s')d.focusS=a;else if(ARTS[a].t==='m')d.focusM=a;t.teachHalf=true;log(`${t.n}이(가) ${d.n}에게 ${ARTS[a].n}을(를) 가르쳤다. (${t.n}은 이달 수련이 절반)`);save();render()},
   jdir(t,v){const j=D('jin');if(t==='m')j.focusM=v||null;else j.focusS=v||null;save();render()},
   dir(id,t,v){const d=D(id);if(t==='m')d.focusM=v||null;else d.focusS=v||null;save();render()},
-  auto(){{const gq=G.q.find(e=>e.id==='gorge'),nk=D('nak');if(META.noYuk&&gq&&nk&&!['away','hurt','seclude'].includes(nk.pos))A.gorge('gorge','nak')}const p=suggest();for(const id in p){const e=G.q.find(x=>x.id===id);if(!e)continue;
+  auto(){for(const e of G.q.filter(x=>x.kind==='wis'))wisAutoRes(e.id);{const gq=G.q.find(e=>e.id==='gorge'),nk=D('nak');if(META.noYuk&&gq&&nk&&!['away','hurt','seclude'].includes(nk.pos))A.gorge('gorge','nak')}const p=suggest();for(const id in p){const e=G.q.find(x=>x.id===id);if(!e)continue;
     if(e.t==='crisis')A.defend(id,p[id].o,p[id].d);else A.sendJob(id,p[id].d)}render()},
   sendJob(eid,did){const e=G.q.find(x=>x.id===eid);const sel=document.getElementById('js_'+eid);const d=did?D(did):sel&&D(sel.value);if(!e||!d)return;
     d.pos='away';d.away=(e.mon||1)===1?1:Math.max(2,e.mon*2-boV(d,'biyeon'));d.job={need:e.need,k:e.k,pay:e.pay,fame:e.fame,fav:e.fav,sp:e.sp,title:e.title};G.q=G.q.filter(x=>x!==e);log(`${d.n}을(를) ${e.title}에 보냈다. (승률 ${chanceK(d,e.need,e.k)}%)`);save();render()},
@@ -791,7 +821,7 @@ const A={
     G.q=G.q.filter(x=>x!==e);save();render()},
   giveup(eid){const e=G.q.find(x=>x.id===eid);if(!e)return;for(const o of e.opts)lose(o);G.q=G.q.filter(x=>x!==e);save();render()},
   decline(eid){const e=G.q.find(x=>x.id===eid);if(!e)return;G.q=G.q.filter(x=>x!==e);log(`${e.title} 의뢰를 거절했다.`);save();render()},
-  quest(eid){const e=G.q.find(x=>x.id===eid);if(!e)return;
+  quest(eid){const e=G.q.find(x=>x.id===eid);if(!e)return;if(e.kind==='wis'){wisOpen(eid);return}
     if(eid==='taeeul'){if(G.half!==0||G.act<1||G.jinBusy||G.retreat)return;G.act=0;G.jinBusy=true;G.jinLock=1;if(goTaeeul())G.q=G.q.filter(x=>x!==e)}
     else if(eid==='limcold'){G.q=G.q.filter(x=>x!==e);G.flags.ilbiSearch=G.m+1;log('서안과 낙양 쪽에 사람을 풀어 장례식 날의 삿갓 쓴 사내를 찾게 했다.')}
     else if(eid==='seokshil'){if(G.retreat)return;G.retreat=3;G.act=0;G.q=G.q.filter(x=>x!==e);log('진산월이 중봉 석실에 들어가 폐관했다. 석 달 동안 자리를 비운다.')}
@@ -812,6 +842,7 @@ const A={
   mapSel(k){MAPSEL=MAPSEL===k?null:k;render()},
   info(eid){G.q=G.q.filter(x=>x.id!==eid);save();render()},
   autoJin(v){G.noAutoJin=!v;save();render()},
+  wisPress(){wisPress()},wisAuto(){if(!WIS||WIS.i>=3)return;const w=Math.min(.17,.07+WIS.lv*.008);while(WIS.i<3){WIS.res.push(Math.random()<Math.max(.1,w-WIS.i*.02)*3.2);WIS.i++}wisEnd();render()},wisClose(){WIS=null;render()},
   forge(id,s){const d=D(id),lv=forgeLv(s);if(!d||!lv)return;const cur=s==='w'?(d.wpn||0):(d.arm||0),x=(s==='w'?GEAR.w:GEAR.a)[lv];if(lv<=cur||G.eun<x.c)return;G.eun-=x.c;if(s==='w')d.wpn=lv;else d.arm=lv;log(`대장간에서 ${d.n}에게 ${s==='w'&&gwonOf(d)?x.gn:x.n}을(를) 벼려 주었다. 은자 -${x.c}`);save();render()},
   arm(eid){const e=G.q.find(x=>x.id===eid);if(!e||(e.arm||0)>=3||G.eun<200)return;G.eun-=200;e.arm=(e.arm||0)+1;log(`${e.title}에 대비해 병장기와 군량을 정비했다. (${e.arm}/3, 종남 병사 +${e.arm*5}%) 은자 -200`);save();render()},
   keepPay(eid){const e=G.q.find(x=>x.id===eid);if(!e||!e.sp||!e.sp.startsWith('keep:')||G.eun<300)return;G.eun-=300;G.q=G.q.filter(x=>x!==e);log('군자금 300냥을 보냈다.'+(P2JOB.keep({sp:e.sp},true)||''));save();render()},
@@ -888,6 +919,7 @@ function endMonth(){
   for(const e of G.q.filter(x=>x.t==='match'&&x.due<=G.m)){G.q=G.q.filter(y=>y!==e);MATCH_FX[e.fx](false,0,e);log(`${e.title}에 나서지 않았다.`)}
   // 미룬 위기는 기한이 지나면 둘 다 잃는다
   for(const e of G.q.filter(x=>x.t==='crisis'&&x.due<=G.m)){for(const o of e.opts)lose(o);log('초가보의 압박을 막지 못했다.')}
+  G.q=G.q.filter(x=>!(x.kind==='wis'&&x.due<=G.m));
   for(const e of G.q.filter(x=>x.t==='job'&&x.p2&&x.due<=G.m))P2JOB[e.sp.split(':')[0]]({sp:e.sp,title:e.title},false,1);
   G.q=G.q.filter(x=>!(x.t==='crisis'&&x.due<=G.m)&&!(x.t==='job'&&x.due<=G.m)&&x.t!=='appl');
   // 해독 기한
@@ -1051,7 +1083,7 @@ let TITLE=null;
 const DIFF={easy:{n:'쉬움',k:.9,eun:100,d:'적이 약하다. 처음 해 보는 사람에게'},normal:{n:'보통',k:1,eun:0,d:'기준 난이도'},hard:{n:'어려움',k:1.15,eun:-50,d:'적이 강하다. 놓친 일이 그대로 멸문으로 이어진다'}};
 const dk=()=>(DIFF[G&&G.diff]||DIFF.normal).k;
 function titleHTML(){return `<div class="modal" style="align-items:flex-end;padding-bottom:14vh;background:rgba(29,26,22,.3)"><div class="box" style="max-width:380px;text-align:center;padding:26px 22px"><h1 style="font-size:34px;letter-spacing:.2em;margin:0">君臨天下</h1><p class="muted" style="letter-spacing:.3em;margin:4px 0 18px">군림천하 · 문파 경영</p><div class="ch">${TITLE.save?`<button class="main" onclick="A.titleGo(0)">이어하기 <span style="font-size:12px;opacity:.75">(${yr(G.m)} ${HALF[G.half||0]})</span></button>`:''}${TITLE.pick?Object.entries(DIFF).map(([k,v])=>`<button ${k==='normal'?'class="main"':''} onclick="A.titleDiff('${k}')">${v.n} <span style="font-size:12px;opacity:.75">· ${v.d}</span></button>`).join(''):`<button ${TITLE.save?'':'class="main"'} onclick="A.titleGo(1)">게임 시작</button>`}</div></div></div>`}
-function modalHTML(){if(TITLE)return titleHTML();if(!MODAL)return'';return `<div class="modal"><div class="box"><h2>${MODAL.title}</h2>${MODAL.p.map(x=>`<p class="serif">${x}</p>`).join('')}
+function modalHTML(){if(TITLE)return titleHTML();if(WIS)return wisHTML();if(!MODAL)return'';return `<div class="modal"><div class="box"><h2>${MODAL.title}</h2>${MODAL.p.map(x=>`<p class="serif">${x}</p>`).join('')}
 <div class="ch">${MODAL.ch.map((c,i)=>`<button onclick="A.choose(${i})">${c[0]}</button>`).join('')}</div></div></div>`}
 function playFx(){document.querySelectorAll?.('.fx[data-fx]').forEach(el=>{const n=el.dataset.fx;el.removeAttribute('data-fx');el.style.backgroundImage=`url(${rlFx(n)})`;let f=0;const t=setInterval(()=>{const k=Math.min(f,5);el.style.backgroundPosition=`${(k%3)*50}% ${Math.floor(k/3)*100}%`;el.style.opacity=f>6?String(Math.max(0,1-(f-6)/3)):'1';if(++f>=10){clearInterval(t);el.remove()}},140)})}
 /* ================= 연무장(도트) ================= */
