@@ -158,6 +158,9 @@ const enemyImg=bn=>ENIMG[bn]||(RLEN[bn]&&RLEN[bn][0]?rlImg(RLEN[bn][0]):null);
 RLEN['서장 무승']=['sadae',null];RLEN['석동']=['',['대라장천','천양신공','구양신공']];
 const emvName=(bn,em)=>{const r=RLEN[bn];return r&&r[1]?r[1][['kang','kwae','su'].indexOf(em)]:MV[em]};
 const ENEMY_FX=['b_noesin','b_biryong','b_baekhwa','b_hyeolhwa','b_paewang','b_samji'];
+// 초식 이름 → 이펙트(로그라이크 짝 + 문파경영)
+const NAMEFX={'구주홍염화':'b_gujuhong','금강항마':'geumganghangma','뇌신파황':'b_noesin','대라궁해':'dara1','대라장천':'dara2','대라섬요':'dara3','마운장':'maun','분뢰경변':'bunroe','불광만천':'b_bulgwang','항룡금강권':'hangryong','혈라인':'hyeolra','제세모니인':'b_jese','음양화벽':'eumyang','음양쌍반진':'eumyang','현음진기':'eumyang','낙뢰구검':'bunroe','신뢰하격':'b_noesin','월녀검법':'wolnyeo','색탈혼':'talhon_saek','천룡번공':'b_cheonji','천양신공':'b_hyeolhwa','구양신공':'b_hyeolhwa'};
+const efxOf=(bn,mv)=>{const nm=emvName(bn,mv);return NAMEFX[nm]||ENEMY_FX[Math.floor(Math.random()*ENEMY_FX.length)]};
 const RLFX=[...new Set([...Object.values(MOVES).flat().map(x=>x[1]).filter(Boolean),...ENEMY_FX,'cheonha_mugung'])];
 const SAVE='munpa-v1';
 
@@ -379,7 +382,8 @@ function mSkill(M,i){const u=M.U.filter(x=>x.hero)[i];if(!u||u.hp<=0||u.skc>0||M
   if(u.sk.t==='ring'){M.FX.push({k:'ring',x:u.x+20,y:u.y-20,r:80,t:0},{k:'sheet',n:u.sk.fx,x:u.x+24,y:u.y-34,w:170,t:0});for(const e of foes)if(Math.hypot(e.x-u.x,(e.y-u.y)*1.4)<110)mHit(M,e,dmg*.75,'#cfe4ff')}
   if(u.sk.t==='cone'){M.FX.push({k:'cone',x:u.x+30,y:u.y-25,t:0},{k:'sheet',n:u.sk.fx,x:u.x+120,y:u.y-34,w:160,t:0});for(const e of foes)if(e.x>u.x&&e.x<u.x+180&&Math.abs(e.y-u.y)<60){mHit(M,e,dmg*.6,'#ffe08a');e.x=Math.min(MW-20,e.x+60)}}}
 function mStep(M,dt){M.tt+=dt;if(M.over)return;M.T-=dt;const rnd=(a,b)=>a+Math.random()*(b-a);
-  for(const u of M.U){if(u.hp<=0){u.dead=(u.dead||0)+dt;continue}u.cd-=dt;if(u.hero)u.skc=Math.max(0,u.skc-dt);if(u.bub)u.bub.t+=dt;
+  for(const u of M.U){if(u.hp<=0){u.dead=(u.dead||0)+dt;continue}    u.cd-=dt;if(u.hero)u.skc=Math.max(0,u.skc-dt);if(u.bub)u.bub.t+=dt;
+    if(u.boss){u.bsk=(u.bsk==null?5:u.bsk)-dt;if(u.bsk<=0){const t=mAlive(M,0).filter(o=>Math.hypot(o.x-u.x,o.y-u.y)<170);if(t.length){u.bsk=10;const r=RLEN[u.n],nm=r&&r[1]?r[1][0]:null,fx=(nm&&NAMEFX[nm])||ENEMY_FX[Math.floor(Math.random()*ENEMY_FX.length)];u.bub={s:(nm||'일격')+'!',t:0};M.shake=6;const c0=t.reduce((s,o)=>({x:s.x+o.x/t.length,y:s.y+o.y/t.length}),{x:0,y:0});M.FX.push({k:'sheet',n:fx,x:c0.x+20,y:c0.y-30,w:180,t:0});for(const o of t)if(Math.hypot(o.x-c0.x,o.y-c0.y)<90)mHit(M,o,u.atk*2.2)}}}
     if(u.go){const dx=u.go.x-u.x,dy=u.go.y-u.y,d=Math.hypot(dx,dy);if(d>8){u.x+=dx/d*u.spd*1.5*dt;u.y+=dy/d*u.spd*1.5*dt;u.face=dx<0;u.f=0;u.mv=1;continue}u.go=null;u.tg=null}
     const foes=mAlive(M,1-u.side);if(!foes.length)continue;let tg=u.tg;
     if(!tg||tg.hp<=0||Math.random()<.01){const cost=e=>Math.abs(e.x-u.x)+2.6*Math.abs(e.y-u.y)+(e.boss&&!u.hero?60:0)+8*M.U.filter(o=>o.tg===e&&o.hp>0).length;tg=foes.reduce((b,e)=>cost(e)<cost(b)?e:b);u.tg=tg}
@@ -491,7 +495,7 @@ function duelMove(mv){const c=DUEL.cur;if(!c||c.over)return;c.fx=null;const d=D(
   const dmg=(a,b)=>Math.round(22*Math.pow(a/b,.7)*(.85+Math.random()*.3));let line;
   if(mv===em){c.hp[0]-=8;c.hp[1]-=8;line=`${c.r}합: 「${mvName(d,mv)}」과 ${c.bn}의 「${emvName(c.bn,em)}」이(가) 맞부딪쳐 서로 밀려났다.`;c.hit='both';c.fx={side:'e',n:mvFx(d,mv)}}
   else if(BEAT[mv]===em){const da=duelArt(d),x=Math.round(dmg(pw,bp)*(1+(da&&ARTS[da].w==='gwon'?boV(d,'janggwaebo'):0)));c.hp[1]-=x;line=`${c.r}합: ${d.n}의 「${mvName(d,mv)}」이(가) ${c.bn}의 「${emvName(c.bn,em)}」을(를) 꺾었다. (-${x})`;c.hit='e';c.fx={side:'e',n:mvFx(d,mv)}}
-  else{const x=Math.round(dmg(bp,pw)*(1-Math.min(.25,boV(d,'hoeseon')+boV(d,'muyeom'))));c.hp[0]-=x;line=`${c.r}합: ${c.bn}의 「${emvName(c.bn,em)}」에 ${d.n}의 「${mvName(d,mv)}」이(가) 밀렸다. (-${x})`;c.hit='p';c.fx={side:'p',n:ENEMY_FX[Math.floor(Math.random()*ENEMY_FX.length)]}}
+  else{const x=Math.round(dmg(bp,pw)*(1-Math.min(.25,boV(d,'hoeseon')+boV(d,'muyeom'))));c.hp[0]-=x;line=`${c.r}합: ${c.bn}의 「${emvName(c.bn,em)}」에 ${d.n}의 「${mvName(d,mv)}」이(가) 밀렸다. (-${x})`;c.hit='p';c.fx={side:'p',n:efxOf(c.bn,em)}}
   c.msg.push(line);c.hp=c.hp.map(v=>Math.max(0,v));
   if(c.hp[0]<=0||c.hp[1]<=0||c.r>=6){c.over=true;const win=c.hp[1]<c.hp[0]||(c.hp[1]===c.hp[0]&&pw>=bp);c.win=win;
     DUEL.list[DUEL.i].win=win;boExp(d);
@@ -554,8 +558,8 @@ function cardFoe(c){const k=c.k,d=D(c.d),it=k.intent;k.disc.push(...k.hand);k.ha
   const red=(1-Math.min(.25,boV(d,'hoeseon')+boV(d,'muyeom')))*eqDef(d);
   const hitP=v=>{let x=v;if(k.e.weak)x*=.75;if(k.p.vuln)x*=1.5;x=Math.round(x*red);if(k.p.dodge){k.p.dodge--;c.msg.push('몸을 흘려 공격을 피했다.');return}
     const b=Math.min(k.p.block,x);k.p.block-=b;x-=b;k.p.hp-=x;if(x)c.pops.push({side:'p',t:'-'+x});if(k.p.counter){k.e.hp-=k.p.counter;c.pops.push({side:'e',t:'반격 '+k.p.counter})}};
-  if(it.k==='atk'){hitP(it.v);c.fx={side:'p',n:ENEMY_FX[Math.floor(Math.random()*ENEMY_FX.length)]};c.hit='p';c.msg.push(`${k.turn}턴: ${c.bn}의 「${emvName(c.bn,'kang')}」 ${it.v}`)}
-  else if(it.k==='multi'){for(let j=0;j<it.n;j++)hitP(it.v);c.fx={side:'p',n:ENEMY_FX[Math.floor(Math.random()*ENEMY_FX.length)]};c.hit='p';c.msg.push(`${k.turn}턴: ${c.bn}의 「${emvName(c.bn,'kwae')}」 ${it.v}×${it.n}`)}
+  if(it.k==='atk'){hitP(it.v);c.fx={side:'p',n:efxOf(c.bn,'kang')};c.hit='p';c.msg.push(`${k.turn}턴: ${c.bn}의 「${emvName(c.bn,'kang')}」 ${it.v}`)}
+  else if(it.k==='multi'){for(let j=0;j<it.n;j++)hitP(it.v);c.fx={side:'p',n:efxOf(c.bn,'kwae')};c.hit='p';c.msg.push(`${k.turn}턴: ${c.bn}의 「${emvName(c.bn,'kwae')}」 ${it.v}×${it.n}`)}
   else if(it.k==='def'){k.e.block+=it.v;c.msg.push(`${k.turn}턴: ${c.bn}이(가) 「${emvName(c.bn,'su')}」로 자세를 굳혔다 (방어 ${it.v})`)}
   else{k.e.pw+=it.v;c.msg.push(`${k.turn}턴: ${c.bn}의 기세가 오른다`)}
   k.p.counter=0;for(const t of['vuln','weak']){if(k.e[t])k.e[t]--;if(k.p[t])k.p[t]--}
