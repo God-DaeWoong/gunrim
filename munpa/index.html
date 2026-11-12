@@ -306,7 +306,7 @@ function battleSuggest(e){const home=e&&e.kind==='hwasan';const c=laneCands().fi
 function readLanes(){const used=new Set();return [0,1,2].map(l=>{const ids=[0,1].map(i=>(document.getElementById(`bl_${l}_${i}`)||{}).value).filter(v=>v&&!used.has(v));ids.forEach(v=>used.add(v));return ids})}
 function fight(eid,lanes,mods){const e=G.q.find(x=>x.id===eid);if(!e)return;const k=e.k||1,res=[];lanes=lanes||battleSuggest(e);mods=mods||[];
   for(let l=0;l<3;l++){const md=mods[l]||{o:1,e:1};
-    const ds=lanes[l].map(D).filter(Boolean),our=ds.reduce((s,d)=>s+power(d)*(.6+d.st.tong/250),0)*(.85+Math.random()*.3)*md.o*(1+.1*(G.wall||0)),en=Math.round(LN(e)[l].e*k*md.e);res.push({l,boss:LN(e)[l].boss&&LN(e)[l].boss.n,ds,win:our>=en,our:Math.round(our),en,duel:md.t})}
+    const ds=lanes[l].map(D).filter(Boolean),our=ds.reduce((s,d)=>s+power(d)*(.6+d.st.tong/250),0)*(.85+Math.random()*.3)*md.o*(1+.1*(G.wall||0)),en=Math.round(LN(e)[l].e*k*md.e);res.push({l,boss:LN(e)[l].boss&&LN(e)[l].boss.n,ds,win:md.force!=null?md.force:our>=en,our:Math.round(our),en,duel:md.t})}
   const wins=res.filter(r=>r.win).length,ok=wins>=2;
   for(const r of res){for(const d of r.ds){if(r.win){if(Math.random()<.6)gainWis(d,1,e.title)}else if(d.id!=='jin'&&Math.random()<.5){d.pos='hurt';d.away=4}}}
   G.q=G.q.filter(x=>x!==e);
@@ -328,11 +328,107 @@ function revealIlbi(){if(G.ilbi==='late'&&!has('ilbi')){ilbiArrive('초가보가
 let DUEL=null;
 const MV={kang:'강공',kwae:'쾌검',su:'수비'},BEAT={kang:'kwae',kwae:'su',su:'kang'};
 const TELL={kang:['상대가 검을 높이 치켜든다.','상대의 어깨에 힘이 몰린다.'],kwae:['상대의 발끝이 가볍게 들린다.','상대의 검끝이 잘게 떨린다.'],su:['상대가 검을 거두고 숨을 고른다.','상대가 반 걸음 물러선다.']};
+/* ================= 떼싸움 (갈래 전투) ================= */
+// 갈래마다 한 판. 적 병사 수는 그 갈래 적 병력에서, 종남 병사 수는 문파원 수에서 나온다. 장수·적장의 강함은 전력에서
+const MW=960,MH=540,MTOP=230,MBOT=500;
+const mImg=s=>{if(typeof Image==='undefined')return{};MIMG[s]=MIMG[s]||Object.assign(new Image(),{src:s});return MIMG[s]};const MIMG={};
+const MELEE_BG={hwasan:'img/sd_yard.webp'};
+const MFOE={cho:['초가보','sepia(.9) hue-rotate(-25deg) saturate(1.8)'],hwasan:['화산','sepia(.5) hue-rotate(230deg) saturate(1.5)'],seojang:['서장군','sepia(1) hue-rotate(-40deg) saturate(2.6)']};
+const mFoeOf=e=>e.kind==='hwasan'?'hwasan':e.kind==='p2a'||e.kind==='p2b'?'seojang':'cho';
+const mTroops=()=>Math.max(13,Math.min(24,8+Math.round(dsCount()*.45)));
+function mSkillOf(d){const a=duelArt(d)||'yuun';if((d.arts.wolnyeo||0)>=(d.arts[a]||0)&&d.arts.wolnyeo!=null)return{n:'월녀검법',t:'ring',fx:'unmu'};
+  const t=['janggwae','nakroe','guban','pungroe'].includes(a)?'cone':'line';return{n:ARTS[a].n,t,fx:t==='cone'?'cheonjeon':(MOVES[a]&&MOVES[a][0][1])||'geombong'}}
+function meleeInit(c){const e=G.q.find(x=>x.id===DUEL.eid),L=LN(e)[c.l],k=e.k||1,rnd=(a,b)=>a+Math.random()*(b-a),U=[];
+  c.ids.forEach((id,i)=>{const d=D(id),P=power(d);U.push({side:0,d:id,n:d.n,sk:mSkillOf(d),hero:1,x:120,y:270+i*110,hp:90+P*1.0,max:90+P*1.0,atk:4+P/9,rng:46,spd:62,cd:0,skc:3,f:0})});
+  const others=G.ds.filter(d=>!d.elder&&d.id!=='jin'&&!c.ids.includes(d.id)),tm=Math.max(.7,Math.min(1.6,(others.reduce((s,d)=>s+power(d),0)/Math.max(1,others.length))/110)),ourB=c.ids.reduce((s,id)=>{const d=D(id);return s+power(d)*(.6+d.st.tong/250)},0)*(1+.1*(G.wall||0)),emR=(typeof MKM!=='undefined'?MKM:2.1)*L.e*k/Math.max(1,ourB);
+  const nt=mTroops()+(e.kind==='p2b'&&G.p2?2*Math.min(5,G.p2.kept.length):0),ne=Math.max(19,Math.min(32,Math.round(L.e*k/10))),em=Math.max(.3,Math.min(2.5,emR*12/ne));
+  for(let i=0;i<nt;i++)U.push({side:0,ally:e.kind==='p2b'&&i>=mTroops(),x:rnd(30,200),y:MTOP+10+(i+rnd(.1,.9))*(MBOT-MTOP-10)/nt,hp:90*tm,max:90*tm,atk:9*tm,rng:34,spd:55,cd:rnd(0,1),f:0});
+  for(let i=0;i<ne;i++)U.push({side:1,x:rnd(700,930),y:MTOP+10+(i+rnd(.1,.9))*(MBOT-MTOP-10)/ne,hp:86*em,max:86*em,atk:9*em,rng:34,spd:55,cd:rnd(0,1),f:0});
+  const bp=Math.round(L.boss.pw*k);U.push({side:1,boss:1,n:L.boss.n,x:860,y:330,hp:200+bp*2,max:200+bp*2,atk:8+bp/6,rng:50,spd:45,cd:0,f:0});
+  c.m={U,FX:[],TXT:[],COIN:[],T:30,tt:0,eun:0,shake:0,auto:false,sel:U[0],foe:mFoeOf(e),bg:MELEE_BG[e.kind]||'img/gorge.webp',ne,nt};c.msg=[`${L.n}. 종남 ${c.ids.length+nt}명 대 ${MFOE[c.m.foe][0]} ${ne+1}명.`]}
+const mAlive=(M,s)=>M.U.filter(u=>u.side===s&&u.hp>0);
+const mMorale=(M,s)=>{const a=M.U.filter(u=>u.side===s);return a.reduce((t,u)=>t+Math.max(0,u.hp)*(u.boss||u.hero?1.6:1),0)/a.reduce((t,u)=>t+u.max*(u.boss||u.hero?1.6:1),0)};
+function mHit(M,v,d,col){if(v.hp<=0)return;v.hp-=d;M.TXT.push({x:v.x,y:v.y-56,t:0,s:String(Math.round(d)),col:col||(v.side?'#ffd36a':'#ff6a5a')});
+  if(v.hp<=0){v.dead=0;if(v.side===1)for(let i=0,n=v.boss?6:Math.random()<.5?1:0;i<n;i++)M.COIN.push({x:v.x+14,y:v.y-20,vx:(Math.random()-.5)*120,vy:-90-Math.random()*70,gy:v.y+Math.random()*14,t:0,v:v.boss?3:1});
+    if(v.boss){M.TXT.push({x:v.x,y:v.y-90,t:0,s:`적장 ${v.n}이(가) 쓰러졌다!`,col:'#fff',big:1});M.shake=14;for(const e of mAlive(M,1))e.hp*=.7}
+    if(v.hero){M.TXT.push({x:v.x,y:v.y-90,t:0,s:`${v.n}이(가) 물러났다`,col:'#ffb0a0',big:1});for(const e of mAlive(M,0))if(!e.hero)e.hp*=.85}}}
+function mSkill(M,i){const u=M.U.filter(x=>x.hero)[i];if(!u||u.hp<=0||u.skc>0||M.over)return;u.skc=10;u.bub={s:u.sk.n+'!',t:0};M.shake=8;const foes=mAlive(M,1),dmg=u.atk*3;
+  if(u.sk.t==='line'){M.FX.push({k:'line',x:u.x+30,y:u.y-30,len:280,t:0},{k:'sheet',n:u.sk.fx,x:u.x+140,y:u.y-22,w:200,t:0});for(const e of foes)if(e.x>u.x-10&&e.x<u.x+300&&Math.abs(e.y-u.y)<32)mHit(M,e,e.boss?dmg*1.4:dmg,'#9fe6ff');u.x=Math.min(MW-60,u.x+60)}
+  if(u.sk.t==='ring'){M.FX.push({k:'ring',x:u.x+20,y:u.y-20,r:80,t:0},{k:'sheet',n:u.sk.fx,x:u.x+24,y:u.y-34,w:170,t:0});for(const e of foes)if(Math.hypot(e.x-u.x,(e.y-u.y)*1.4)<110)mHit(M,e,dmg*.75,'#cfe4ff')}
+  if(u.sk.t==='cone'){M.FX.push({k:'cone',x:u.x+30,y:u.y-25,t:0},{k:'sheet',n:u.sk.fx,x:u.x+120,y:u.y-34,w:160,t:0});for(const e of foes)if(e.x>u.x&&e.x<u.x+180&&Math.abs(e.y-u.y)<60){mHit(M,e,dmg*.6,'#ffe08a');e.x=Math.min(MW-20,e.x+60)}}}
+function mStep(M,dt){M.tt+=dt;if(M.over)return;M.T-=dt;const rnd=(a,b)=>a+Math.random()*(b-a);
+  for(const u of M.U){if(u.hp<=0){u.dead=(u.dead||0)+dt;continue}u.cd-=dt;if(u.hero)u.skc=Math.max(0,u.skc-dt);if(u.bub)u.bub.t+=dt;
+    if(u.go){const dx=u.go.x-u.x,dy=u.go.y-u.y,d=Math.hypot(dx,dy);if(d>8){u.x+=dx/d*u.spd*1.5*dt;u.y+=dy/d*u.spd*1.5*dt;u.face=dx<0;u.f=0;u.mv=1;continue}u.go=null;u.tg=null}
+    const foes=mAlive(M,1-u.side);if(!foes.length)continue;let tg=u.tg;
+    if(!tg||tg.hp<=0||Math.random()<.01){const cost=e=>Math.abs(e.x-u.x)+2.6*Math.abs(e.y-u.y)+(e.boss&&!u.hero?60:0)+8*M.U.filter(o=>o.tg===e&&o.hp>0).length;tg=foes.reduce((b,e)=>cost(e)<cost(b)?e:b);u.tg=tg}
+    const dx=tg.x-u.x,dy=tg.y-u.y,dist=Math.hypot(dx,dy);u.face=dx<0;u.mv=dist>u.rng;
+    if(u.mv){const ax=Math.abs(dx)>u.rng*.7?Math.sign(dx):0,ay=Math.abs(dy)>14?Math.sign(dy)*(Math.abs(dx)<120?.8:.3):0,n=Math.hypot(ax,ay)||1;u.x+=ax/n*u.spd*dt;u.y+=ay/n*u.spd*dt;u.f=0}
+    else if(u.cd<=0){u.cd=rnd(.7,1.1);u.f=.18;mHit(M,tg,u.atk*rnd(.8,1.2));M.FX.push({k:'spark',x:tg.x+10,y:tg.y-30,t:0});
+      if(Math.random()<.03)u.bub={s:u.side?['쳐라!','밀어붙여라!','한 놈도 놓치지 마라!'][Math.random()*3|0]:['종남을 지켜라!','물러서지 마라!'][Math.random()*2|0],t:0}}
+    u.f=Math.max(0,u.f-dt);u.y=Math.max(MTOP,Math.min(MBOT,u.y));u.x=Math.max(10,Math.min(MW-40,u.x))}
+  const L=M.U.filter(u=>u.hp>0);for(let i=0;i<L.length;i++)for(let j=i+1;j<L.length;j++){const a=L[i],b=L[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1;if(d<30){const p=(30-d)/2*(a.side===b.side?1:.6);a.x-=dx/d*p;a.y-=dy/d*p;b.x+=dx/d*p;b.y+=dy/d*p}}
+  if(M.auto)M.U.filter(x=>x.hero).forEach((u,i)=>{if(u.hp>0&&u.skc<=0&&mAlive(M,1).some(e=>Math.hypot(e.x-u.x,e.y-u.y)<200))mSkill(M,i)});
+  for(const k of M.COIN){k.t+=dt;if(k.t<.9){k.x+=k.vx*dt;k.vy+=420*dt;k.y+=k.vy*dt;if(k.y>k.gy){k.y=k.gy;k.vy*=-.35;k.vx*=.6}}else{const dx=600-k.x,dy=22-k.y,d=Math.hypot(dx,dy);if(d<16){k.done=1;M.eun+=k.v}else{const sp=300+k.t*500;k.x+=dx/d*sp*dt;k.y+=dy/d*sp*dt}}}M.COIN=M.COIN.filter(k=>!k.done);
+  for(const f of M.FX)f.t+=dt;M.FX=M.FX.filter(f=>f.t<(f.k==='sheet'?.9:.5));for(const t of M.TXT)t.t+=dt;M.TXT=M.TXT.filter(t=>t.t<(t.big?2.2:.9));
+  if(!mAlive(M,1).length||!mAlive(M,0).length||M.T<=0){const m0=mMorale(M,0),m1=mMorale(M,1);M.over={win:!mAlive(M,1).length||(mAlive(M,0).length>0&&m0>=m1),m0,m1};M.eun+=M.COIN.reduce((s,k)=>s+k.v,0);M.COIN=[]}}
+const MOC=typeof document!=='undefined'&&document.createElement?document.createElement('canvas'):null;
+function mDraw(M,c){c.save();if(M.shake>0){c.translate((Math.random()-.5)*M.shake,(Math.random()-.5)*M.shake);M.shake*=.85;if(M.shake<.5)M.shake=0}
+  const BG=mImg(M.bg);if(BG.naturalWidth){const r=Math.max(MW/BG.naturalWidth,MH/BG.naturalHeight);c.drawImage(BG,(MW-BG.naturalWidth*r)/2,(MH-BG.naturalHeight*r)/2,BG.naturalWidth*r,BG.naturalHeight*r)}else{c.fillStyle='#2a241d';c.fillRect(0,0,MW,MH)}
+  c.fillStyle='rgba(20,14,10,.4)';c.fillRect(0,0,MW,MH);
+  const mook=mImg('img/sd_mook_jn.png'),order=M.U.slice().sort((a,b)=>(a.hp>0)-(b.hp>0)||a.y-b.y);
+  for(const u of order){const dead=u.hp<=0;if(dead&&u.dead>3)continue;c.globalAlpha=dead?Math.max(0,1-u.dead/3):1;
+    const hi=u.hero?mImg('img/sd_'+u.d+'.png'):null,im=hi&&hi.naturalWidth?hi:mook;
+    if(im.naturalWidth){const h=u.hero?66:u.boss?72:52,w=h*im.naturalWidth/im.naturalHeight,bob=u.mv?Math.abs(Math.sin(M.tt*14))*4:0;c.save();
+      if(!u.hero&&(u.side||u.ally))c.filter=u.ally?'hue-rotate(90deg) saturate(1.4)':u.boss?'sepia(1) hue-rotate(-40deg) saturate(3) brightness(.85)':MFOE[M.foe][1];
+      c.translate(u.x+24,u.y+16-bob);if(dead){c.rotate(u.side?1.45:-1.45);c.translate(10,-6)}if(!u.face)c.scale(-1,1);c.rotate(u.f>0?.22:0);c.translate(u.f>0?6:0,0);c.drawImage(im,-w/2,-h,w,h);c.restore()}
+    c.globalAlpha=1;
+    if(!dead){const bw=u.hero||u.boss?40:26,y=u.y-(u.hero?64:u.boss?70:52);c.fillStyle='rgba(0,0,0,.6)';c.fillRect(u.x+8,y,bw,4);c.fillStyle=u.side?'#e0603a':u.ally?'#7ad08a':'#6ab0e8';c.fillRect(u.x+8,y,bw*u.hp/u.max,4);
+      if(u===M.sel){c.strokeStyle='#ffd36a';c.lineWidth=2;c.beginPath();c.ellipse(u.x+24,u.y+16,26,8,0,0,7);c.stroke()}
+      if(u.n){c.font='bold 12px sans-serif';c.fillStyle=u.boss?'#ffb08a':'#fff3dc';c.fillText(u.n,u.x+6,y-4)}
+      if(u.bub&&u.bub.t<2.2){c.font='13px sans-serif';const tw=c.measureText(u.bub.s).width+12;c.fillStyle='rgba(241,233,216,.92)';c.fillRect(u.x,y-30,tw,20);c.fillStyle='#1d1a16';c.fillText(u.bub.s,u.x+6,y-15)}}}
+  for(const f of M.FX){const a=Math.max(0,1-f.t/.5);c.globalAlpha=a;
+    if(f.k==='sheet'){const im=mImg(rlFx(f.n));if(im.naturalWidth&&MOC){const fw=im.naturalWidth/3,fh=im.naturalHeight/2,k=Math.min(5,f.t/.12|0),h=f.w*fh/fw,o=MOC,ox=o.getContext('2d');c.globalAlpha=f.t>.72?Math.max(0,1-(f.t-.72)/.18):1;
+      o.width=f.w|0;o.height=h|0;ox.drawImage(im,(k%3)*fw,(k/3|0)*fh,fw,fh,0,0,o.width,o.height);ox.globalCompositeOperation='destination-in';const gr=ox.createRadialGradient(o.width/2,o.height/2,0,o.width/2,o.height/2,o.width/2);gr.addColorStop(0,'#fff');gr.addColorStop(.55,'rgba(255,255,255,.9)');gr.addColorStop(1,'rgba(255,255,255,0)');
+      ox.save();ox.translate(o.width/2,o.height/2);ox.scale(1,o.height/o.width);ox.translate(-o.width/2,-o.height/2);ox.fillStyle=gr;ox.fillRect(-o.width,-o.height*2,o.width*3,o.height*5);ox.restore();ox.globalCompositeOperation='source-over';
+      c.globalCompositeOperation='lighter';c.drawImage(o,f.x-f.w/2,f.y-h/2);c.globalCompositeOperation='source-over'}}
+    if(f.k==='spark'){c.strokeStyle='#fff6d0';c.lineWidth=2;for(let i=0;i<4;i++){const an=i*1.57+f.t*8;c.beginPath();c.moveTo(f.x,f.y);c.lineTo(f.x+Math.cos(an)*12,f.y+Math.sin(an)*12);c.stroke()}}
+    if(f.k==='line'){const g=c.createLinearGradient(f.x,0,f.x+f.len,0);g.addColorStop(0,'rgba(160,230,255,0)');g.addColorStop(.2,'#bff0ff');g.addColorStop(1,'rgba(160,230,255,0)');c.fillStyle=g;c.fillRect(f.x,f.y-4-8*a,f.len,8+16*a)}
+    if(f.k==='ring'){c.strokeStyle='#b9d8ff';c.lineWidth=10*a;c.beginPath();c.ellipse(f.x,f.y,f.r*(.4+f.t*1.4),f.r*.45*(.4+f.t*1.4),0,0,7);c.stroke()}
+    if(f.k==='cone'){c.fillStyle='rgba(255,220,120,.5)';c.beginPath();c.moveTo(f.x,f.y);c.arc(f.x,f.y,30+f.t*240,-.32,.32);c.closePath();c.fill()}
+    c.globalAlpha=1}
+  for(const k of M.COIN){const x=k.x|0,y=k.y|0;c.fillStyle='#6d6a63';c.fillRect(x-5,y-4,10,8);c.fillRect(x-4,y-5,8,10);c.fillStyle='#dfe3e8';c.fillRect(x-4,y-3,8,6);c.fillRect(x-3,y-4,6,8);c.fillStyle='#6d6a63';c.fillRect(x-1,y-1,2,2)}
+  for(const t of M.TXT){c.globalAlpha=1-t.t/(t.big?2.2:.9);c.font=t.big?'bold 24px serif':'bold 17px sans-serif';c.strokeStyle='#000';c.lineWidth=3;const y=t.y-t.t*30,x=t.big?Math.max(10,t.x-130):t.x;c.strokeText(t.s,x,y);c.fillStyle=t.col;c.fillText(t.s,x,y)}c.globalAlpha=1;
+  const m0=mMorale(M,0),m1=mMorale(M,1);c.fillStyle='rgba(0,0,0,.6)';c.fillRect(0,0,MW,58);c.font='bold 16px serif';c.fillStyle='#fff3dc';c.fillText('종남',14,24);c.fillText(MFOE[M.foe][0],14,48);
+  c.fillStyle='#333';c.fillRect(80,12,410,14);c.fillRect(80,36,410,14);c.fillStyle='#6ab0e8';c.fillRect(80,12,410*m0,14);c.fillStyle='#e0603a';c.fillRect(80,36,410*m1,14);
+  c.font='12px sans-serif';c.fillStyle='#ddd';c.fillText(`${mAlive(M,0).length}명`,500,24);c.fillText(`${mAlive(M,1).length}명`,500,48);c.font='bold 15px sans-serif';c.fillStyle='#e8edf2';c.fillText(`은자 +${M.eun}`,612,30);
+  c.font='bold 24px serif';c.fillStyle=M.T<8?'#ff7a5a':'#fff3dc';c.fillText(Math.max(0,Math.ceil(M.T))+'초',MW-70,38);
+  if(M.over){c.fillStyle='rgba(0,0,0,.6)';c.fillRect(0,MH/2-46,MW,92);c.font='bold 32px serif';c.fillStyle=M.over.win?'#ffd36a':'#ff8a6a';c.textAlign='center';c.fillText(M.over.win?'이 갈래를 지켜 냈다':'이 갈래가 밀렸다',MW/2,MH/2+4);c.font='15px sans-serif';c.fillStyle='#eee';c.fillText(`기세 종남 ${Math.round(M.over.m0*100)} 대 ${MFOE[M.foe][0]} ${Math.round(M.over.m1*100)} · 주운 은자 ${M.eun}냥`,MW/2,MH/2+30);c.textAlign='left'}
+  c.restore()}
+// 끝난 판을 정리한다(한 번만)
+function meleeEnd(c){const M=c.m;if(c.over)return;c.over=true;const win=M.over.win;c.win=win;DUEL.list[DUEL.i].win=win;DUEL.mods[c.l]={o:1,e:1,force:win,t:`떼싸움 ${win?'승':'패'}`};
+  if(M.eun){G.eun+=M.eun;log(`${c.t}에서 은자 ${M.eun}냥을 주웠다.`)}
+  for(const u of M.U.filter(x=>x.hero)){const d=D(u.d);if(!d)continue;boExp(d);if(win&&u.hp>0&&Math.random()<.6)gainWis(d,1,c.t)}
+  c.msg.push(win?`${c.t}을(를) 지켜 냈다.`:`${c.t}이(가) 밀렸다.`)}
+function meleeHTML(){const c=DUEL.cur,M=c.m,hs=M.U.filter(x=>x.hero);
+  return `<div class="modal"><div class="box duel gorge" style="max-width:1000px;padding:12px 14px"><h2 style="margin:0 0 8px">떼싸움 · ${c.t}</h2><canvas id="mcv" width="${MW}" height="${MH}" style="width:100%;display:block;border-radius:8px;touch-action:manipulation" onpointerdown="meleeTap(event)"></canvas>
+<div style="display:flex;gap:8px;margin-top:8px;align-items:stretch;flex-wrap:wrap">${hs.map((u,i)=>`<button id="msk${i}" class="msk" onclick="A.mSkill(${i})" style="position:relative;width:74px;height:92px;padding:0;overflow:hidden;border-radius:8px;background:#2a241d">${D(u.d).img?`<img src="${D(u.d).img}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:top">`:`<b style="font-size:28px;color:#fff3dc">${u.n[0]}</b>`}<span style="position:absolute;left:0;right:0;top:0;background:rgba(0,0,0,.6);color:#fff3dc;font-size:11px;line-height:1.3">${u.n}<br>${u.sk.n}</span><span class="mcd" style="position:absolute;left:0;right:0;bottom:0;background:rgba(10,8,6,.72);height:0"></span><b style="position:absolute;right:3px;bottom:3px;background:#d9b25a;color:#1d1a16;border-radius:4px;padding:0 5px;font:bold 12px sans-serif">${'QW'[i]}</b></button>`).join('')}
+<span style="margin-left:auto;display:flex;flex-direction:column;gap:6px">${c.over?`<button class="main" onclick="A.duelNext()">${DUEL.i+1<DUEL.list.length?'다음 갈래로':'결과 보기'}</button>`:`<button id="mauto" onclick="A.mAuto()">${M.auto?'절초 맡김 켬':'절초 맡김 끔'}</button><button onclick="A.duelAuto()">결과만 보기</button>`}</span></div>
+<p class="muted" style="font-size:12px;margin:6px 0 0">장수를 누르면 고르고, 땅을 누르면 그 장수가 그리로 간다. 초상이나 Q·W로 절초. 30초 뒤 기세가 높은 쪽이 이긴다. 적장을 쓰러뜨리면 적 기세가 크게 꺾인다.</p></div></div>`}
+function meleeTap(ev){const c=DUEL&&DUEL.cur;if(!c||!c.m||c.m.over)return;const M=c.m,cv=ev.currentTarget,r=cv.getBoundingClientRect(),x=(ev.clientX-r.left)*MW/r.width,y=(ev.clientY-r.top)*MH/r.height;
+  const h=M.U.find(u=>u.hero&&u.hp>0&&x>u.x-10&&x<u.x+60&&y>u.y-80&&y<u.y+24);if(h){M.sel=h;return}if(M.sel&&M.sel.hp>0){M.sel.go={x:x-24,y:Math.max(MTOP,Math.min(MBOT,y))};M.FX.push({k:'spark',x,y,t:0})}}
+let MLOOP=0,MLAST=0;
+function meleeKick(){if(MLOOP||typeof requestAnimationFrame==='undefined')return;MLOOP=1;MLAST=0;requestAnimationFrame(meleeFrame)}
+function meleeFrame(t){const c=DUEL&&DUEL.cur;if(!c||!c.m){MLOOP=0;return}const M=c.m,dt=Math.min(.05,MLAST?(t-MLAST)/1000:0);MLAST=t;mStep(M,dt);
+  const cv=document.getElementById('mcv');if(cv&&cv.getContext)mDraw(M,cv.getContext('2d'));
+  M.U.filter(x=>x.hero).forEach((u,i)=>{const b=document.getElementById('msk'+i);if(b){b.style.opacity=u.hp>0?1:.4;const cd=b.querySelector('.mcd');if(cd)cd.style.height=(u.hp>0?Math.round(100*u.skc/10):100)+'%'}});
+  if(M.over&&!c.over){meleeEnd(c);save();render()}
+  if(M.over&&M.tt>(M.endT=M.endT||M.tt)+2.5){MLOOP=0;return}requestAnimationFrame(meleeFrame)}
+if(typeof addEventListener!=='undefined')addEventListener('keydown',e=>{const c=DUEL&&DUEL.cur;if(!c||!c.m)return;const i='QW'.indexOf(e.key.toUpperCase());if(i>=0)A.mSkill(i)});
 function startDuels(eid,lanes){const e=G.q.find(x=>x.id===eid);const list=[];
-  lanes.forEach((ids,l)=>{const d=ids[0]&&D(ids[0]);const b=LN(e)[l].boss;if(d&&b)list.push({l,t:LN(e)[l].n,d:d.id,bn:b.n,bpw:Math.round(b.pw*(e.k||1))})});
+  lanes.forEach((ids,l)=>{const ds=ids.map(D).filter(Boolean);const b=LN(e)[l].boss;if(ds.length&&b)list.push({l,t:LN(e)[l].n,d:ds[0].id,ids:ds.map(d=>d.id),bn:b.n,bpw:Math.round(b.pw*(e.k||1)),melee:1})});
   DUEL={kind:'lane',eid,lanes,list,i:0,mods:[{o:1,e:1},{o:1,e:1},{o:1,e:1}]};nextDuel()}
 function nextDuel(){const c=DUEL.list[DUEL.i];if(!c){const X=DUEL;DUEL=null;if(X.kind==='match')matchEnd(X);else fight(X.eid,X.lanes,X.mods);return}
-  const d=D(c.d);DUEL.cur={...c,hp:[100,100],r:0,msg:[`${c.t}. ${c.bn}이(가) 앞으로 나섰다. ${d.n}이(가) 검을 뽑았다.`],emv:pickMove(),hit:null};cardInit(DUEL.cur);render()}
+  const d=D(c.d);DUEL.cur={...c,hp:[100,100],r:0,msg:[`${c.t}. ${c.bn}이(가) 앞으로 나섰다. ${d.n}이(가) 검을 뽑았다.`],emv:pickMove(),hit:null};if(c.melee){meleeInit(DUEL.cur);render();meleeKick()}else{cardInit(DUEL.cur);render()}}
 function pickMove(){const ks=['kang','kwae','su'];return ks[Math.floor(Math.random()*3)]}
 function tellOf(c){if(c.fake==null||c.fakeR!==c.r){c.fakeR=c.r;c.fake=Math.random()<(.5-Math.max(boV(D(c.d),'waseon'),0))?['kang','kwae','su'].filter(k=>k!==c.emv)[Math.floor(Math.random()*2)]:c.emv}return TELL[c.fake][c.r%2]}
 // 일기토에 쓰는 무공: 수련 중인 초식, 없으면 가장 높은 초식
@@ -351,7 +447,7 @@ function duelMove(mv){const c=DUEL.cur;if(!c||c.over)return;c.fx=null;const d=D(
     else{if(DUEL.kind==='lane')DUEL.mods[c.l]={o:.85,e:1,t:`${d.n} 일기토 패`};c.msg.push(`${d.n}이(가) 물러났다. 아군의 기세가 꺾였다.`);if(d.id!=='jin'&&Math.random()<.5){d.pos='hurt';d.away=4}}}
   else c.emv=pickMove();
   render()}
-function duelAuto(){const c=DUEL.cur;if(c&&c.k){cardAI(c);return}while(c&&!c.over){const ks=['kang','kwae','su'];duelMove(ks[Math.floor(Math.random()*3)])}}
+function duelAuto(){const c=DUEL.cur;if(c&&c.m){c.m.auto=true;let n=0;while(!c.m.over&&n++<2000)mStep(c.m,1/15);meleeEnd(c);return}if(c&&c.k){cardAI(c);return}while(c&&!c.over){const ks=['kang','kwae','su'];duelMove(ks[Math.floor(Math.random()*3)])}}
 /* ================= 카드 일기토 ================= */
 // 로그라이크 초식 카드를 가져왔다. 덱은 제자가 고른 초식 무공 셋(안 고르면 성 높은 순 셋), 심법·보법은 패시브.
 // 턴마다 내력 3, 다섯 장. 상대는 다음 행동을 보여 준다. 6턴 안에 쓰러뜨리거나 끝날 때 체력 비율이 높으면 이긴다
@@ -439,7 +535,7 @@ ${c.over?`<div class="log" style="max-height:140px;margin:10px 0">${c.msg.slice(
 <span><button class="main" onclick="A.cardFoe()">턴 끝내기</button> <button onclick="A.duelAuto()">맡긴다</button></span></div>
 <div class="log" style="max-height:90px;margin:8px 0 0">${c.msg.slice(-6).reverse().join('<br>')}</div>`}</div></div>`}
 
-function duelHTML(){if(DUEL&&DUEL.cur&&DUEL.cur.k)return cardHTML();if(!DUEL||!DUEL.cur)return'';const c=DUEL.cur,d=D(c.d),bar=v=>`<div class="hpb"><i style="width:${v}%"></i></div>`;
+function duelHTML(){if(DUEL&&DUEL.cur&&DUEL.cur.m)return meleeHTML();if(DUEL&&DUEL.cur&&DUEL.cur.k)return cardHTML();if(!DUEL||!DUEL.cur)return'';const c=DUEL.cur,d=D(c.d),bar=v=>`<div class="hpb"><i style="width:${v}%"></i></div>`;
   return `<div class="modal"><div class="box duel gorge${DUEL.kind==='lane'?'':' bimu'}"><h2>일기토 · ${c.t}</h2>
 <div class="duelrow"><div class="duelside ${c.hit==='p'||c.hit==='both'?'hit':''}">${c.fx&&c.fx.side==='p'&&c.fx.n?`<div class="fx" data-fx="${c.fx.n}"></div>`:''}${pt(d)}<b>${d.n}</b><span class="muted">전력 ${power(d)}</span>${bar(c.hp[0])}<span>${c.hp[0]}</span></div>
 <div class="vs serif">對</div>
@@ -690,7 +786,7 @@ const A={
   bsug(eid){const p=battleSuggest(G.q.find(x=>x.id===eid));for(let l=0;l<3;l++)for(let i=0;i<2;i++){const el=document.getElementById(`bl_${l}_${i}`);if(el)el.value=p[l][i]||''}},
   battle(eid){startDuels(eid,readLanes())},
   match(eid){startMatch(eid)},
-  duelMove(k){duelMove(k)},duelAuto(){duelAuto();render()},cardPlay(i){cardPlay(i)},cardFoe(){const c=DUEL&&DUEL.cur;if(c&&c.k&&!c.over)cardFoe(c)},
+  duelMove(k){duelMove(k)},duelAuto(){duelAuto();render()},mSkill(i){const c=DUEL&&DUEL.cur;if(c&&c.m)mSkill(c.m,i)},mAuto(){const c=DUEL&&DUEL.cur;if(c&&c.m){c.m.auto=!c.m.auto;const b=document.getElementById('mauto');if(b)b.textContent=c.m.auto?'절초 맡김 켬':'절초 맡김 끔'}},cardPlay(i){cardPlay(i)},cardFoe(){const c=DUEL&&DUEL.cur;if(c&&c.k&&!c.over)cardFoe(c)},
   setDeck(id,a,v){const d=D(id);if(!d)return;let s=deckArts(d).slice();if(d.deck&&d.deck.length)s=d.deck.filter(x=>d.arts[x]!=null);s=v?[...s.filter(x=>x!==a),a].slice(-3):s.filter(x=>x!==a);d.deck=s;save();render()},duelNext(){DUEL.i++;nextDuel()},
   accept(eid){const e=G.q.find(x=>x.id===eid);if(!e)return;if(dsCount()>=capOfDs()){alertMsg('정원이 찼다. 숙소를 늘려야 한다.');return}G.q=G.q.filter(x=>x!==e);
     G.ds.push({id:'r'+G.m+Math.random().toString(36).slice(2,6),n:e.nm,r:'새 제자',st:e.st,ch:70,arts:{...e.arts},xp:{},pos:'train',away:0,mind:0,focusM:null,focusS:null,job:null});log(`${e.nm}을(를) 제자로 받았다.`);save();render()},
