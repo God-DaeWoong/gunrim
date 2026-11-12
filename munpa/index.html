@@ -153,7 +153,7 @@ const MOVES={
   nakroe:[['뇌정만균','nakroe'],['낙뢰신권','nakroe'],['낙뢰신권','nakroe']]};
 // 로그라이크 적: 이름 → [초상 파일, 강공·쾌검·수비 때 쓰는 초식 이름]
 const RLEN={'감종간':['gamjong',['대라섬요','색탈혼','허무보']],'두기춘':['dugichun',['검세','연검','운기']],'고진':['gojin',['대라궁해(반쪽)','백락심연','검막']],'유중악':['yujung',['뇌신파황','낙뢰구검','신뢰하격']],'백모란':['baekmo',['구주홍염화','월녀검법','음양화벽']],'조익현':['joik',['대라궁해','대라섬요','현음진기']],'야율척':['yayul',['항룡금강권','불광만천','금강항마']],'백대행':['baekdae',['천룡번공','천개유룡','백원적과']],'복양수':['bokyang',null],'당각':['danggak',null],'매장원':['maejang',null],'운자추':['unjachu',null]};
-const ENIMG={'곽존해':'img/gwakjon.webp','백리장손':'img/baekri.webp','정화':'img/jeonghwa.webp','검단현':'img/geomdan.webp','점창 제자':'img/sd_ally_jeom.png','소림 무승':'img/sd_ally_sorim.png','화산 고수':'img/sd_mook_hs.png','서장 선봉장':'img/sd_sj_boss.png','서장 철기대장':'img/sd_sj_boss.png','서장 대장':'img/sd_sj_boss.png','석동':'img/seokdong.webp','용 선생':'img/yongseon.webp','초일산':'img/choil.webp','갈태독':'img/galtae.webp','곽태보':'img/gwaktae.webp'};
+const ENIMG={'남궁연':'img/namgungyeon.webp','곽존해':'img/gwakjon.webp','백리장손':'img/baekri.webp','정화':'img/jeonghwa.webp','검단현':'img/geomdan.webp','점창 제자':'img/sd_ally_jeom.png','소림 무승':'img/sd_ally_sorim.png','화산 고수':'img/sd_mook_hs.png','서장 선봉장':'img/sd_sj_boss.png','서장 철기대장':'img/sd_sj_boss.png','서장 대장':'img/sd_sj_boss.png','석동':'img/seokdong.webp','용 선생':'img/yongseon.webp','초일산':'img/choil.webp','갈태독':'img/galtae.webp','곽태보':'img/gwaktae.webp'};
 const enemyImg=bn=>ENIMG[bn]||(RLEN[bn]&&RLEN[bn][0]?rlImg(RLEN[bn][0]):null);
 RLEN['서장 무승']=['sadae',null];RLEN['석동']=['',['대라장천','천양신공','구양신공']];
 const emvName=(bn,em)=>{const r=RLEN[bn];return r&&r[1]?r[1][['kang','kwae','su'].indexOf(em)]:MV[em]};
