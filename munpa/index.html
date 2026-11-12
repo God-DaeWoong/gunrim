@@ -322,7 +322,7 @@ function battleSuggest(e){const home=e&&e.kind==='hwasan';const c=laneCands().fi
 function readLanes(){const used=new Set();return [0,1,2].map(l=>{const ids=[0,1].map(i=>(document.getElementById(`bl_${l}_${i}`)||{}).value).filter(v=>v&&!used.has(v));ids.forEach(v=>used.add(v));return ids})}
 function fight(eid,lanes,mods){const e=G.q.find(x=>x.id===eid);if(!e)return;const k=e.k||1,res=[];lanes=lanes||battleSuggest(e);mods=mods||[];
   for(let l=0;l<3;l++){const md=mods[l]||{o:1,e:1};
-    const ds=lanes[l].map(D).filter(Boolean),our=ds.reduce((s,d)=>s+power(d)*(.6+d.st.tong/250),0)*(.85+Math.random()*.3)*md.o*(1+.1*(G.wall||0)),en=Math.round(LN(e)[l].e*k*md.e);res.push({l,boss:LN(e)[l].boss&&LN(e)[l].boss.n,ds,win:md.force!=null?md.force:our>=en,our:Math.round(our),en,duel:md.t})}
+    const ds=lanes[l].map(D).filter(Boolean),our=ds.reduce((s,d)=>s+power(d)*(.6+d.st.tong/250),0)*(.85+Math.random()*.3)*md.o*(1+.1*(G.wall||0)),en=Math.round(LN(e)[l].e*k*md.e);res.push({l,boss:LN(e)[l].boss&&LN(e)[l].boss.n,dw:md.dw,ds,win:md.force!=null?md.force:our>=en,our:Math.round(our),en,duel:md.t})}
   const wins=res.filter(r=>r.win).length,ok=wins>=2;
   for(const r of res){for(const d of r.ds){if(r.win){if(Math.random()<.6)gainWis(d,1,e.title)}else if(d.id!=='jin'&&Math.random()<.5){d.pos='hurt';d.away=4}}}
   G.q=G.q.filter(x=>x!==e);
@@ -362,7 +362,7 @@ function meleeInit(c){const e=G.q.find(x=>x.id===DUEL.eid),L=LN(e)[c.l],k=e.k||1
   const nt=mTroops()+(e.kind==='p2b'&&G.p2?2*Math.min(5,G.p2.kept.length):0),ne=Math.max(19,Math.min(32,Math.round(L.e*k/10))),em=Math.max(.3,Math.min(3,emR*15/ne*tm0));
   for(let i=0;i<nt;i++)U.push({side:0,ally:e.kind==='p2b'&&i>=mTroops(),x:rnd(30,200),y:MTOP+10+(i+rnd(.1,.9))*(MBOT-MTOP-10)/nt,hp:90*tm,max:90*tm,atk:9*tm,rng:34,spd:55,cd:rnd(0,1),f:0});
   for(let i=0;i<ne;i++)U.push({side:1,x:rnd(700,930),y:MTOP+10+(i+rnd(.1,.9))*(MBOT-MTOP-10)/ne,hp:86*em,max:86*em,atk:9*em,rng:34,spd:55,cd:rnd(0,1),f:0});
-  const chain=e.kind==='hwasan';const bp=Math.round(L.boss.pw*k*dk());if(!chain)U.push({side:1,boss:1,n:L.boss.n,x:860,y:330,hp:200+bp*2,max:200+bp*2,atk:8+bp/6,rng:50,spd:45,cd:0,f:0});
+  const chain=e.kind==='hwasan'||!!(G.p2&&P2BOSS[L.boss.n]);const bp=Math.round(L.boss.pw*k*dk());if(!chain)U.push({side:1,boss:1,n:L.boss.n,x:860,y:330,hp:200+bp*2,max:200+bp*2,atk:8+bp/6,rng:50,spd:45,cd:0,f:0});
   c.m={U,FX:[],TXT:[],COIN:[],T:30,tt:0,eun:0,shake:0,auto:G.mAuto!==false,sel:U[0],foe:mFoeOf(e),bg:MELEE_BG[e.kind]||'img/gorge.webp',ne,nt,em,tm};c.m.chain=chain;c.msg=[`${L.n}. 종남 ${c.ids.length+nt}명 대 ${MFOE[c.m.foe][0]} ${ne+(chain?0:1)}명.${chain?` 적장 ${L.boss.n}은(는) 뒤에서 지켜본다.`:''}`]}
 const mAlive=(M,s)=>M.U.filter(u=>u.side===s&&u.hp>0);
 const mMorale=(M,s)=>{const a=M.U.filter(u=>u.side===s);return a.reduce((t,u)=>t+Math.max(0,u.hp)*(u.boss||u.hero?1.6:1),0)/a.reduce((t,u)=>t+u.max*(u.boss||u.hero?1.6:1),0)};
@@ -559,8 +559,8 @@ function cardFoe(c){const k=c.k,d=D(c.d),it=k.intent;k.disc.push(...k.hand);k.ha
 function cardEnd(c){const k=c.k,d=D(c.d);c.over=true;k.p.hp=Math.max(0,k.p.hp);k.e.hp=Math.max(0,k.e.hp);
   const win=k.e.hp<=0||(k.p.hp>0&&k.p.hp/k.p.max>k.e.hp/k.e.max);c.win=win;c.hp=[Math.round(100*k.p.hp/k.p.max),Math.round(100*k.e.hp/k.e.max)];
   DUEL.list[DUEL.i].win=win;boExp(d);
-  if(win){if(c.chain){DUEL.mods[c.l].t+=` · ${d.n} 적장 일기토 승`;G.fame+=3}else if(DUEL.kind==='lane')DUEL.mods[c.l]={o:1,e:.7,t:`${d.n} 일기토 승`};c.msg.push(`${c.bn}이(가) 무릎을 꿇었다.`);gainWis(d,1,`${c.bn}와(과)의 일기토`)}
-  else{if(c.chain)DUEL.mods[c.l].t+=` · ${d.n} 적장 일기토 패`;else if(DUEL.kind==='lane')DUEL.mods[c.l]={o:.85,e:1,t:`${d.n} 일기토 패`};c.msg.push(`${d.n}이(가) 물러났다. 아군의 기세가 꺾였다.`);if(d.id!=='jin'&&Math.random()<.5){d.pos='hurt';d.away=4}}
+  if(win){if(c.chain){DUEL.mods[c.l].t+=` · ${d.n} 적장 일기토 승`;DUEL.mods[c.l].dw=true;G.fame+=3}else if(DUEL.kind==='lane')DUEL.mods[c.l]={o:1,e:.7,t:`${d.n} 일기토 승`};c.msg.push(`${c.bn}이(가) 무릎을 꿇었다.`);gainWis(d,1,`${c.bn}와(과)의 일기토`)}
+  else{if(c.chain){DUEL.mods[c.l].t+=` · ${d.n} 적장 일기토 패`;DUEL.mods[c.l].dw=false}else if(DUEL.kind==='lane')DUEL.mods[c.l]={o:.85,e:1,t:`${d.n} 일기토 패`};c.msg.push(`${d.n}이(가) 물러났다. 아군의 기세가 꺾였다.`);if(d.id!=='jin'&&Math.random()<.5){d.pos='hurt';d.away=4}}
   render()}
 // 맡긴다: 들어올 공격을 보고 방어를 먼저 쌓고, 남은 내력으로 내력당 피해가 큰 초식부터
 function cardAI(c){const k=c.k;let guard=0;while(!c.over&&k.turn<=k.max){const it=k.intent,inc=it.k==='atk'?it.v:it.k==='multi'?it.v*it.n:0;
@@ -731,10 +731,10 @@ const P2JOB={
 MATCH_FX.p2v=(ok,w,e)=>{ok?p2Beat(e.who):p2Esc(e.who)};
 MATCH_FX.p2v2=(ok,w,e,X)=>{for(const o of e.opp){const b=X&&X.list.find(x=>x.bn===o.n);b&&b.win?p2Beat(o.n):p2Esc(o.n)}};
 const P2FIGHT={
-  p2a:(ok,txt,e,res)=>{const P=G.p2;for(const r of res)if(r.win&&P.esc.includes(r.boss))p2Beat(r.boss);
+  p2a:(ok,txt,e,res)=>{const P=G.p2;for(const r of res)if(r.win&&r.dw===true&&P.esc.includes(r.boss))p2Beat(r.boss);
     if(ok){G.fame+=15;G.qual+=5;MODAL={title:'사천 방어전',p:[...txt,'사천을 지켜 냈다. 서장군의 선봉이 물러갔다.'],ch:[['검각으로 간다.',()=>log('사천 방어전 승리. 명성 +15, 구파 자격 +5')]]}}
     else{P.sacheonLost=1;P.yayul+=15;MODAL={title:'사천 방어전',p:[...txt,'사천이 뚫렸다. 서장군이 기세를 타고 검각으로 향한다.'],ch:[['……',()=>log('사천 방어전에서 밀렸다. 검각의 적이 더 세진다.')]]}}},
-  p2b:(ok,txt,e,res)=>{const P=G.p2;for(const r of res)if(r.win&&P.esc.includes(r.boss))p2Beat(r.boss);
+  p2b:(ok,txt,e,res)=>{const P=G.p2;for(const r of res)if(r.win&&r.dw===true&&P.esc.includes(r.boss))p2Beat(r.boss);
     if(ok){G.fame+=15;G.qual+=5;MODAL={title:'검각 앞 결전',p:[...txt,'서장군의 본대가 검각 앞에서 무너졌다. 야율척이 정상에서 진산월을 부른다.'],ch:[['정상으로 오른다.',()=>log('검각 앞 결전 승리. 명성 +15, 구파 자격 +5')]]}}
     else{P.geomLost=1;P.yayul+=25;MODAL={title:'검각 앞 결전',p:[...txt,'검각 성루가 흔들린다. 기세가 오른 야율척이 정상에서 기다린다.'],ch:[['……',()=>log('검각 앞 결전에서 밀렸다. 야율척의 기세가 높다.')]]}}}};
 function p2Cal(rows){const P=G.p2,st=n=>P.beat.includes(n)?'꺾음':P.esc.includes(n)?'달아남':'';
