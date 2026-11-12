@@ -1001,9 +1001,9 @@ function recs(){const r=[];if(G.eun<0)r.push(['money',`<b style="color:var(--red
   if(G.m>=8&&!G.ds.some(d=>d.pos==='guard'&&d.id!=='jin'&&!d.elder)){const hu=G.ds.filter(d=>d.pos==='hurt'&&d.home==='guard');r.unshift(['guard',hu.length?`${hu.map(d=>d.n).join('·')}이(가) 다쳐 수비가 비었다. 다른 제자를 수비로 세우라(수비는 둘 이상이 안전하다)`:'수비 자리에 아무도 없다. 본산이 습격당하면 이름 없는 제자들만 맞선다(제자 탭에서 한 명 이상 수비로)'])}
   if(G.q.some(e=>e.id==='seokshil'))r.push(['sq','석실 폐관은 수비를 갖춘 뒤에(사건 탭)']);
   if(!r.length)r.push(['focus','급한 일이 없다. 수련 전념']);return r.slice(0,2)}
-function evBar(){if(!G.q.length)return '';const n=Object.keys(suggest()).length,work=G.q.filter(e=>e.t==='job'||e.t==='crisis').length,news=G.q.filter(e=>e.t==='event'&&e.info).length,rest=G.q.length-work-news;
+function evBar(){if(!G.q.length)return '';const nWis=G.q.filter(e=>e.kind==='wis').length,nGorge=META.noYuk&&G.q.some(e=>e.id==='gorge')&&D('nak')&&!['away','hurt','seclude'].includes(D('nak').pos)?1:0,n=Object.keys(suggest()).length+nWis+nGorge,work=G.q.filter(e=>e.t==='job'||e.t==='crisis').length,news=G.q.filter(e=>e.t==='event'&&e.info).length,rest=G.q.length-work-news;
   return `<div class="panel" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><b>사건 ${G.q.length}건</b><span class="muted" style="font-size:13px">의뢰·위기 ${work} · 소식 ${news}${rest?` · 직접 정할 일 ${rest}`:''}</span>
-    ${work?`<button class="main" onclick="A.auto()" ${n?'':'disabled'}>추천대로 보내기 (${n}건)</button>`:''}${news?`<button onclick="A.infoAll()">소식 모두 확인 (${news})</button>`:''}${rest?`<button onclick="A.tab('ev')">사건 탭에서 정하기 →</button>`:''}
+    ${work||nWis||nGorge?`<button class="main" onclick="A.auto()" ${n?'':'disabled'} title="의뢰·위기 배정${nWis?` · 벽 앞의 제자 ${nWis}명 맡기기(깨달음 30%)`:''}">추천대로 처리 (${n}건)</button>`:''}${news?`<button onclick="A.infoAll()">소식 모두 확인 (${news})</button>`:''}${rest?`<button onclick="A.tab('ev')">사건 탭에서 정하기 →</button>`:''}
     ${work?`<label style="font-size:13px"><input type="checkbox" ${G.autoNext?'checked':''} onchange="A.autoNext(this.checked)"> 다음 달로 넘길 때 남은 일 자동</label>`:''}</div>`}
 function mainTab(){
   const j=D('jin');
