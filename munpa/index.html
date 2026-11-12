@@ -129,7 +129,7 @@ const POS={train:'수련',guard:'수비',rest:'휴식',study:'장경각 해독',
 // 주루 관리: 정치가 높을수록 많이 번다(달마다). 자리는 대왕령 주루 3, 조암령 주루 +4, 초가보가 쥐던 주루 +2, 서안 객잔 +1(최대 10)
 const secMul=()=>G.flags.sulyeon?3:2.5,secSlots=()=>(G.flags.yeongong?1:0)+(G.flags.sulyeon?1:0);
 const shopSlots=()=>{const dd=G.devDone||[];return 3+(dd.includes('ju')?4:0)+(dd.includes('land')?2:0)+(dd.includes('sang')?1:0)};
-const shopEarn=()=>G.ds.filter(d=>d.pos==='shop').map(d=>Math.round(d.st.jeong/6+d.st.ji/20)).sort((a,b)=>b-a).slice(0,shopSlots()).reduce((s,v)=>s+v,0);
+const shopEarn=()=>G.ds.filter(d=>d.pos==='shop').map(d=>Math.round(d.st.jeong/6+d.st.ji/20)).sort((a,b)=>b-a).slice(0,shopSlots()).reduce((s,v)=>s+v,0)*(G.dang?sangMul():1)|0;
 const FAC={yeon:{n:'연무장',d:'수련치 +10%/단계, 떼싸움 병사 공격 +5%·체력 +4%/단계'},jang:{n:'장경각',d:'해독 속도, 전수할 수 있는 무공 수'},yak:{n:'약방',d:'휴식 중 심마 회복. 부상 요양: 0단계 1.5배·덧날 확률 높음 / 1단계 보통 / 2단계 0.75배 / 3단계 절반·덧나지 않음, 쉬는 제자의 고질을 고친다. 두 번 덧나면 고질(전력 -10%)'},oe:{n:'외당',d:'본산 방어, 잠입 차단, 사건을 일찍 앎'}};
 // 로그라이크 그림을 같은 사이트에서 불러 쓴다. 사이트: /gunrim/munpa/ → /gunrim/img/, 내 컴퓨터: 로그라이크 폴더
 const RL_LOCAL=location.protocol==='file:';
@@ -191,6 +191,33 @@ function gateOf(d,a){const lv=d.arts[a];if(a==='chileum'&&d.taeum&&has('ilbi'))r
 function gainWis(d,n,why){d.wis=(d.wis||0)+n;log(`${d.n}이(가) ${why}에서 깨달음 ${n}을(를) 얻었다. (가진 깨달음 ${d.wis})`)}
 function capOf(d,a){if(a==='chileum')return d.taeum?10:2;if(d.capUp&&d.capUp[a])return 10;return ARTS[a].cap}
 const YAKL=()=>Math.min(3,G.fac.yak||0),hurtLen=n=>Math.max(1,Math.round(n*[1.5,1,.75,.5][YAKL()])),hurtTxt=d=>`${d.away}순 요양`;
+const gRate=()=>.5+.05*Math.min(3,G.fac.oe||0);
+const isMun=d=>/^r/.test(d.id)&&!d.img;
+const DANG={yeon:{n:'연무당',k:'oseong',kn:'오성',d:'문도 수련'},oe:{n:'외당',k:'tong',kn:'통솔',d:'본산 수비'},sang:{n:'상단',k:'jeong',kn:'정치',d:'주루·상권'},haeng:{n:'행당',k:'ji',kn:'지력',d:'의뢰 파견'}};
+function dangInit(){if(G&&!G.dang)G.dang={h:{},a:{oe:2,sang:2,haeng:2},rot:1}}
+const dHead=k=>{const id=G.dang&&G.dang.h[k],d=id&&D(id);return d&&!['away','hurt'].includes(d.pos)?d:null};
+const headOf=d=>G.dang?Object.keys(G.dang.h).find(k=>G.dang.h[k]===d.id):null;
+const topMain=d=>Math.max(0,...Object.keys(d.arts).filter(a=>ARTS[a].t==='m').map(a=>d.arts[a]));
+const yeonB=()=>{const h=dHead('yeon');return h?Math.max(0,Math.min(.45,(h.st.oseong-50)/150+topMain(h)/60)):0};
+const sangMul=()=>{const h=dHead('sang');return h?.9+h.st.jeong/250:.85};
+const oeMul=()=>{const h=dHead('oe');return h?1+(h.st.tong-50)/150:.9};
+const haengB=()=>{const h=dHead('haeng');return h?Math.round((h.st.ji-50)/3):-5};
+const homeTroops=()=>Math.max(6,Math.min(24,6+Math.round(G.ds.filter(d=>d.pos==='guard'&&d.id!=='jin').length*1.6)));
+const munAll=()=>G.ds.filter(isMun);
+const munFree=()=>munAll().filter(d=>!['away','hurt','seclude','study','rest'].includes(d.pos)&&!headOf(d));
+function dangAssign(){dangInit();for(const d of munAll()){if(['away','hurt','seclude','study'].includes(d.pos))continue;if(d.mind>=80&&d.pos!=='rest'){d.pos='rest';d.dg='rest'}else if(d.pos==='rest'&&d.mind<30)d.pos='train'}
+  const M=munFree().sort((a,b)=>a.id<b.id?-1:1);if(!M.length)return;
+  const off=G.dang.rot?(Math.floor((G.m-1)/6)*Math.max(1,Math.round(M.length/4)))%M.length:0,L=M.slice(off).concat(M.slice(0,off)),A=G.dang.a;
+  L.forEach((d,i)=>{const p=i<A.oe?'guard':i<A.oe+A.sang?'shop':i<A.oe+A.sang+A.haeng?'haeng':'train';d.dg=p;d.pos=p==='haeng'?'train':p;d.home=d.pos})}
+function haengDispatch(){const pool=()=>munAll().filter(d=>d.dg==='haeng'&&d.pos==='train');for(const e of G.q.filter(x=>x.t==='job').sort((a,b)=>(b.pay||0)-(a.pay||0))){const c=pool().filter(d=>chanceK(d,e.need,e.k)>=55).sort((a,b)=>power(a)-power(b));if(!c.length)continue;A.sendJob(e.id,c[0].id)}}
+function dangHTML(){dangInit();const M=munAll(),A=G.dang.a,rest=Math.max(0,munFree().length-A.oe-A.sang-A.haeng);
+  const cand=k=>G.ds.filter(d=>!d.elder&&d.id!=='jin'&&(!headOf(d)||headOf(d)===k)).sort((a,b)=>b.st[DANG[k].k]-a.st[DANG[k].k]);
+  const eff={yeon:()=>'문도 수련 +'+Math.round(yeonB()*100)+'%',oe:()=>'본산 싸움 병사 '+homeTroops()+'명 · 힘 ×'+oeMul().toFixed(2)+' · 수비 수련 '+Math.round(gRate()*100)+'%',sang:()=>'주루 수입 ×'+sangMul().toFixed(2),haeng:()=>'행당 문도 의뢰 성공률 '+(haengB()>=0?'+':'')+haengB()+'%'};
+  const row=k=>{const h=G.dang.h[k];return `<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.08)"><b style="min-width:52px">${DANG[k].n}</b><select onchange="A.dangHead('${k}',this.value)"><option value="">당주 없음</option>${cand(k).map(d=>`<option value="${d.id}" ${h===d.id?'selected':''}>${d.n} (${DANG[k].kn} ${d.st[DANG[k].k]})</option>`).join('')}</select>${k==='yeon'?`<span>문도 <b>${rest}</b>명 (나머지)</span>`:`<span>문도 <button style="padding:0 8px" onclick="A.dangN('${k}',-1)">−</button> <b>${A[k]}</b> <button style="padding:0 8px" onclick="A.dangN('${k}',1)">+</button></span>`}<span class="muted" style="font-size:12px">${DANG[k].d} · ${eff[k]()}</span></div>`};
+  const ST=d=>headOf(d)?DANG[headOf(d)].n+'주':d.pos==='away'?'파견 중':d.pos==='hurt'?'요양'+(d.chronic?'·고질':''):d.pos==='rest'?'휴식':d.pos==='seclude'?'폐관':({guard:'외당',shop:'상단',haeng:'행당',train:'연무당'})[d.dg]||POS[d.pos];
+  return `<div class="panel"><h3>당과 문도 <span class="muted" style="font-size:13px">문도 ${M.length}명</span></h3><p class="muted" style="font-size:12px;margin:0 0 4px">당주는 사숙·중견 제자가 맡는다(원로는 맡지 않는다). 당주는 일을 보느라 자기 수련이 줄어든다(×0.6). 문도(새로 받은 이름 없는 제자)는 정한 인원대로 각 당에 들어가고, 남는 문도는 연무당에서 수련한다. 이름 있는 제자는 아래 카드에서 따로 배치한다.</p>${Object.keys(DANG).map(row).join('')}
+<label style="font-size:13px;display:block;margin-top:6px"><input type="checkbox" ${G.dang.rot?'checked':''} onchange="A.dangRot(this.checked)"> 반년마다 문도를 당끼리 교대시킨다</label> <button style="margin-top:6px" onclick="A.dangRec()">당주 추천대로</button>
+${M.length?`<details style="margin-top:8px"><summary>문도 목록</summary><table class="cal" style="margin-top:6px"><tr><th>이름</th><th>전력</th><th>당·상태</th><th>주무공</th></tr>${M.slice().sort((a,b)=>power(b)-power(a)).map(d=>{const m=Object.keys(d.arts).filter(a=>ARTS[a].t==='m').sort((x,y)=>d.arts[y]-d.arts[x])[0];return `<tr><td>${d.n}</td><td>${Math.round(power(d))}</td><td>${ST(d)}</td><td>${m?ARTS[m].n+' '+d.arts[m]+'성':''}</td></tr>`}).join('')}</table></details>`:''}</div>`}
 function power(d){const ms=[],ss=[];for(const a in d.arts){if(ARTS[a].t==='b')continue;(ARTS[a].t==='m'?ms:ss).push(d.arts[a])}ms.sort((a,b)=>b-a);ss.sort((a,b)=>b-a);
   let p=(ms[0]||0)*10+(ms[1]||0)*3+(ss[0]||0)*5+(d.mukryeong?10:0)+(d.arts.muyeom?d.arts.muyeom*8:0);if(d.yukhap)p+=20;if(d.chronic)p*=.9;if(d.id==='jin'){if(G.flags.yongyeong)p+=15;if(G.flags.geomjeong)p+=20;if(G.p2)p+=15*G.p2.relic;if(d.capUp&&d.capUp.cheonha)p+=5}return p}
 // 수련 방향이 없으면 올릴 수 있는 것 중 가장 높은 무공(한 우물)
@@ -206,11 +233,11 @@ function pickFocus(d,t){
 function gain(d){
   const half=d.teachHalf?.5:1;d.teachHalf=false;
   if(d.id==='jin')return (G.jinSec?secMul():G.retreat?3*(G.flags.yeongong?1.3:1)*(G.flags.sulyeon?1.2:1):G.jinBusy?0:G.jinFocus?2:1)*(1+.1*G.fac.yeon)*half;
-  if(d.coach){d.coach=false;return {train:1,guard:.35,study:.2,shop:.2,seclude:secMul(),rest:0,away:.2,hurt:0}[d.pos]*(1+.1*G.fac.yeon)*half*2}
-  const base={train:1,guard:.35,study:.2,shop:.2,seclude:secMul(),rest:0,away:.2,hurt:0}[d.pos]||0;
-  return base*(1+.1*G.fac.yeon)*half;
+  if(d.coach){d.coach=false;return {train:1,guard:gRate(),study:.2,shop:.2,seclude:secMul(),rest:0,away:.2,hurt:0}[d.pos]*(1+.1*G.fac.yeon)*half*2}
+  const base=d.dg==='haeng'&&d.pos==='train'?.5:({train:1,guard:gRate(),study:.2,shop:.2,seclude:secMul(),rest:0,away:.2,hurt:0}[d.pos]||0);
+  return base*(1+.1*G.fac.yeon)*half*(headOf(d)?.6:1)*(isMun(d)&&d.pos==='train'&&d.dg!=='haeng'?1+yeonB():1);
 }
-function monthPct(d,a){let g;if(d.id==='jin')g=(G.jinSec?secMul():G.retreat?3:G.jinBusy?0:G.jinFocus?2:1)*(1+.1*G.fac.yeon);else g=({train:1,guard:.35,study:.2,shop:.2,seclude:secMul(),rest:0,away:.2,hurt:0}[d.pos]||0)*(1+.1*G.fac.yeon)*(d.coach?2:1);
+function monthPct(d,a){let g;if(d.id==='jin')g=(G.jinSec?secMul():G.retreat?3:G.jinBusy?0:G.jinFocus?2:1)*(1+.1*G.fac.yeon);else g=({train:1,guard:gRate(),study:.2,shop:.2,seclude:secMul(),rest:0,away:.2,hurt:0}[d.pos]||0)*(1+.1*G.fac.yeon)*(d.coach?2:1);
   return Math.round(100*g*growOf(d,a)*(a==='chileum'&&d.taeum?1.2:1)/costOf(d.arts[a]))}
 function train(d){
   if(d.cold){d.cold=0;return}
@@ -325,7 +352,7 @@ const LANES=[{n:'소량산로',e:180,boss:{n:'초일산',pw:110}},{n:'태평곡�
 const canOut=d=>!d.elder||(d.id==='ilbi'&&d.n!=='삿갓 쓴 사내');
 function laneCands(){return G.ds.filter(d=>canOut(d)&&d.pos!=='away'&&d.pos!=='hurt'&&d.pos!=='seclude'&&!(d.id==='jin'&&(G.retreat||G.jinBusy)))}
 const isHome=e=>!!e&&(e.kind==='hwasan'||e.kind==='raid');
-function battleSuggest(e){const home=isHome(e),NL=e?LN(e).length:3;let c=laneCands().filter(d=>!d.elder&&!(home&&d.id==='jin')&&!(home&&d.pos!=='guard')).sort((a,b)=>power(b)-power(a));if(home&&!c.length)c=laneCands().filter(d=>!d.elder&&d.id!=='jin'&&d.pos!=='away').sort((a,b)=>power(b)-power(a)).slice(0,Math.min(NL,2));const pick=[[],[],[]];const order=NL===1?[0,0,0]:[2,0,1];let i=0;for(const d of c.slice(0,6)){pick[order[i%3]].push(d.id);i++}return pick}
+function battleSuggest(e){const home=isHome(e),NL=e?LN(e).length:3;let c=laneCands().filter(d=>!d.elder&&!(home&&d.id==='jin')&&!(home&&d.pos!=='guard'&&headOf(d)!=='oe')).sort((a,b)=>power(b)-power(a));if(home&&!c.length)c=laneCands().filter(d=>!d.elder&&d.id!=='jin'&&d.pos!=='away').sort((a,b)=>power(b)-power(a)).slice(0,Math.min(NL,2));const pick=[[],[],[]];const order=NL===1?[0,0,0]:[2,0,1];let i=0;for(const d of c.slice(0,6)){pick[order[i%3]].push(d.id);i++}return pick}
 function readLanes(){const used=new Set();return [0,1,2].map(l=>{const ids=[0,1].map(i=>(document.getElementById(`bl_${l}_${i}`)||{}).value).filter(v=>v&&!used.has(v));ids.forEach(v=>used.add(v));return ids})}
 function fight(eid,lanes,mods){const e=G.q.find(x=>x.id===eid);if(!e)return;const k=e.k||1,res=[];lanes=lanes||battleSuggest(e);mods=mods||[];
   const NL=LN(e).length;for(let l=0;l<NL;l++){const md=mods[l]||{o:1,e:1};
@@ -371,9 +398,9 @@ const mTroops=()=>Math.max(13,Math.min(24,8+Math.round(dsCount()*.45)));
 function mSkillOf(d){const a=duelArt(d)||'yuun';if((d.arts.wolnyeo||0)>=(d.arts[a]||0)&&d.arts.wolnyeo!=null)return{n:'월녀검법',t:'ring',fx:'wolnyeo'};
   const t=['janggwae','nakroe','guban','pungroe','yeomhwa'].includes(a)?'cone':'line',mf=MOVES[a]&&MOVES[a][0][1];return{n:ARTS[a].n,t,fx:mf||(t==='cone'?'cheonjeon':'geombong')}}
 function meleeInit(c){const e=G.q.find(x=>x.id===DUEL.eid),L=LN(e)[c.l],k=e.k||1,rnd=(a,b)=>a+Math.random()*(b-a),U=[];
-  c.ids.forEach((id,i)=>{const d=D(id),late=isHome(e)&&d.pos!=='guard',P=power(d)*(late?.8:1);U.push({side:0,d:id,n:d.n,sk:mSkillOf(d),hero:1,wait:late?6:0,x:late?-60:120,y:270+i*110,hp:(90+P)/eqDef(d)*(d.yukhap?1.2:1),max:(90+P)/eqDef(d)*(d.yukhap?1.2:1),atk:(4+P/9)*eqAtk(d),rng:46,spd:62,cd:0,skc:3,f:0})});
-  const others=G.ds.filter(d=>!d.elder&&d.id!=='jin'&&!c.ids.includes(d.id)),tm0=Math.max(.7,Math.min(1.6,(others.reduce((s,d)=>s+power(d),0)/Math.max(1,others.length))/110)),tm=tm0*(1+.05*(e.arm||0)),ourB=Math.max(isHome(e)?140:1,c.ids.reduce((s,id)=>{const d=D(id);return s+power(d)*(.6+d.st.tong/250)},0))*(1+.1*(G.wall||0))*(isHome(e)?1+.08*G.fac.oe:1),emR=(isHome(e)?(typeof MHK!=='undefined'?MHK:.5):1)*dk()*(typeof MKM!=='undefined'?MKM:1.35)*Math.pow(L.e*k/Math.max(1,ourB),typeof MKE!=='undefined'?MKE:.5);
-  const nt=mTroops()+(e.kind==='p2b'&&G.p2?2*Math.min(5,G.p2.kept.length):0),ne=Math.max(19,Math.min(32,Math.round(L.e*k/10))),em=Math.max(.3,Math.min(3.5,emR*15/ne*tm0*foeUp())),FB=facBuff();
+  c.ids.forEach((id,i)=>{const d=D(id),late=isHome(e)&&d.pos!=='guard'&&headOf(d)!=='oe',P=power(d)*(late?.6:1);U.push({side:0,d:id,n:d.n,sk:mSkillOf(d),hero:1,wait:late?10:0,x:late?-60:120,y:270+i*110,hp:(90+P)/eqDef(d)*(d.yukhap?1.2:1),max:(90+P)/eqDef(d)*(d.yukhap?1.2:1),atk:(4+P/9)*eqAtk(d),rng:46,spd:62,cd:0,skc:3,f:0})});
+  const others=G.ds.filter(d=>!d.elder&&d.id!=='jin'&&!c.ids.includes(d.id)),tm0=Math.max(.7,Math.min(1.6,(others.reduce((s,d)=>s+power(d),0)/Math.max(1,others.length))/110)),tm=tm0*(1+.05*(e.arm||0))*(isHome(e)?oeMul():1),ourB=Math.max(isHome(e)?140:1,c.ids.reduce((s,id)=>{const d=D(id);return s+power(d)*(.6+d.st.tong/250)},0))*(1+.1*(G.wall||0))*(isHome(e)?1+.08*G.fac.oe:1),emR=(isHome(e)?(typeof MHK!=='undefined'?MHK:.9)*(G.diff==='easy'?.7:1):1)*dk()*(typeof MKM!=='undefined'?MKM:1.35)*Math.pow(L.e*k/Math.max(1,ourB),typeof MKE!=='undefined'?MKE:.5);
+  const nt=(isHome(e)?homeTroops():mTroops())+(e.kind==='p2b'&&G.p2?2*Math.min(5,G.p2.kept.length):0),ne=Math.max(19,Math.min(32,Math.round(L.e*k/10))),em=Math.max(.3,Math.min(3.5,emR*15/ne*tm0*foeUp())),FB=facBuff();
   for(let i=0;i<nt;i++)U.push({side:0,ally:e.kind==='p2b'&&i>=mTroops(),allyN:e.kind==='p2b'&&i>=mTroops()&&G.p2&&G.p2.kept.length?G.p2.kept[(i-mTroops())%G.p2.kept.length]:null,x:rnd(30,200),y:MTOP+10+(i+rnd(.1,.9))*(MBOT-MTOP-10)/nt,hp:90*tm*FB.h,max:90*tm*FB.h,atk:9*tm*FB.a,rng:34,spd:55,cd:rnd(0,1),f:0});
   for(let i=0;i<ne;i++)U.push({side:1,vimg:mFoeOf(e)==='seojang'?(i%4===1?'img/sd_mook_kw.png':i%4===3?'img/sd_mook_hg.png':null):null,x:rnd(700,930),y:MTOP+10+(i+rnd(.1,.9))*(MBOT-MTOP-10)/ne,hp:86*em,max:86*em,atk:9*em,rng:34,spd:55,cd:rnd(0,1),f:0});
   const chain=e.kind==='hwasan'||!!(G.p2&&P2BOSS[L.boss.n]);const bp=Math.round(L.boss.pw*k*dk()*Math.sqrt(foeUp()));if(!chain)U.push({side:1,boss:1,n:L.boss.n,x:860,y:330,hp:200+bp*2,max:200+bp*2,atk:8+bp/6,rng:50,spd:45,cd:0,f:0});
@@ -831,7 +858,7 @@ const A={
     d.arts[a]=a==='yuungyeol'?5:1;d.xp[a]=0;if(ARTS[a].t==='s')d.focusS=a;else if(ARTS[a].t==='m')d.focusM=a;t.teachHalf=true;log(`${t.n}이(가) ${d.n}에게 ${ARTS[a].n}을(를) 가르쳤다. (${t.n}은 이달 수련이 절반)`);save();render()},
   jdir(t,v){const j=D('jin');if(t==='m')j.focusM=v||null;else j.focusS=v||null;save();render()},
   dir(id,t,v){const d=D(id);if(t==='m')d.focusM=v||null;else d.focusS=v||null;save();render()},
-  auto(){autoSeclude();for(const e of G.q.filter(x=>x.kind==='wis'))wisAutoRes(e.id);{const gq=G.q.find(e=>e.id==='gorge'),nk=D('nak');if(META.noYuk&&gq&&nk&&!['away','hurt','seclude'].includes(nk.pos))A.gorge('gorge','nak')}const p=suggest();for(const id in p){const e=G.q.find(x=>x.id===id);if(!e)continue;
+  auto(){autoSeclude();if(Object.keys(DANG).some(k=>!dHead(k)))A.dangRec(1);for(const e of G.q.filter(x=>x.kind==='wis'))wisAutoRes(e.id);{const gq=G.q.find(e=>e.id==='gorge'),nk=D('nak');if(META.noYuk&&gq&&nk&&!['away','hurt','seclude'].includes(nk.pos))A.gorge('gorge','nak')}const p=suggest();for(const id in p){const e=G.q.find(x=>x.id===id);if(!e)continue;
     if(e.t==='crisis')A.defend(id,p[id].o,p[id].d);else A.sendJob(id,p[id].d)}render()},
   sendJob(eid,did){const e=G.q.find(x=>x.id===eid);const sel=document.getElementById('js_'+eid);const d=did?D(did):sel&&D(sel.value);if(!e||!d)return;
     d.pos='away';d.away=(e.mon||1)===1?1:Math.max(2,e.mon*2-boV(d,'biyeon'));d.job={need:e.need,k:e.k,pay:e.pay,fame:e.fame,fav:e.fav,sp:e.sp,title:e.title};G.q=G.q.filter(x=>x!==e);log(`${d.n}을(를) ${e.title}에 보냈다. (승률 ${chanceK(d,e.need,e.k)}%)`);save();render()},
@@ -871,6 +898,10 @@ const A={
   infoAll(){const ns=G.q.filter(x=>x.t==='event'&&x.info);if(!ns.length)return;G.q=G.q.filter(x=>!(x.t==='event'&&x.info));MODAL={title:`소식 ${ns.length}건`,p:ns.map(e=>`<b>${e.title}</b> — ${typeof e.text==='function'?e.text():e.text}`),ch:[['모두 읽었다.',()=>{}]]};save();render()},
   choose(i){const c=MODAL.ch[i];MODAL=null;const keep=c[1]();if(!keep)MODAL=MODAL||null;save();render()},
   mSpd(){G.mSpd=(G.mSpd||1)>=3?1:(G.mSpd||1)+1;const b=document.getElementById("mspd");if(b)b.textContent="배속 ×"+G.mSpd;save()},
+  dangHead(k,id){dangInit();for(const j in G.dang.h)if(G.dang.h[j]===id)delete G.dang.h[j];if(id)G.dang.h[k]=id;else delete G.dang.h[k];save();render()},
+  dangN(k,v){dangInit();const A=G.dang.a;if(v>0&&A.oe+A.sang+A.haeng>=munFree().length)return;A[k]=Math.max(0,A[k]+v);dangAssign();save();render()},
+  dangRot(v){dangInit();G.dang.rot=v?1:0;save()},
+  dangRec(quiet){dangInit();for(const k of ['sang','haeng','yeon','oe']){if(dHead(k))continue;const c=G.ds.filter(d=>!d.elder&&!isMun(d)&&d.id!=='jin'&&d.id!=='lim'&&!headOf(d)&&!['away','hurt'].includes(d.pos)).sort((a,b)=>(b.st[DANG[k].k]-power(b)/8)-(a.st[DANG[k].k]-power(a)/8))[0];if(c){G.dang.h[k]=c.id;if(!quiet)log(c.n+'을(를) '+DANG[k].n+'주로 앉혔다.')}}if(!quiet){save();render()}},
   autoNext(v){G.autoNext=v;save()},
   next(){if(DUEL)return;if(G.autoNext&&!MODAL)A.auto();endHalf()},
   titleGo(n){if(n){TITLE.pick=1;TITLE.rec=0;render();return}TITLE=null;render()},
@@ -893,7 +924,7 @@ function raidOld(){const def=G.ds.filter(d=>d.id!=='jin'&&!d.elder&&(d.pos==='gu
   else{G.income.sang=Math.max(25,G.income.sang-10);for(const d of G.ds.filter(d=>d.pos==='guard'))if(Math.random()<.5){d.pos='hurt';d.away=hurtLen(4)}
     log(`${G.retreat?'장문인이 없는 틈에 ':''}초가보가 본산을 쳤다. 막지 못했다. (방어 ${Math.round(def)} : 공격 ${atk}) 서안 상권 수입 -10, 수비하던 제자 일부 부상`)}}
 function lose(o){G.income[o.k]=Math.max(o.k==='sang'?25:5,G.income[o.k]-(o.k==='sang'?8:5));log(`초가보에게 밀렸다: ${o.loss}`)}
-function chanceK(d,need,k){if(!k||k==='mu')return chance(d,need);return Math.max(5,Math.min(95,Math.round(50+(d.st[k]-need)*1.5+boV(d,'eoryong'))))}
+function chanceK(d,need,k){const hb=d.dg==='haeng'?haengB():0;if(!k||k==='mu')return Math.max(5,Math.min(95,chance(d,need)+hb));return Math.max(5,Math.min(95,Math.round(50+(d.st[k]-need)*1.5+boV(d,'eoryong'))+hb))}
 function chance(d,need){return Math.max(5,Math.min(95,Math.round(50+(power(d)-need)*1.2+boV(d,'eoryong'))))}
 
 /* ================= 월말 ================= */
@@ -930,6 +961,7 @@ function endHalf(){
   autoGorge();autoJin();if(MODAL||DUEL)return;
   // 태음신맥 한기
   {const l=D('lim');if(l&&l.pos!=='away'&&l.pos!=='hurt'){const v=l.arts.chileum;const p=v==null?.35:v<4?.25:v<7?.12:0;if(Math.random()<p){l.cold=1;log(`임영옥에게 한기가 올라 이번 순은 몸을 녹이며 쉬었다.${v==null?' (칠음진기를 모른다)':` (칠음진기 ${v}성, 7성부터는 한기가 잡힌다)`}`)}}}
+  dangAssign();haengDispatch();
   // 수련(순)
   for(const d of G.ds){if(d.pos==='seclude')d.secT=(d.secT||0)+1;train(d)}
   if(YAKL()>=3)for(const d of G.ds)if(d.chronic&&d.pos==='rest'&&Math.random()<.15){d.chronic=0;log(`약방에서 쉬던 ${d.n}의 고질이 나았다.`)}
@@ -1061,7 +1093,7 @@ ${(()=>{const lib=LIB.filter(a=>!knows(j,a)&&teacher(a,'jin'));return lib.length
 <div class="panel"><h3>기록</h3><div class="log">${G.log.join('<br>')}</div></div>`;
 }
 function discTab(){
-  return `<p class="muted">한 달은 상순·하순 두 차례다. 배치는 순마다 바꿀 수 있고 행동을 쓰지 않는다. 짧은 의뢰는 한 순만 자리를 비운다. ▸ 표시가 지금 수련 중인 무공이다. 수련 방향을 정하지 않으면 가장 높은 무공을 알아서 올린다. 「60% +25%/월」은 다음 성까지 60% 찼고, 지금 배치대로면 한 달에 25%씩 찬다는 뜻이다. 4성부터는 한 단계에 수련치가 두 배, 7성부터 세 배 든다.</p><div class="grid">${G.ds.filter(d=>d.id!=='jin').map(d=>{
+  return `<p class="muted">한 달은 상순·하순 두 차례다. 배치는 순마다 바꿀 수 있고 행동을 쓰지 않는다. 짧은 의뢰는 한 순만 자리를 비운다. ▸ 표시가 지금 수련 중인 무공이다. 수련 방향을 정하지 않으면 가장 높은 무공을 알아서 올린다. 「60% +25%/월」은 다음 성까지 60% 찼고, 지금 배치대로면 한 달에 25%씩 찬다는 뜻이다. 4성부터는 한 단계에 수련치가 두 배, 7성부터 세 배 든다.</p>${dangHTML()}<div class="grid">${G.ds.filter(d=>d.id!=='jin'&&!isMun(d)).map(d=>{
     const lock=d.pos==='away'||d.pos==='hurt';const lib=LIB.filter(a=>!knows(d,a)).sort((x,y)=>(teacher(y,d.id)?1:0)-(teacher(x,d.id)?1:0));const tOf=a=>teacher(a,d.id),okA=a=>tOf(a)&&!(SECRET[a]&&d.ch<SECRET[a]);
     const ms=Object.keys(d.arts).filter(a=>ARTS[a].t==='m'),ss=Object.keys(d.arts).filter(a=>ARTS[a].t==='s');
     return `<div class="d"><div class="hd">${pt(d)}<div><b>${d.n}</b> <span class="muted">${d.r}</span><br>전력 ${power(d)} · 충성 ${d.ch} · 깨달음 ${d.wis||0}${d.yukhap?' · <b style="color:#b8892e">육합귀진(탈태환골)</b>':''}${d.chronic?' · <b style="color:var(--red)">고질(전력 -10%)</b>':''}</div></div>
